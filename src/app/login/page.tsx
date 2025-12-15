@@ -28,11 +28,9 @@ export default function LoginPage() {
         try {
             const { error } = await signIn(email, password);
             if (error) {
-                if (error.message.includes('Invalid login credentials')) {
-                    setError('Usuario o contraseña incorrectos');
-                } else {
-                    setError(error.message);
-                }
+                // Show RAW error for debugging (remove before final prod, or keep for beta)
+                console.error('Login error:', error);
+                setError(`Error: ${error.message} (Status: ${error.status || 'Unknown'})`);
             }
             // Redirect is handled by AuthContext
         } catch (err) {
