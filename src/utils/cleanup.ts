@@ -1,10 +1,11 @@
-import { supabaseAdmin } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 
 /**
  * Scans for files in the 'contracts' bucket that do not have a corresponding record in the database.
  * @returns List of orphaned file paths
  */
 export async function scanOrphanedFiles(): Promise<string[]> {
+    const supabaseAdmin = getSupabaseAdmin();
     if (!supabaseAdmin) throw new Error('Supabase Admin not initialized');
 
     try {
@@ -86,6 +87,7 @@ export async function scanOrphanedFiles(): Promise<string[]> {
  */
 export async function cleanupFiles(paths: string[]): Promise<void> {
     if (paths.length === 0) return;
+    const supabaseAdmin = getSupabaseAdmin();
     if (!supabaseAdmin) throw new Error('Supabase Admin not initialized');
 
     const { error } = await supabaseAdmin

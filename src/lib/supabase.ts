@@ -9,15 +9,16 @@ const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 let _supabase: SupabaseClient | null = null;
 let _supabaseAdmin: SupabaseClient | null = null;
 
-// Get or create the public Supabase client (respects RLS)
-function getSupabaseClient(): SupabaseClient {
+/**
+ * Get the public Supabase client (respects RLS)
+ * Uses lazy initialization to avoid build-time errors
+ */
+export function getSupabase(): SupabaseClient {
     if (!_supabase) {
         if (!supabaseUrl || !supabaseKey) {
-            console.warn('⚠️ Supabase credentials not found in environment variables');
-            // Return a dummy client that will fail gracefully at runtime
-            // This allows the build to succeed
+            throw new Error('Supabase credentials not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.');
         }
-        _supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseKey || 'placeholder', {
+        _supabase = createClient(supabaseUrl, supabaseKey, {
             auth: {
                 persistSession: true,
                 autoRefreshToken: true,
@@ -27,8 +28,11 @@ function getSupabaseClient(): SupabaseClient {
     return _supabase;
 }
 
-// Get or create the admin Supabase client (bypasses RLS)
-function getSupabaseAdminClient(): SupabaseClient | null {
+/**
+ * Get the admin Supabase client (bypasses RLS)
+ * Only use this in API routes, NEVER expose to client
+ */
+export function getSupabaseAdmin(): SupabaseClient | null {
     if (!supabaseServiceRoleKey || !supabaseUrl) {
         return null;
     }
@@ -43,25 +47,46 @@ function getSupabaseAdminClient(): SupabaseClient | null {
     return _supabaseAdmin;
 }
 
-// Export getters instead of direct instances for lazy initialization
-export const supabase = new Proxy({} as SupabaseClient, {
-    get(_, prop) {
-        return (getSupabaseClient() as unknown as Record<string, unknown>)[prop as string];
-    }
-});
+// Legacy exports for backward compatibility - DEPRECATED, use getSupabase() instead
+// These will throw at runtime if env vars are missing (which is correct behavior)
+export const supabase = {
+    get auth() { return getSupabase().auth; },
+    get from() { return getSupabase().from.bind(getSupabase()); },
+    get storage() { return getSupabase().storage; },
+    get rpc() { return getSupabase().rpc.bind(getSupabase()); },
+    get channel() { return getSupabase().channel.bind(getSupabase()); },
+    get removeChannel() { return getSupabase().removeChannel.bind(getSupabase()); },
+    get removeAllChannels() { return getSupabase().removeAllChannels.bind(getSupabase()); },
+    get getChannels() { return getSupabase().getChannels.bind(getSupabase()); },
+} as unknown as SupabaseClient;
 
-export const supabaseAdmin = new Proxy({} as SupabaseClient, {
-    get(_, prop) {
-        const client = getSupabaseAdminClient();
-        if (!client) return undefined;
-        return (client as unknown as Record<string, unknown>)[prop as string];
-    }
-}) as SupabaseClient | null;
+export const supabaseAdmin = {
+    get auth() {
+        const admin = getSupabaseAdmin();
+        if (!admin) throw new Error('Supabase Admin not configured');
+        return admin.auth;
+    },
+    get from() {
+        const admin = getSupabaseAdmin();
+        if (!admin) throw new Error('Supabase Admin not configured');
+        return admin.from.bind(admin);
+    },
+    get storage() {
+        const admin = getSupabaseAdmin();
+        if (!admin) throw new Error('Supabase Admin not configured');
+        return admin.storage;
+    },
+    get rpc() {
+        const admin = getSupabaseAdmin();
+        if (!admin) throw new Error('Supabase Admin not configured');
+        return admin.rpc.bind(admin);
+    },
+} as unknown as SupabaseClient | null;
 
 // Helper function to get current user ID
 export async function getCurrentUserId(): Promise<string | null> {
     try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await getSupabase().auth.getSession();
         return session?.user?.id || null;
     } catch (error) {
         console.error('Error getting current user:', error);
@@ -83,9 +108,7 @@ export async function uploadContractFile(file: File, userId?: string): Promise<{
         const userFolder = actualUserId || 'anonymous';
         const filePath = `${userFolder}/contracts/${fileName}`;
 
-        // console.log('📤 Uploading file to:', filePath);
-
-        const { data, error } = await supabase.storage
+        const { data, error } = await getSupabase().storage
             .from('documents')
             .upload(filePath, file, {
                 cacheControl: '3600',
@@ -97,7 +120,6 @@ export async function uploadContractFile(file: File, userId?: string): Promise<{
             return { path: '', error };
         }
 
-        // console.log('✅ File uploaded successfully');
         return { path: data.path, error: null };
     } catch (err) {
         console.error('❌ Upload exception:', err);
@@ -108,7 +130,7 @@ export async function uploadContractFile(file: File, userId?: string): Promise<{
 // Helper function to get signed URL for download
 export async function getSignedUrlForContract(filePath: string): Promise<{ url: string; error: Error | null }> {
     try {
-        const { data, error } = await supabase.storage
+        const { data, error } = await getSupabase().storage
             .from('documents')
             .createSignedUrl(filePath, 3600); // 1 hour expiry
 
@@ -127,7 +149,7 @@ export async function getSignedUrlForContract(filePath: string): Promise<{ url: 
 // Helper function to delete file from storage
 export async function deleteContractFile(filePath: string): Promise<{ error: Error | null }> {
     try {
-        const { error } = await supabase.storage
+        const { error } = await getSupabase().storage
             .from('documents')
             .remove([filePath]);
 
