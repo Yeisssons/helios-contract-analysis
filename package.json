@@ -1,0 +1,45 @@
+{
+  "name": "axial-pioneer",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test:ingest": "npx ts-node --transpile-only scripts/stress-test.ts"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@supabase/supabase-js": "^2.78.0",
+    "@types/file-saver": "^2.0.7",
+    "@types/react-calendar": "^3.9.0",
+    "clsx": "^2.1.1",
+    "dotenv": "^16.6.1",
+    "file-saver": "^2.0.5",
+    "framer-motion": "^12.23.25",
+    "lucide-react": "^0.556.0",
+    "next": "^14.2.33",
+    "pdf-parse": "^1.1.1",
+    "react": "^18.3.1",
+    "react-calendar": "^6.0.0",
+    "react-dom": "^18.3.1",
+    "react-dropzone": "^14.3.8",
+    "resend": "^6.4.2",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.4.0",
+    "xlsx": "^0.18.5",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.7",
+    "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5"
+  }
+}
