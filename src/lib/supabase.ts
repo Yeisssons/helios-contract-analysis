@@ -1,32 +1,62 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Get Supabase credentials from environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || '';
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-if (!supabaseUrl || !supabaseKey) {
-    console.warn('⚠️ Supabase credentials not found in environment variables');
+// Lazy-initialized clients to prevent build-time errors on Vercel
+let _supabase: SupabaseClient | null = null;
+let _supabaseAdmin: SupabaseClient | null = null;
+
+// Get or create the public Supabase client (respects RLS)
+function getSupabaseClient(): SupabaseClient {
+    if (!_supabase) {
+        if (!supabaseUrl || !supabaseKey) {
+            console.warn('⚠️ Supabase credentials not found in environment variables');
+            // Return a dummy client that will fail gracefully at runtime
+            // This allows the build to succeed
+        }
+        _supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseKey || 'placeholder', {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true,
+            },
+        });
+    }
+    return _supabase;
 }
 
-// Create and export Supabase client (for client-side, respects RLS)
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-    auth: {
-        persistSession: true,  // Enable session persistence
-        autoRefreshToken: true,
-    },
+// Get or create the admin Supabase client (bypasses RLS)
+function getSupabaseAdminClient(): SupabaseClient | null {
+    if (!supabaseServiceRoleKey || !supabaseUrl) {
+        return null;
+    }
+    if (!_supabaseAdmin) {
+        _supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false,
+            },
+        });
+    }
+    return _supabaseAdmin;
+}
+
+// Export getters instead of direct instances for lazy initialization
+export const supabase = new Proxy({} as SupabaseClient, {
+    get(_, prop) {
+        return (getSupabaseClient() as unknown as Record<string, unknown>)[prop as string];
+    }
 });
 
-// Create admin client for server-side operations (bypasses RLS)
-// Only use this in API routes, NEVER expose to client
-export const supabaseAdmin = supabaseServiceRoleKey
-    ? createClient(supabaseUrl, supabaseServiceRoleKey, {
-        auth: {
-            autoRefreshToken: false,
-            persistSession: false,
-        },
-    })
-    : null;
+export const supabaseAdmin = new Proxy({} as SupabaseClient, {
+    get(_, prop) {
+        const client = getSupabaseAdminClient();
+        if (!client) return undefined;
+        return (client as unknown as Record<string, unknown>)[prop as string];
+    }
+}) as SupabaseClient | null;
 
 // Helper function to get current user ID
 export async function getCurrentUserId(): Promise<string | null> {
