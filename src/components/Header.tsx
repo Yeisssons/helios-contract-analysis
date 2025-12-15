@@ -38,7 +38,7 @@ export default function Header() {
                             <Sparkles className="w-5 h-5 text-white" fill="currentColor" strokeWidth={1} />
                             <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/20" />
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col hidden sm:flex">
                             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-zinc-400 tracking-tight">
                                 Helios
                             </span>

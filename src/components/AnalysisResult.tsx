@@ -246,7 +246,7 @@ export default function AnalysisResult({ analysis, onDismiss, onRename, onUpdate
                     </div>
 
                     {/* Main content grid */}
-                    <div className="grid md:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                         {/* Left column - Summary & Parties */}
                         <div className="space-y-6">
                             {/* Summary */}
@@ -685,7 +685,7 @@ export default function AnalysisResult({ analysis, onDismiss, onRename, onUpdate
             {/* Email Draft Modal - Updated to Glass */}
             {showEmailModal && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-                    <div className="relative w-full max-w-3xl max-h-[85vh] glass-strong rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+                    <div className="relative w-[95%] md:w-[600px] max-h-[80vh] glass-strong rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
                         {/* Modal Header */}
                         <div className="flex items-center justify-between p-5 border-b border-white/5 bg-white/[0.02]">
                             <div className="flex items-center gap-3">

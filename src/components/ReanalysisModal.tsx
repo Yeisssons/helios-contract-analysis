@@ -75,7 +75,7 @@ export default function ReanalysisModal({
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="relative w-full max-w-3xl max-h-[80vh] overflow-hidden bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl"
+                        className="relative w-[95%] md:w-[600px] max-h-[80vh] overflow-hidden bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl"
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
@@ -151,14 +151,14 @@ export default function ReanalysisModal({
                                                         key={point}
                                                         onClick={() => togglePoint(point)}
                                                         className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all text-left ${selectedNewPoints.includes(point)
-                                                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                                                                : 'bg-white/5 text-slate-400 border border-white/10 hover:bg-white/10'
+                                                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                                            : 'bg-white/5 text-slate-400 border border-white/10 hover:bg-white/10'
                                                             }`}
                                                     >
                                                         <div
                                                             className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 ${selectedNewPoints.includes(point)
-                                                                    ? 'bg-emerald-500'
-                                                                    : 'bg-white/10'
+                                                                ? 'bg-emerald-500'
+                                                                : 'bg-white/10'
                                                                 }`}
                                                         >
                                                             {selectedNewPoints.includes(point) && (

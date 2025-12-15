@@ -466,10 +466,10 @@ function HomeContent() {
       <div className="relative z-10 flex flex-col min-h-screen">
         <Header />
 
-        <main className="flex-1 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
+        <main className="flex-1 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12 space-y-8 md:space-y-16">
           {/* Hero / Upload Section */}
           <section className="relative">
-            <div className="max-w-3xl mx-auto text-center mb-12 space-y-4">
+            <div className="max-w-3xl mx-auto text-center mb-8 md:mb-12 space-y-4">
               <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white bg-clip-text text-transparent bg-gradient-to-br from-white via-white to-zinc-500">
                 {t('uploadTitle')}
               </h2>

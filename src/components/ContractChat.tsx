@@ -168,7 +168,7 @@ export default function ContractChat({ contracts, initialContractId }: ContractC
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="w-[380px] h-[600px] max-h-[80vh] flex flex-col bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+                        className="fixed inset-0 md:static md:inset-auto z-[60] md:z-auto w-full h-full md:w-[380px] md:h-[600px] md:max-h-[80vh] flex flex-col bg-zinc-900/95 backdrop-blur-xl border-none md:border md:border-white/10 rounded-none md:rounded-2xl shadow-2xl overflow-hidden"
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5">
