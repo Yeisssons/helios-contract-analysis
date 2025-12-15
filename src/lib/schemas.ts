@@ -13,4 +13,6 @@ export const ChatRequestSchema = z.object({
 // Schema for Contract Processing (Metadata only, file is handled via FormData)
 export const ContractMetadataSchema = z.object({
     customQuery: z.string().max(500).optional(),
+    dataPoints: z.array(z.string()).optional(),
+    sector: z.string().optional(),
 });

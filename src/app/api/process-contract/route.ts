@@ -4,6 +4,7 @@ import { analyzeContractText } from '@/lib/gemini';
 import { extractContractDataWithAI } from '@/lib/ai-mock';
 import { ProcessContractResponse } from '@/types/contract';
 import { APP_CONFIG, getAdaptiveModel } from '@/config/constants';
+import { ContractMetadataSchema } from '@/lib/schemas';
 
 // Flag to use real AI or mock (set via environment variable)
 const USE_REAL_AI = process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.length > 0;
@@ -30,10 +31,25 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
 
         const formData = await request.formData();
         const file = formData.get('file') as File | null;
-        const customQuery = formData.get('customQuery') as string | null;
-        const dataPointsRaw = formData.get('dataPoints') as string | null;
-        const dataPoints = dataPointsRaw ? JSON.parse(dataPointsRaw) as string[] : [];
-        const sector = (formData.get('sector') as string) || APP_CONFIG.DEFAULTS.SECTOR;
+
+        // Metadata Parsing & Validation
+        const rawMetadata = {
+            customQuery: formData.get('customQuery') as string || undefined,
+            dataPoints: formData.get('dataPoints') ? JSON.parse(formData.get('dataPoints') as string) : [],
+            sector: formData.get('sector') as string || undefined
+        };
+
+        const validation = ContractMetadataSchema.safeParse(rawMetadata);
+
+        if (!validation.success) {
+            return NextResponse.json(
+                { success: false, error: 'Invalid request parameters', details: validation.error.format() },
+                { status: 400 }
+            );
+        }
+
+        const { customQuery, dataPoints, sector } = validation.data;
+        const currentSector = sector || APP_CONFIG.DEFAULTS.SECTOR;
 
         // 1. Input Validation
         if (!file) {
@@ -101,8 +117,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
             id: crypto.randomUUID(), // Generate a temporary ID for frontend keying
             fileName: file.name,
             ...extractedData,
-            requestedDataPoints: dataPoints,
-            sector,
+            requestedDataPoints: dataPoints || [],
+            sector: currentSector,
             createdAt: new Date().toISOString(),
         };
 
