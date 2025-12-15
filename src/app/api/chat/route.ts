@@ -8,8 +8,26 @@ const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 import { ChatRequestSchema } from '@/lib/schemas';
 
+import { rateLimit } from '@/lib/rate-limit';
+import { headers } from 'next/headers';
+
+// Initializing rate limiter: 10 requests per minute per user/IP
+const limiter = rateLimit({
+    interval: 60 * 1000, // 60 seconds
+    uniqueTokenPerInterval: 500, // Max 500 users per interval
+});
+
 export async function POST(req: NextRequest) {
     try {
+        const ip = headers().get('x-forwarded-for') || 'anonymous';
+
+        if (!limiter.check(10, ip)) {
+            return NextResponse.json(
+                { error: 'Rate limit exceeded. Please try again in a minute.' },
+                { status: 429 }
+            );
+        }
+
         const body = await req.json();
         const validation = ChatRequestSchema.safeParse(body);
 

@@ -8,8 +8,26 @@ import { APP_CONFIG, getAdaptiveModel } from '@/config/constants';
 // Flag to use real AI or mock (set via environment variable)
 const USE_REAL_AI = process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.length > 0;
 
+import { rateLimit } from '@/lib/rate-limit';
+import { headers } from 'next/headers';
+
+// Strict rate limiter for heavy processing: 5 requests per minute
+const limiter = rateLimit({
+    interval: 60 * 1000,
+    uniqueTokenPerInterval: 500,
+});
+
 export async function POST(request: NextRequest): Promise<NextResponse<ProcessContractResponse>> {
     try {
+        const ip = headers().get('x-forwarded-for') || 'anonymous';
+
+        if (!limiter.check(5, ip)) {
+            return NextResponse.json(
+                { success: false, error: 'Rate limit exceeded. Please wait before uploading more files.' },
+                { status: 429 }
+            );
+        }
+
         const formData = await request.formData();
         const file = formData.get('file') as File | null;
         const customQuery = formData.get('customQuery') as string | null;
