@@ -86,25 +86,43 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
         let extractedData;
 
         // 3. Processing Logic
-        if (USE_REAL_AI && fileExtension === 'pdf') {
+        if (USE_REAL_AI) {
             try {
                 // Step 1: Convert file to Buffer
                 const arrayBuffer = await file.arrayBuffer();
                 const buffer = Buffer.from(arrayBuffer);
 
-                // Step 2: Extract text from PDF
-                const extractedText = await parsePdf(buffer);
+                // SECURITY: Magic Number Validation
+                // Check if it's really a PDF by reading the first 4 bytes
+                if (fileExtension === 'pdf') {
+                    const header = buffer.subarray(0, 5).toString('ascii'); // %PDF-
+                    if (!header.startsWith('%PDF-')) {
+                        throw new Error('Security Error: File has .pdf extension but invalid PDF signature. Processing aborted.');
+                    }
+                }
 
-                // Step 3: Analyze with Gemini AI (using adaptive model)
-                extractedData = await analyzeContractText(
-                    extractedText,
-                    customQuery || undefined,
-                    dataPoints,
-                    adaptiveModelName // Pass the adaptive model name
-                );
+                // Step 2: Extract text from PDF
+                if (fileExtension === 'pdf') {
+                    const extractedText = await parsePdf(buffer);
+
+                    // Step 3: Analyze with Gemini AI (using adaptive model)
+                    extractedData = await analyzeContractText(
+                        extractedText,
+                        customQuery || undefined,
+                        dataPoints,
+                        adaptiveModelName // Pass the adaptive model name
+                    );
+                } else if (fileExtension === 'docx') {
+                    // Placeholder for DOCX handling if you implement it later
+                    // For now, fail safe
+                    throw new Error('DOCX processing not yet enabled in this environment');
+                } else {
+                    throw new Error(`Unsupported file type: ${fileExtension}`);
+                }
+
             } catch (aiError) {
                 console.error('AI Processing Error:', aiError);
-                throw new Error('AI analysis failed. Please try again or use a different file.');
+                throw new Error(aiError instanceof Error ? aiError.message : 'AI analysis failed');
             }
         } else {
             // Fallback to mock for non-PDF files or when API key is not set

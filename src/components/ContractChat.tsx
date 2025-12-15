@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, X, Send, MessageSquare, Bot, User, Trash2, ChevronDown } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import rehypeSanitize from 'rehype-sanitize';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ContractData } from '@/types/contract';
 
@@ -244,7 +246,15 @@ export default function ContractChat({ contracts, initialContractId }: ContractC
                                                 ? 'bg-zinc-800 text-white rounded-tr-sm'
                                                 : 'bg-indigo-500/10 text-zinc-200 border border-indigo-500/20 rounded-tl-sm'}
                                         `}>
-                                            <p className="whitespace-pre-wrap">{msg.content}</p>
+                                            {msg.role === 'user' ? (
+                                                <p className="whitespace-pre-wrap">{msg.content}</p>
+                                            ) : (
+                                                <div className="markdown-prose prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-li:my-0">
+                                                    <ReactMarkdown rehypePlugins={[rehypeSanitize]}>
+                                                        {msg.content}
+                                                    </ReactMarkdown>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))
