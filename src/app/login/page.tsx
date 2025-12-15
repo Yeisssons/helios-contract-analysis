@@ -29,7 +29,7 @@ export default function LoginPage() {
             const { error } = await signIn(email, password);
             if (error) {
                 if (error.message.includes('Invalid login credentials')) {
-                    setError('Email o contraseña incorrectos');
+                    setError('Usuario o contraseña incorrectos');
                 } else {
                     setError(error.message);
                 }
@@ -95,15 +95,15 @@ export default function LoginPage() {
                         {/* Email */}
                         <div>
                             <label className="block text-sm font-medium text-slate-300 mb-2">
-                                Email
+                                Usuario
                             </label>
                             <div className="relative">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                 <input
-                                    type="email"
+                                    type="text"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="tu@email.com"
+                                    placeholder="Usuario (ej. admin)"
                                     className="w-full pl-12 pr-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                                 />
                             </div>

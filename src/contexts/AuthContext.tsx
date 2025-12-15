@@ -71,8 +71,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, [loading, session, pathname, router]);
 
-    const signIn = useCallback(async (email: string, password: string) => {
+    const signIn = useCallback(async (identifier: string, password: string) => {
         try {
+            // Check if identifier is an email
+            const isEmail = identifier.includes('@');
+            const email = isEmail ? identifier : `${identifier}@helios.local`;
+
             const { error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
