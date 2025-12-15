@@ -138,7 +138,7 @@ You are answering questions about the specific contract provided above.
     } catch (error) {
         console.error('Chat API Error:', error);
         return NextResponse.json(
-            { error: 'Internal Server Error' },
+            { error: error instanceof Error ? error.message : 'Internal Server Error' },
             { status: 500 }
         );
     }

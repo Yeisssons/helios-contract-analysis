@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
 import Header from '@/components/Header';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import {
     FileText,
     Calendar,

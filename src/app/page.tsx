@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
 import Header from '@/components/Header';
 import FileUpload from '@/components/FileUpload';
@@ -131,7 +132,7 @@ function HomeContent() {
             dataSources: contract.dataSources || contract.data_sources || {},
             abusiveClauses: contract.abusiveClauses || contract.abusive_clauses || [],
             alerts: contract.alerts || [],
-            riskScore: contract.riskScore || contract.risk_score,
+            riskScore: contract.riskScore ?? contract.risk_score ?? 5,
             requestedDataPoints: Object.keys(contract.extractedData || contract.extracted_data || {}),
           };
 
@@ -199,13 +200,13 @@ function HomeContent() {
       noticePeriodDays: contract.noticePeriodDays,
       terminationClauseReference: contract.terminationClauseReference,
       // Pass through new fields if they exist from API/Mock
-      summary: (contract as any).summary || `Contrato de ${contract.contractType.toLowerCase()}...`,
-      parties: (contract as any).parties || ['Empresa A', 'Empresa B'],
-      riskScore: (contract as any).riskScore ?? 5,
-      alerts: (contract as any).alerts || [],
-      abusiveClauses: (contract as any).abusiveClauses || [],
-      customQuery: contract.customQuery,
-      customAnswer: contract.customAnswer,
+      summary: (contract as any)?.summary || `Contrato de ${contract?.contractType?.toLowerCase() || 'general'}...`,
+      parties: (contract as any)?.parties || [],
+      riskScore: (contract as any)?.riskScore ?? 5,
+      alerts: (contract as any)?.alerts || [],
+      abusiveClauses: (contract as any)?.abusiveClauses || [],
+      customQuery: contract?.customQuery,
+      customAnswer: contract?.customAnswer,
       // Data points for audit
       extractedData: contract.extractedData,
       requestedDataPoints: contract.requestedDataPoints,
@@ -557,10 +558,14 @@ function HomeContent() {
   );
 }
 
+
+
 export default function Home() {
   return (
     <LanguageProvider defaultLanguage="es">
-      <HomeContent />
+      <ErrorBoundary>
+        <HomeContent />
+      </ErrorBoundary>
     </LanguageProvider>
   );
 }
