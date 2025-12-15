@@ -11,9 +11,10 @@ export function middleware(request: NextRequest) {
     const cspHeader = `
         default-src 'self';
         script-src 'self' 'unsafe-eval' 'unsafe-inline';
-        style-src 'self' 'unsafe-inline';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
         img-src 'self' blob: data: https://*;
-        font-src 'self' data:;
+        font-src 'self' https://fonts.gstatic.com data:;
+        connect-src 'self' https://*.supabase.co wss://*.supabase.co https://quzovwfpsmcmsndbmipc.supabase.co https://generativelanguage.googleapis.com;
         object-src 'none';
         base-uri 'self';
         form-action 'self';
