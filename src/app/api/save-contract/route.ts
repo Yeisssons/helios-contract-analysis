@@ -5,7 +5,7 @@ import { APP_CONFIG } from '@/config/constants';
 export async function POST(request: NextRequest) {
     try {
         // 1. Strict Authentication Check
-        const authHeader = request.headers.get('authorization');
+        const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
 
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return NextResponse.json(
@@ -15,9 +15,26 @@ export async function POST(request: NextRequest) {
         }
 
         const token = authHeader.substring(7);
-        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+        // Create an authenticated client for this request to respect RLS
+        // This ensures auth.uid() is set correctly for RLS policies
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabaseUserClient = createClient(supabaseUrl, supabaseKey, {
+            global: {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            },
+        });
+
+        // Verify user
+        const { data: { user }, error: authError } = await supabaseUserClient.auth.getUser();
 
         if (authError || !user) {
+            console.error('Auth error:', authError);
             return NextResponse.json(
                 { error: 'Invalid or expired token', details: authError },
                 { status: 401 }
@@ -78,17 +95,30 @@ export async function POST(request: NextRequest) {
 
         // 4. Database Insertion
         // Using upsert to handle potential idempotency if same ID sent twice
-        const dbClient = supabaseAdmin || supabase;
-        const { data, error } = await dbClient
+        // Use the authenticated client to respect RLS
+        const { data, error } = await supabaseUserClient
             .from('contracts')
-            .upsert(contractRecord) // Changed from insert to upsert for robustness
+            .upsert(contractRecord)
             .select()
             .single();
 
         if (error) {
             console.error('❌ Supabase DB error:', error);
+            // Check for specific error types
+            if (error.code === '42703') { // Undefined column
+                return NextResponse.json(
+                    { error: 'Database schema mismatch. Please run migration script.', details: error.message },
+                    { status: 500 }
+                );
+            }
+            if (error.code === '42501') { // RLS violation
+                return NextResponse.json(
+                    { error: 'Permission denied (RLS). Ensure user owns the record.', details: error.message },
+                    { status: 403 }
+                );
+            }
             return NextResponse.json(
-                { error: 'Failed to save contract to database', details: error.message },
+                { error: 'Failed to save contract to database', details: error.message, code: error.code },
                 { status: 500 }
             );
         }
