@@ -208,6 +208,7 @@ export default function FileUpload({ onUploadSuccess, customQuery }: FileUploadP
                     sector: selectedSector,
                     tags: [],
                     requestedDataPoints: selectedPoints,
+                    extractedText: result.data.extractedText, // Pass raw PDF text for chat
                 }),
             });
 

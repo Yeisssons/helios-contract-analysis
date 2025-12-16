@@ -84,6 +84,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
         const adaptiveModelName = getAdaptiveModel(file.size);
 
         let extractedData;
+        let extractedText = ''; // Store extracted text for database persistence
 
         // 3. Processing Logic
         if (USE_REAL_AI) {
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
 
                 // Step 2: Extract text from PDF
                 if (fileExtension === 'pdf') {
-                    const extractedText = await parsePdf(buffer);
+                    extractedText = await parsePdf(buffer);
 
                     // Step 3: Analyze with Gemini AI (using adaptive model)
                     extractedData = await analyzeContractText(
@@ -127,14 +128,16 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
         } else {
             // Fallback to mock for non-PDF files or when API key is not set
             const mockText = `Mock contract text for ${file.name}`;
+            extractedText = mockText;
             extractedData = await extractContractDataWithAI(mockText, file.name, customQuery || undefined, dataPoints);
         }
 
-        // Return the extracted data directly without saving to mock DB
+        // Return the extracted data including the raw text for database persistence
         const fullResponse = {
             id: crypto.randomUUID(), // Generate a temporary ID for frontend keying
             fileName: file.name,
             ...extractedData,
+            extractedText, // Include raw text for chat and persistence
             requestedDataPoints: dataPoints || [],
             sector: currentSector,
             createdAt: new Date().toISOString(),

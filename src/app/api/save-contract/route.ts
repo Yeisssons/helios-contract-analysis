@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
             sector,
             tags,
             requestedDataPoints,
+            extractedText, // Raw PDF text for chat functionality
         } = body;
 
         // Ensure required fields
@@ -70,6 +71,7 @@ export async function POST(request: NextRequest) {
             tags: tags || [],
             user_notes: '',
             user_id: userId,
+            extracted_text: extractedText || null, // Store raw PDF text for chat
             created_at: new Date().toISOString(),
             last_modified: new Date().toISOString(),
         };
