@@ -124,10 +124,12 @@ export async function analyzeContractText(
     const TIMEOUT_MS = 45000; // 45 seconds timeout
 
     // Fallback model chain for resilience
+    // Prioritized by: availability in free tier, speed, reliability
     const MODEL_CHAIN = [
-        modelName || 'gemini-2.5-flash',      // Primary
-        'gemini-1.5-flash-8b',                 // Fast fallback
-        'gemini-1.5-pro',                      // Last resort (slower but reliable)
+        modelName || 'gemini-2.5-flash',      // Primary (fastest)
+        'gemini-2.5-flash-lite',               // Fallback 1: Same speed, separate quota!
+        'gemini-1.5-flash',                    // Fallback 2: Previous gen, usually available
+        'gemini-1.5-pro',                      // Last resort: Slower but reliable
     ];
 
     const systemPrompt = buildSystemPrompt(customQuery, dataPoints);
