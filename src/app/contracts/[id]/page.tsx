@@ -97,9 +97,20 @@ function ContractDetailContent() {
         if (!editedContract) return;
         setIsSaving(true);
         try {
+            const { supabase } = await import('@/lib/supabase');
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (!session?.access_token) {
+                alert(language === 'es' ? 'No estás autenticado' : 'Not authenticated');
+                return;
+            }
+
             const res = await fetch('/api/contracts/update', {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
                 body: JSON.stringify({
                     id: contractId,
                     extractedData: editedContract.extractedData,
