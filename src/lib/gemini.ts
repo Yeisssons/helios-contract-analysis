@@ -102,6 +102,9 @@ Por favor, busca la respuesta a esta pregunta específica en el contrato y coló
  * Outputs in the document's language and includes abusive clause detection
  * Supports custom queries for specific data extraction
  * 
+ * Implements automatic model fallback when primary model is overloaded:
+ * Chain: gemini-2.5-flash -> gemini-1.5-flash-8b -> gemini-1.5-pro
+ * 
  * @param text - The contract text to analyze
  * @param customQuery - Optional custom query to answer
  * @param dataPoints - Optional array of data points to extract
@@ -119,22 +122,15 @@ export async function analyzeContractText(
 
     // Configuration
     const TIMEOUT_MS = 45000; // 45 seconds timeout
-    const MAX_RETRIES = 2;
 
-    // Use provided model or default to gemini-2.5-flash
-    const selectedModel = modelName || 'gemini-2.5-flash';
-    // console.log(`🤖 Using AI Model: ${selectedModel}`);
-
-    const model = genAI.getGenerativeModel({
-        model: selectedModel,
-        generationConfig: {
-            responseMimeType: 'application/json',
-            temperature: 0.1, // Low temperature for consistent structured output
-        } as GenerationConfig,
-    });
+    // Fallback model chain for resilience
+    const MODEL_CHAIN = [
+        modelName || 'gemini-2.5-flash',      // Primary
+        'gemini-1.5-flash-8b',                 // Fast fallback
+        'gemini-1.5-pro',                      // Last resort (slower but reliable)
+    ];
 
     const systemPrompt = buildSystemPrompt(customQuery, dataPoints);
-
     const prompt = `${systemPrompt}
 
 TEXTO DEL CONTRATO A ANALIZAR:
@@ -144,19 +140,26 @@ ${text}
 
 Extrae la información y devuelve SOLO el objeto JSON.`;
 
-    // Retry logic with timeout
     let lastError: Error | null = null;
 
-    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    // Try each model in the chain
+    for (let modelIndex = 0; modelIndex < MODEL_CHAIN.length; modelIndex++) {
+        const currentModel = MODEL_CHAIN[modelIndex];
+        console.log(`🤖 Trying model ${modelIndex + 1}/${MODEL_CHAIN.length}: ${currentModel}`);
+
         try {
+            const model = genAI.getGenerativeModel({
+                model: currentModel,
+                generationConfig: {
+                    responseMimeType: 'application/json',
+                    temperature: 0.1,
+                } as GenerationConfig,
+            });
+
             // Create timeout promise
             const timeoutPromise = new Promise<never>((_, reject) => {
                 setTimeout(() => {
-                    reject(new Error(
-                        attempt < MAX_RETRIES
-                            ? 'Análisis tomando más tiempo del normal, reintentando...'
-                            : 'El análisis está tomando demasiado tiempo. Por favor, intente con un archivo más pequeño o inténtelo de nuevo.'
-                    ));
+                    reject(new Error('Timeout: El análisis está tomando demasiado tiempo.'));
                 }, TIMEOUT_MS);
             });
 
@@ -169,25 +172,25 @@ Extrae la información y devuelve SOLO el objeto JSON.`;
             const response = await result.response;
             const responseText = response.text();
 
-            // Try to parse JSON, with better error handling
+            // Try to parse JSON
             let parsedResult: ContractAnalysisResult;
             try {
                 parsedResult = JSON.parse(responseText);
             } catch (parseError) {
                 console.error('JSON Parse Error:', parseError);
-
-                // Try to extract JSON from markdown code blocks if present
                 const jsonMatch = responseText.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
                 if (jsonMatch) {
                     parsedResult = JSON.parse(jsonMatch[1]);
                 } else {
-                    throw new Error(`Error al analizar el contrato: ${parseError instanceof Error ? parseError.message : 'Invalid JSON'}`);
+                    throw new Error(`Error al analizar respuesta: JSON inválido`);
                 }
             }
 
             const analysis = parsedResult;
 
-            // Validate and sanitize the response
+            console.log(`✅ Success with model: ${currentModel}`);
+
+            // Return validated result
             return {
                 contractType: analysis.contractType || 'Contrato General',
                 effectiveDate: validateDate(analysis.effectiveDate) || getTodayDate(),
@@ -203,20 +206,38 @@ Extrae la información y devuelve SOLO el objeto JSON.`;
                 customAnswer: analysis.customAnswer,
                 extractedData: analysis.extractedData,
             };
+
         } catch (error) {
             lastError = error instanceof Error ? error : new Error(String(error));
-            console.warn(`⚠️ Gemini attempt ${attempt}/${MAX_RETRIES} failed:`, lastError.message);
+            const errorMessage = lastError.message.toLowerCase();
 
-            // Don't retry on non-timeout errors
-            if (!lastError.message.includes('Análisis tomando') && !lastError.message.includes('timeout')) {
+            // Check if this is a retryable error (overload, rate limit, timeout)
+            const isRetryable =
+                errorMessage.includes('overload') ||
+                errorMessage.includes('503') ||
+                errorMessage.includes('429') ||
+                errorMessage.includes('rate') ||
+                errorMessage.includes('timeout') ||
+                errorMessage.includes('unavailable');
+
+            console.warn(`⚠️ Model ${currentModel} failed:`, lastError.message);
+
+            if (!isRetryable || modelIndex === MODEL_CHAIN.length - 1) {
+                // Non-retryable error or last model in chain - give up
+                console.error(`❌ All models exhausted or non-retryable error`);
                 break;
             }
+
+            // Wait briefly before trying next model (exponential backoff)
+            const backoffMs = Math.min(1000 * Math.pow(2, modelIndex), 5000);
+            console.log(`⏳ Waiting ${backoffMs}ms before trying next model...`);
+            await new Promise(r => setTimeout(r, backoffMs));
         }
     }
 
-    // All retries exhausted
-    console.error('Gemini API error after retries:', lastError);
-    throw new Error(lastError?.message || 'Error al analizar el contrato: Error desconocido');
+    // All models exhausted
+    console.error('Gemini API error after all fallbacks:', lastError);
+    throw new Error(lastError?.message || 'Error al analizar el contrato: Todos los modelos de IA están saturados. Por favor, inténtelo de nuevo en unos minutos.');
 }
 
 /**
