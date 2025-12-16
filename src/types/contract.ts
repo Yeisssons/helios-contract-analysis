@@ -29,6 +29,7 @@ export interface ContractData {
     // Management features
     tags?: string[];           // Professional classification tags
     userNotes?: string;        // Optional user notes
+    extractedText?: string;    // Full text extracted from PDF
     lastModified?: string;     // Track updates (ISO string)
 }
 
@@ -71,6 +72,7 @@ export interface ContractRecord {
     extracted_data?: Record<string, string>;
     data_sources?: Record<string, string>;
     tags?: string[];
+    extracted_text?: string;
     created_at: string;
     updated_at?: string;
     last_modified?: string;
