@@ -28,8 +28,19 @@ function PDFViewerContent() {
     useEffect(() => {
         async function loadContract() {
             try {
+                const { supabase } = await import('@/lib/supabase');
+                const { data: { session } } = await supabase.auth.getSession();
+
+                if (!session?.access_token) {
+                    throw new Error('Not authenticated');
+                }
+
                 // Fetch contract details
-                const response = await fetch(`/api/contracts/${params.id}`);
+                const response = await fetch(`/api/contracts/${params.id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${session.access_token}`
+                    }
+                });
                 const result = await response.json();
 
                 if (result.success && result.data) {

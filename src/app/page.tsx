@@ -35,7 +35,16 @@ function HomeContent() {
   useEffect(() => {
     async function fetchContracts() {
       try {
-        const response = await fetch('/api/contracts');
+        const { supabase } = await import('@/lib/supabase');
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session?.access_token) return;
+
+        const response = await fetch('/api/contracts', {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        });
         const result: ContractsListResponse = await response.json();
 
         if (result.success && result.data) {
