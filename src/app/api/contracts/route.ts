@@ -2,10 +2,45 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { ContractsListResponse } from '@/types/contract';
 
-export async function GET(): Promise<NextResponse<ContractsListResponse>> {
+export async function GET(request: Request): Promise<NextResponse<ContractsListResponse>> {
     try {
-        // Fetch all contracts from Supabase, ordered by creation date (newest first)
-        const { data, error } = await supabase
+        // 1. Strict Authentication Check
+        const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
+
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return NextResponse.json(
+                { success: false, error: 'Authorization header required' },
+                { status: 401 }
+            );
+        }
+
+        const token = authHeader.substring(7);
+
+        // Create an authenticated client for this request to respect RLS
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabaseUserClient = createClient(supabaseUrl, supabaseKey, {
+            global: {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            },
+        });
+
+        // Verify user and get ID (optional but good practice)
+        const { data: { user }, error: authError } = await supabaseUserClient.auth.getUser();
+
+        if (authError || !user) {
+            return NextResponse.json(
+                { success: false, error: 'Invalid or expired token' },
+                { status: 401 }
+            );
+        }
+
+        // Fetch all contracts from Supabase using authenticated client
+        const { data, error } = await supabaseUserClient
             .from('contracts')
             .select('*')
             .order('created_at', { ascending: false });
