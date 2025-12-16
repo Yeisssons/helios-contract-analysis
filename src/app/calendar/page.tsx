@@ -255,6 +255,51 @@ function CalendarPageContent() {
             });
 
             if (res.ok) {
+                // If a team member is assigned, open Gmail with the email composed
+                if (newTask.assignedTo) {
+                    const assignedMember = teamMembers.find((m: TeamMember) => m.id === newTask.assignedTo);
+                    if (assignedMember) {
+                        const formattedDate = new Date(newTask.date).toLocaleDateString(
+                            language === 'es' ? 'es-ES' : 'en-US',
+                            { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+                        );
+
+                        const subject = language === 'es'
+                            ? `📋 Nueva tarea asignada: ${newTask.title}`
+                            : `📋 New task assigned: ${newTask.title}`;
+
+                        const body = language === 'es'
+                            ? `Hola ${assignedMember.name},
+
+Se te ha asignado una nueva tarea:
+
+📋 Tarea: ${newTask.title}
+📅 Fecha: ${formattedDate}
+${newTask.description ? `📝 Descripción: ${newTask.description}` : ''}
+
+Por favor, revisa el calendario para más detalles.
+
+Saludos,
+Contract Manager`
+                            : `Hello ${assignedMember.name},
+
+You have been assigned a new task:
+
+📋 Task: ${newTask.title}
+📅 Date: ${formattedDate}
+${newTask.description ? `📝 Description: ${newTask.description}` : ''}
+
+Please check the calendar for more details.
+
+Best regards,
+Contract Manager`;
+
+                        // Open Gmail compose window
+                        const gmailUrl = `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(assignedMember.email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                        window.open(gmailUrl, '_blank');
+                    }
+                }
+
                 setRefreshTrigger(prev => prev + 1);
                 setShowTaskModal(false);
                 setNewTask({ title: '', description: '', date: new Date(), eventType: 'other', assignedTo: '' });
@@ -1108,9 +1153,11 @@ END:VCALENDAR`;
                                     ))}
                                 </select>
                                 {newTask.assignedTo && (
-                                    <p className="text-xs text-emerald-400 mt-1 flex items-center gap-1">
+                                    <p className="text-xs text-blue-400 mt-1 flex items-center gap-1">
                                         <Mail className="w-3 h-3" />
-                                        {language === 'es' ? 'Se enviará email a:' : 'Email will be sent to:'} {teamMembers.find((m: TeamMember) => m.id === newTask.assignedTo)?.email}
+                                        {language === 'es'
+                                            ? `Se abrirá Gmail para enviar email a: ${teamMembers.find((m: TeamMember) => m.id === newTask.assignedTo)?.email}`
+                                            : `Gmail will open to send email to: ${teamMembers.find((m: TeamMember) => m.id === newTask.assignedTo)?.email}`}
                                     </p>
                                 )}
                             </div>
