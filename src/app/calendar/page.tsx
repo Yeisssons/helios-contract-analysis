@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
 import Header from '@/components/Header';
+import TeamMembersModal from '@/components/TeamMembersModal';
 import { supabase } from '@/lib/supabase';
 import {
     Calendar as CalendarIcon,
@@ -20,10 +21,12 @@ import {
     DollarSign,
     Shield,
     Users,
+    Users2,
     Building2,
     Plus,
     UserPlus,
-    X
+    X,
+    Mail
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -63,14 +66,14 @@ interface CustomTask {
     isDbEvent?: boolean;
 }
 
-// Mock team members - in production this would come from an API/database
-const TEAM_MEMBERS = [
-    { id: 'user-1', name: 'María García', email: 'maria@ysnsolutions.com', avatar: '👩‍💼' },
-    { id: 'user-2', name: 'Carlos López', email: 'carlos@ysnsolutions.com', avatar: '👨‍💻' },
-    { id: 'user-3', name: 'Ana Martínez', email: 'ana@ysnsolutions.com', avatar: '👩‍⚖️' },
-    { id: 'user-4', name: 'Pedro Sánchez', email: 'pedro@ysnsolutions.com', avatar: '👨‍💼' },
-    { id: 'user-5', name: 'Laura Fernández', email: 'laura@ysnsolutions.com', avatar: '👩‍🔬' },
-];
+// Team member interface for real members from database
+interface TeamMember {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string;
+    role: string;
+}
 
 const EVENT_TYPE_CONFIG = {
     renewal: { color: 'emerald', icon: '🔄', labelEs: 'Renovación', labelEn: 'Renewal' },
@@ -104,6 +107,11 @@ function CalendarPageContent() {
     const [user, setUser] = useState<any>(null);
     const [customTasks, setCustomTasks] = useState<CustomTask[]>([]);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+    // Team members state
+    const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+    const [showTeamModal, setShowTeamModal] = useState(false);
+    const [loadingTeamMembers, setLoadingTeamMembers] = useState(false);
 
     // Auth check
     useEffect(() => {
@@ -143,6 +151,79 @@ function CalendarPageContent() {
         fetchEvents();
     }, [user, refreshTrigger]);
 
+    // Fetch team members
+    useEffect(() => {
+        if (!user) return;
+
+        const fetchTeamMembers = async () => {
+            setLoadingTeamMembers(true);
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.access_token) return;
+
+                const res = await fetch('/api/team-members', {
+                    headers: {
+                        'Authorization': `Bearer ${session.access_token}`
+                    }
+                });
+
+                if (res.ok) {
+                    const result = await res.json();
+                    if (result.success && result.data) {
+                        setTeamMembers(result.data);
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load team members", err);
+            } finally {
+                setLoadingTeamMembers(false);
+            }
+        };
+
+        fetchTeamMembers();
+    }, [user, refreshTrigger]);
+
+    // Team member CRUD handlers
+    const handleAddTeamMember = async (member: { name: string; email: string; avatar: string; role: string }) => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) throw new Error('Not authenticated');
+
+        const res = await fetch('/api/team-members', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify(member)
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to add member');
+        }
+
+        setRefreshTrigger(prev => prev + 1);
+    };
+
+    const handleDeleteTeamMember = async (id: string) => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) throw new Error('Not authenticated');
+
+        const res = await fetch(`/api/team-members?id=${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${session.access_token}`
+            }
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to delete member');
+        }
+
+        setRefreshTrigger(prev => prev + 1);
+    };
+
     // Task creation modal states
     const [showTaskModal, setShowTaskModal] = useState(false);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -167,13 +248,15 @@ function CalendarPageContent() {
                     date: newTask.date,
                     description: newTask.description,
                     user_id: user.id,
-                    color: 'blue' // Default
+                    color: 'blue',
+                    assigned_to_member: newTask.assignedTo || null,
+                    language: language
                 })
             });
 
             if (res.ok) {
                 setRefreshTrigger(prev => prev + 1);
-                setShowTaskModal(false); // Fixed: was setIsTaskModalOpen
+                setShowTaskModal(false);
                 setNewTask({ title: '', description: '', date: new Date(), eventType: 'other', assignedTo: '' });
             }
         } catch (error) {
@@ -530,14 +613,30 @@ END:VCALENDAR`;
                                 </p>
                             </div>
 
-                            {/* Export Button */}
-                            <button
-                                onClick={handleExportCalendar}
-                                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
-                            >
-                                <Download className="w-4 h-4" />
-                                {language === 'es' ? 'Exportar .ICS' : 'Export .ICS'}
-                            </button>
+                            <div className="flex items-center gap-3">
+                                {/* Team Management Button */}
+                                <button
+                                    onClick={() => setShowTeamModal(true)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                                >
+                                    <Users2 className="w-4 h-4" />
+                                    {language === 'es' ? 'Equipo' : 'Team'}
+                                    {teamMembers.length > 0 && (
+                                        <span className="text-xs bg-blue-500 px-1.5 py-0.5 rounded-full">
+                                            {teamMembers.length}
+                                        </span>
+                                    )}
+                                </button>
+
+                                {/* Export Button */}
+                                <button
+                                    onClick={handleExportCalendar}
+                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    {language === 'es' ? 'Exportar .ICS' : 'Export .ICS'}
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -984,6 +1083,15 @@ END:VCALENDAR`;
                                 <label className="block text-sm font-medium text-slate-300 mb-1 flex items-center gap-2">
                                     <UserPlus className="w-4 h-4 text-emerald-400" />
                                     {language === 'es' ? 'Asignar a' : 'Assign to'}
+                                    {teamMembers.length === 0 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowTeamModal(true)}
+                                            className="text-xs text-emerald-400 hover:text-emerald-300 underline"
+                                        >
+                                            {language === 'es' ? '+ Añadir miembros' : '+ Add members'}
+                                        </button>
+                                    )}
                                 </label>
                                 <select
                                     value={newTask.assignedTo}
@@ -993,15 +1101,16 @@ END:VCALENDAR`;
                                     <option value="">
                                         {language === 'es' ? '-- Sin asignar --' : '-- Unassigned --'}
                                     </option>
-                                    {TEAM_MEMBERS.map((member) => (
+                                    {teamMembers.map((member: TeamMember) => (
                                         <option key={member.id} value={member.id}>
                                             {member.avatar} {member.name}
                                         </option>
                                     ))}
                                 </select>
                                 {newTask.assignedTo && (
-                                    <p className="text-xs text-slate-500 mt-1">
-                                        {TEAM_MEMBERS.find(m => m.id === newTask.assignedTo)?.email}
+                                    <p className="text-xs text-emerald-400 mt-1 flex items-center gap-1">
+                                        <Mail className="w-3 h-3" />
+                                        {language === 'es' ? 'Se enviará email a:' : 'Email will be sent to:'} {teamMembers.find((m: TeamMember) => m.id === newTask.assignedTo)?.email}
                                     </p>
                                 )}
                             </div>
@@ -1027,6 +1136,16 @@ END:VCALENDAR`;
                     </div>
                 </div>
             )}
+
+            {/* Team Members Modal */}
+            <TeamMembersModal
+                isOpen={showTeamModal}
+                onClose={() => setShowTeamModal(false)}
+                teamMembers={teamMembers}
+                onAddMember={handleAddTeamMember}
+                onDeleteMember={handleDeleteTeamMember}
+                language={language}
+            />
         </div>
     );
 }
