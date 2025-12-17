@@ -2,6 +2,14 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
+    // 1. Bot Protection (Basic User-Agent Blocking)
+    const userAgent = request.headers.get('user-agent') || '';
+    const isBot = /curl|wget|python-requests|pydownloader|scrapy|httpclient/i.test(userAgent);
+
+    if (isBot) {
+        return new NextResponse(null, { status: 403, statusText: 'Forbidden' });
+    }
+
     // Generate a secure nonce for CSP
     const nonce = btoa(crypto.randomUUID());
 

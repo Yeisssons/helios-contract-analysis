@@ -352,3 +352,20 @@ pre code {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* Security / Anti-scraping Utility */
+.no-copy {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  pointer-events: none;
+  /* Optional: prevents right click on specific elements if overlay */
+}
+
+/* Allow interaction on child inputs even if parent is no-copy */
+.no-copy input,
+.no-copy textarea {
+  user-select: text;
+  pointer-events: auto;
+}

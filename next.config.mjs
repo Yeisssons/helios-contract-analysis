@@ -18,6 +18,9 @@ const nextConfig = {
     },
   },
 
+  // Security: Disable source maps in production to prevent code reverse-engineering
+  productionBrowserSourceMaps: false,
+
   images: {
     remotePatterns: [
       {

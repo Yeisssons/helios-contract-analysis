@@ -6,6 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import Footer from '@/components/Footer';
 import PrivacyModal from '@/components/PrivacyModal';
+import SecurityGuard from '@/components/SecurityGuard';
 
 const inter = Inter({ subsets: ["latin"], variable: '--font-inter' });
 const outfit = Outfit({ subsets: ["latin"], variable: '--font-outfit' });
@@ -34,6 +35,7 @@ export default function RootLayout({
             <div className="flex flex-col min-h-screen">
               {children}
             </div>
+            <SecurityGuard />
             <PrivacyModal />
             <Footer />
             <Toaster
