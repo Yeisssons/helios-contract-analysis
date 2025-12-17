@@ -53,7 +53,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setLoading(false);
 
                 if (event === 'SIGNED_IN') {
-                    router.push('/');
+                    // Only redirect to home if we are on an auth page, otherwise stay where we are
+                    if (window.location.pathname === '/login' || window.location.pathname === '/signup') {
+                        router.push('/');
+                    }
                 } else if (event === 'SIGNED_OUT') {
                     router.push('/login');
                 }

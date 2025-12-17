@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Mail, Shield, FileText, ExternalLink } from 'lucide-react';
 
@@ -37,18 +38,18 @@ export default function Footer() {
                     </div>
 
                     <div className="flex flex-wrap items-center justify-center gap-6">
-                        <a href="/contact" className="hover:text-white transition-colors flex items-center gap-1.5">
+                        <Link href="/contact" className="hover:text-white transition-colors flex items-center gap-1.5">
                             <Mail className="w-3.5 h-3.5" />
                             {t('contact')}
-                        </a>
-                        <a href="/policies" className="hover:text-white transition-colors flex items-center gap-1.5">
+                        </Link>
+                        <Link href="/policies" className="hover:text-white transition-colors flex items-center gap-1.5">
                             <FileText className="w-3.5 h-3.5" />
                             {t('privacy')}
-                        </a>
-                        <a href="/security" className="hover:text-white transition-colors flex items-center gap-1.5">
+                        </Link>
+                        <Link href="/security" className="hover:text-white transition-colors flex items-center gap-1.5">
                             <Shield className="w-3.5 h-3.5" />
                             {t('security')}
-                        </a>
+                        </Link>
 
                         <p className="flex items-center gap-1.5 pl-6 border-l border-white/10 hidden md:flex">
                             {t('poweredBy')}
