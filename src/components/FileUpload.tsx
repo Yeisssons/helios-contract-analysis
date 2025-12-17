@@ -572,10 +572,10 @@ export default function FileUpload({ onUploadSuccess, customQuery }: FileUploadP
 
                         <div className="space-y-2 max-w-sm">
                             <p className="text-xl font-semibold text-white tracking-tight">
-                                {isDragActive ? t('dropHere') : (language === 'es' ? 'Análisis Documental Inteligente' : 'Intelligent Document Analysis')}
+                                {isDragActive ? t('dropHere') : (language === 'es' ? 'Motor de Inteligencia Documental' : 'Document Intelligence Engine')}
                             </p>
                             <p className="text-base text-zinc-400 font-light">
-                                {language === 'es' ? 'Procesa cualquier tipo de documento (legal, financiero, técnico) al instante' : 'Process any document type (legal, financial, technical) instantly'}
+                                {language === 'es' ? 'Transforma cualquier documento en datos accionables al instante' : 'Transform any document into actionable data instantly'}
                             </p>
                         </div>
 

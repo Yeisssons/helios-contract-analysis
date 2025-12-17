@@ -108,8 +108,8 @@ const translations = {
         autoExtraction: 'Extracción Automática',
 
         // Upload Section
-        uploadTitle: 'Análisis Documental',
-        uploadDescription: 'Procesa cualquier tipo de documento (legal, financiero, técnico) al instante',
+        uploadTitle: 'Motor de Inteligencia Documental',
+        uploadDescription: 'Transforma cualquier documento en datos accionables al instante',
         dropzoneText: 'Arrastra y suelta tu contrato aquí',
         dropzoneOr: 'o',
         browseFiles: 'buscar archivos',
