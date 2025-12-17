@@ -179,7 +179,7 @@ export default function ContractChat({ contracts, initialContractId }: ContractC
                                     <Bot className="w-4 h-4 text-indigo-400" />
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-sm font-semibold text-white">Helios AI</span>
+                                    <span className="text-sm font-semibold text-white">YSN AI</span>
                                     <div className="flex items-center gap-1 text-[10px] text-zinc-400">
                                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                         Online
