@@ -108,8 +108,8 @@ const translations = {
         autoExtraction: 'Extracción Automática',
 
         // Upload Section
-        uploadTitle: 'Motor de Inteligencia Estratégica',
-        uploadDescription: 'Transforma archivos y datos en decisiones inteligentes al instante',
+        uploadTitle: 'De datos a decisiones',
+        uploadDescription: 'Convierte tus archivos y datos en información clara para decidir mejor, más rápido',
         dropzoneText: 'Arrastra y suelta tu contrato aquí',
         dropzoneOr: 'o',
         browseFiles: 'buscar archivos',

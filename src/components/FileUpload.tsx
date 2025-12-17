@@ -572,10 +572,10 @@ export default function FileUpload({ onUploadSuccess, customQuery }: FileUploadP
 
                         <div className="space-y-2 max-w-sm">
                             <p className="text-xl font-semibold text-white tracking-tight">
-                                {isDragActive ? t('dropHere') : (language === 'es' ? 'Motor de Inteligencia Estratégica' : 'Strategic Intelligence Engine')}
+                                {isDragActive ? t('dropHere') : (language === 'es' ? 'De datos a decisiones' : 'From Data to Decisions')}
                             </p>
                             <p className="text-base text-zinc-400 font-light">
-                                {language === 'es' ? 'Transforma archivos y datos en decisiones inteligentes al instante' : 'Transform files and data into intelligent decisions instantly'}
+                                {language === 'es' ? 'Convierte tus archivos y datos en información clara para decidir mejor, más rápido' : 'Turn your files and data into clear insights to decide better, faster'}
                             </p>
                         </div>
 
