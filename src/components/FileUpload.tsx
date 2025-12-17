@@ -418,6 +418,41 @@ export default function FileUpload({ onUploadSuccess, customQuery }: FileUploadP
                                                 </button>
                                             );
                                         })}
+
+                                        {/* Add Custom Data Point Button */}
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                const newPoint = prompt(
+                                                    language === 'es'
+                                                        ? 'Ingrese el nombre del nuevo punto de datos:'
+                                                        : 'Enter the name of the new data point:'
+                                                );
+                                                if (newPoint && newPoint.trim()) {
+                                                    const trimmedPoint = newPoint.trim();
+                                                    if (!availablePoints.includes(trimmedPoint)) {
+                                                        setAvailablePoints(prev => [...prev, trimmedPoint]);
+                                                        setSelectedPoints(prev => [...prev, trimmedPoint]);
+                                                        toast.success(
+                                                            language === 'es'
+                                                                ? `✓ Punto "${trimmedPoint}" añadido y seleccionado`
+                                                                : `✓ Point "${trimmedPoint}" added and selected`
+                                                        );
+                                                    } else {
+                                                        toast.error(
+                                                            language === 'es'
+                                                                ? 'Este punto de datos ya existe'
+                                                                : 'This data point already exists'
+                                                        );
+                                                    }
+                                                }
+                                            }}
+                                            className="group flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 border border-dashed border-primary/30 bg-transparent hover:bg-primary/10 text-primary hover:border-primary/50"
+                                        >
+                                            <Plus className="w-4 h-4" />
+                                            <span>{language === 'es' ? 'Crear' : 'Create'}</span>
+                                        </button>
                                     </div>
                                 </div>
 
