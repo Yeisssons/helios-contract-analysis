@@ -62,7 +62,7 @@ export default function SecurityPage() {
                             <Shield className="w-6 h-6" />
                         </div>
                         <h3 className="text-xl font-bold text-white mb-3">
-                            {language === 'es' ? 'Encriptación Militar' : 'Military-Grade Encryption'}
+                            {language === 'es' ? 'Encriptación Bancaria' : 'Bank-Grade Encryption'}
                         </h3>
                         <p className="text-zinc-400 leading-relaxed text-sm">
                             {language === 'es'

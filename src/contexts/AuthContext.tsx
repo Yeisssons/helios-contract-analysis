@@ -66,8 +66,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [router]);
 
     // Redirect to login if not authenticated
+    // Redirect to login if not authenticated
     useEffect(() => {
-        if (!loading && !session && !PUBLIC_ROUTES.includes(pathname)) {
+        const isPublicRoute = PUBLIC_ROUTES.some(route => pathname === route || pathname.startsWith(`${route}/`));
+
+        if (!loading && !session && !isPublicRoute) {
             router.push('/login');
         }
     }, [loading, session, pathname, router]);

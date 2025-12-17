@@ -613,7 +613,7 @@ export default function FileUpload({ onUploadSuccess, customQuery }: FileUploadP
 
             {/* Trust Badges */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-4">
-                <Link href="/security#encryption" className="flex flex-col items-center text-center gap-2 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group cursor-help" title={language === 'es' ? 'Tus datos viajan y se almacenan seguros con encriptación de grado militar' : 'Your data travels and is stored securely with military-grade encryption'}>
+                <Link href="/security#encryption" className="flex flex-col items-center text-center gap-2 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group cursor-help" title={language === 'es' ? 'Tus datos viajan y se almacenan seguros con encriptación de grado bancario' : 'Your data travels and is stored securely with bank-grade encryption'}>
                     <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:text-emerald-300 group-hover:bg-emerald-500/20 transition-colors">
                         <Lock className="w-5 h-5" />
                     </div>
