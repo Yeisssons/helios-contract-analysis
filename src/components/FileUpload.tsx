@@ -361,17 +361,41 @@ export default function FileUpload({ onUploadSuccess, customQuery }: FileUploadP
                                         <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
                                             {language === 'es' ? 'Puntos de Extracción' : 'Extraction Points'}
                                         </label>
-                                        <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
-                                            AI POWERED
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            {/* Select All / Deselect All Button */}
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (selectedPoints.length === availablePoints.length) {
+                                                        // Deselect all
+                                                        setSelectedPoints([]);
+                                                    } else {
+                                                        // Select all
+                                                        setSelectedPoints([...availablePoints]);
+                                                    }
+                                                }}
+                                                className="text-[10px] font-medium text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded bg-primary/10 hover:bg-primary/20 border border-primary/20"
+                                            >
+                                                {selectedPoints.length === availablePoints.length
+                                                    ? (language === 'es' ? '✗ Deseleccionar todos' : '✗ Deselect All')
+                                                    : (language === 'es' ? '✓ Seleccionar todos' : '✓ Select All')
+                                                }
+                                            </button>
+                                            <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+                                                AI POWERED
+                                            </span>
+                                        </div>
                                     </div>
                                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                                         {availablePoints.map((point) => {
                                             const isSelected = selectedPoints.includes(point);
+                                            const translatedPoint = getDataPointTranslation(point, language);
                                             return (
                                                 <button
                                                     key={point}
                                                     type="button"
+                                                    title={translatedPoint} // Tooltip for full name on hover
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         toggleDataPoint(point);
@@ -390,7 +414,7 @@ export default function FileUpload({ onUploadSuccess, customQuery }: FileUploadP
                                                     `}>
                                                         {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                                                     </div>
-                                                    <span className="truncate">{getDataPointTranslation(point, language)}</span>
+                                                    <span className="truncate">{translatedPoint}</span>
                                                 </button>
                                             );
                                         })}
