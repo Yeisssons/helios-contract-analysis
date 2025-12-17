@@ -46,6 +46,10 @@ export default function Footer() {
                             <FileText className="w-3.5 h-3.5" />
                             {t('privacy')}
                         </Link>
+                        <Link href="/pricing" className="hover:text-white transition-colors flex items-center gap-1.5">
+                            <span className="font-semibold">$</span>
+                            {language === 'es' ? 'Precios' : 'Pricing'}
+                        </Link>
                         <Link href="/security" className="hover:text-white transition-colors flex items-center gap-1.5">
                             <Shield className="w-3.5 h-3.5" />
                             {t('security')}
