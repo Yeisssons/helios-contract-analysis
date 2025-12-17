@@ -163,3 +163,148 @@ export async function sendTaskAssignmentEmail({
 
     return sendEmail({ to, subject, html });
 }
+
+/**
+ * Send email notification for contract renewal alerts
+ */
+export async function sendRenewalAlertEmail({
+    to,
+    userName,
+    contractName,
+    renewalDate,
+    daysUntilRenewal,
+    contractId,
+    appUrl = 'https://helios-contract.vercel.app',
+    language = 'es'
+}: {
+    to: string;
+    userName: string;
+    contractName: string;
+    renewalDate: string;
+    daysUntilRenewal: number;
+    contractId: string;
+    appUrl?: string;
+    language?: 'es' | 'en';
+}) {
+    const isSpanish = language === 'es';
+
+    const urgencyColor = daysUntilRenewal <= 7 ? '#ef4444' : daysUntilRenewal <= 30 ? '#f59e0b' : '#10b981';
+    const urgencyText = daysUntilRenewal <= 7
+        ? (isSpanish ? '¡Urgente!' : 'Urgent!')
+        : daysUntilRenewal <= 30
+            ? (isSpanish ? 'Próximamente' : 'Upcoming')
+            : (isSpanish ? 'Próxima renovación' : 'Upcoming Renewal');
+
+    const subject = isSpanish
+        ? `⏰ Alerta de renovación: ${contractName} (${daysUntilRenewal} días)`
+        : `⏰ Renewal Alert: ${contractName} (${daysUntilRenewal} days)`;
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #09090b; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #09090b; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #18181b 0%, #09090b 100%); border-radius: 16px; border: 1px solid #27272a; overflow: hidden;">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(90deg, ${urgencyColor} 0%, #3b82f6 100%); padding: 24px 32px;">
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td>
+                                        <h1 style="margin: 0; color: white; font-size: 24px; font-weight: 600;">
+                                            ⏰ ${urgencyText}
+                                        </h1>
+                                    </td>
+                                    <td align="right">
+                                        <span style="color: rgba(255,255,255,0.8); font-size: 14px; font-weight: 500;">
+                                            Helios
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 32px;">
+                            <p style="color: #a1a1aa; font-size: 16px; margin: 0 0 24px 0;">
+                                ${isSpanish ? 'Hola' : 'Hello'} <strong style="color: white;">${userName}</strong>,
+                            </p>
+                            
+                            <p style="color: #a1a1aa; font-size: 16px; margin: 0 0 24px 0;">
+                                ${isSpanish
+            ? 'Te recordamos que el siguiente contrato está próximo a renovarse:'
+            : 'This is a reminder that the following contract is due for renewal:'}
+                            </p>
+                            
+                            <!-- Contract Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #27272a; border-radius: 12px; border: 1px solid #3f3f46; margin-bottom: 24px;">
+                                <tr>
+                                    <td style="padding: 24px;">
+                                        <h2 style="margin: 0 0 16px 0; color: ${urgencyColor}; font-size: 20px; font-weight: 600;">
+                                            📄 ${contractName}
+                                        </h2>
+                                        
+                                        <table cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="padding: 8px 0;">
+                                                    <span style="color: #71717a; font-size: 14px;">📅 ${isSpanish ? 'Fecha de renovación:' : 'Renewal Date:'}</span>
+                                                    <span style="color: white; font-size: 14px; margin-left: 8px; font-weight: 500;">${renewalDate}</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0;">
+                                                    <span style="color: #71717a; font-size: 14px;">⏱️ ${isSpanish ? 'Días restantes:' : 'Days remaining:'}</span>
+                                                    <span style="color: ${urgencyColor}; font-size: 14px; margin-left: 8px; font-weight: 700;">${daysUntilRenewal}</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- CTA Button -->
+                            <table cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+                                <tr>
+                                    <td>
+                                        <a href="${appUrl}/contracts/${contractId}" 
+                                           style="display: inline-block; background: linear-gradient(90deg, #10b981 0%, #059669 100%); color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 14px;">
+                                            ${isSpanish ? 'Ver Contrato' : 'View Contract'}
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 24px 32px; border-top: 1px solid #27272a; text-align: center;">
+                            <p style="color: #52525b; font-size: 12px; margin: 0;">
+                                ${isSpanish
+            ? 'Este email fue enviado automáticamente por Helios Contract Intelligence'
+            : 'This email was sent automatically by Helios Contract Intelligence'}
+                            </p>
+                            <p style="color: #3f3f46; font-size: 12px; margin: 8px 0 0 0;">
+                                © ${new Date().getFullYear()} YSN Solutions
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+    `.trim();
+
+    return sendEmail({ to, subject, html });
+}
+

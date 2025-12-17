@@ -1,8 +1,8 @@
 {
     "crons": [
         {
-            "path": "/api/cron/cleanup",
-            "schedule": "0 0 * * *"
+            "path": "/api/cron/renewal-alerts",
+            "schedule": "0 8 * * *"
         }
     ]
 }
