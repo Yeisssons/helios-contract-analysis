@@ -94,3 +94,59 @@ USING (auth.uid() = user_id);
 -- For now, let's allow inserts if user matches, but typically we want server-side control.
 -- Actually, strict audit usually requires server-only write to prevent tampering.
 -- We will insert via supabaseAdmin (service role) so no insert policy needed for 'public' role.
+
+-- 5. User Subscriptions Table (for plan limits)
+CREATE TABLE IF NOT EXISTS public.user_subscriptions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
+    
+    -- Plan Info
+    plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'pro', 'enterprise')),
+    
+    -- Usage Tracking
+    documents_this_month INTEGER DEFAULT 0,
+    usage_reset_date DATE DEFAULT (date_trunc('month', CURRENT_DATE) + interval '1 month')::date,
+    
+    -- Subscription Details (for future Stripe integration)
+    stripe_customer_id TEXT,
+    stripe_subscription_id TEXT,
+    subscription_status TEXT DEFAULT 'active' CHECK (subscription_status IN ('active', 'canceled', 'past_due', 'trialing')),
+    
+    -- Timestamps
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- RLS for User Subscriptions
+ALTER TABLE public.user_subscriptions ENABLE ROW LEVEL SECURITY;
+
+-- Users can view their own subscription
+CREATE POLICY "Users can view own subscription"
+ON public.user_subscriptions FOR SELECT
+USING (auth.uid() = user_id);
+
+-- Users can update their own subscription (for usage tracking)
+CREATE POLICY "Users can update own subscription"
+ON public.user_subscriptions FOR UPDATE
+USING (auth.uid() = user_id);
+
+-- Index for fast lookups
+CREATE INDEX IF NOT EXISTS idx_user_subscriptions_user_id ON public.user_subscriptions(user_id);
+
+-- Function to auto-create subscription row for new users
+CREATE OR REPLACE FUNCTION public.handle_new_user_subscription()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.user_subscriptions (user_id, plan, documents_this_month)
+    VALUES (NEW.id, 'free', 0)
+    ON CONFLICT (user_id) DO NOTHING;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to auto-create subscription on user signup
+DROP TRIGGER IF EXISTS on_auth_user_created_subscription ON auth.users;
+CREATE TRIGGER on_auth_user_created_subscription
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user_subscription();
+

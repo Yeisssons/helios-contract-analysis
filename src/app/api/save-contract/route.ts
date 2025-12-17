@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 import { APP_CONFIG } from '@/config/constants';
+import { checkDocumentUploadAllowed, incrementDocumentUsage } from '@/lib/subscriptions';
 
 export async function POST(request: NextRequest) {
     try {
@@ -43,7 +44,24 @@ export async function POST(request: NextRequest) {
 
         const userId = user.id;
 
-        // 2. Parse and Validate Request Body
+        // 2. Check Document Upload Limit (Plan Gating)
+        const usageCheck = await checkDocumentUploadAllowed(userId, supabaseUserClient);
+
+        if (!usageCheck.allowed) {
+            return NextResponse.json(
+                {
+                    error: 'Document limit reached',
+                    message: usageCheck.message,
+                    plan: usageCheck.plan,
+                    documentsUsed: usageCheck.documentsUsed,
+                    documentsLimit: usageCheck.documentsLimit,
+                    upgradeRequired: true
+                },
+                { status: 403 }
+            );
+        }
+
+        // 3. Parse and Validate Request Body
         const body = await request.json();
         const {
             id,
@@ -123,7 +141,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // 5. Audit Log
+        // 5. Audit Log & Usage Tracking
         if (data) {
             const { logAudit } = await import('@/lib/audit');
             await logAudit({
@@ -133,9 +151,20 @@ export async function POST(request: NextRequest) {
                 resourceId: data.id,
                 details: { fileName: data.file_name, size: 0 } // Size not passed here but valuable if added later
             });
+
+            // Increment document usage count for subscription limits
+            await incrementDocumentUsage(userId, supabaseUserClient);
         }
 
-        return NextResponse.json({ success: true, contract: data }, { status: 201 });
+        return NextResponse.json({
+            success: true,
+            contract: data,
+            usage: {
+                documentsUsed: usageCheck.documentsUsed + 1,
+                documentsLimit: usageCheck.documentsLimit,
+                remainingDocuments: usageCheck.remainingDocuments - 1,
+            }
+        }, { status: 201 });
 
     } catch (error) {
         console.error('❌ Save contract handler error:', error);
