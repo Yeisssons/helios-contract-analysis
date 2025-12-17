@@ -24,9 +24,30 @@ export function useAntiScraping() {
             );
         }
 
-        // 2. Disable Right Click (Optional - often annoying, but requested "max difficulty")
-        // We will only do this on key elements if needed, but for now global listener is aggressive.
-        // Let's stick to just the console warning and CSS no-select for better UX.
+        // 2. Disable Right Click & Keyboard Shortcuts
+        const handleContextMenu = (e: MouseEvent) => {
+            e.preventDefault();
+            return false;
+        };
 
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Block Shortcuts: F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U, Ctrl+S, Ctrl+P
+            if (
+                e.key === 'F12' ||
+                (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
+                (e.ctrlKey && (e.key === 'u' || e.key === 's' || e.key === 'p'))
+            ) {
+                e.preventDefault();
+                return false;
+            }
+        };
+
+        document.addEventListener('contextmenu', handleContextMenu);
+        document.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.removeEventListener('contextmenu', handleContextMenu);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
     }, []);
 }
