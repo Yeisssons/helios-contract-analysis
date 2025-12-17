@@ -168,7 +168,19 @@ function HomeContent() {
   const fetchContracts = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/contracts');
+      const { supabase } = await import('@/lib/supabase');
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/contracts', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
       const result: ContractsListResponse = await response.json();
 
       if (result.success && result.data) {
