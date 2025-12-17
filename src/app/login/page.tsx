@@ -114,8 +114,8 @@ export default function LoginPage() {
                             <button
                                 onClick={() => { setMode('login'); setError(null); }}
                                 className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${mode === 'login'
-                                        ? 'bg-slate-700 text-white shadow-sm'
-                                        : 'text-slate-400 hover:text-slate-300'
+                                    ? 'bg-slate-700 text-white shadow-sm'
+                                    : 'text-slate-400 hover:text-slate-300'
                                     }`}
                             >
                                 Iniciar Sesión
@@ -123,8 +123,8 @@ export default function LoginPage() {
                             <button
                                 onClick={() => { setMode('register'); setError(null); }}
                                 className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${mode === 'register'
-                                        ? 'bg-slate-700 text-white shadow-sm'
-                                        : 'text-slate-400 hover:text-slate-300'
+                                    ? 'bg-slate-700 text-white shadow-sm'
+                                    : 'text-slate-400 hover:text-slate-300'
                                     }`}
                             >
                                 Registrarse
@@ -159,18 +159,18 @@ export default function LoginPage() {
 
                         {/* Form */}
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            {/* Email */}
+                            {/* Email / Username */}
                             <div>
                                 <label className="block text-xs font-medium text-slate-400 mb-1.5 ml-1">
-                                    Correo Electrónico
+                                    {mode === 'login' ? 'Correo o Usuario' : 'Correo Electrónico'}
                                 </label>
                                 <div className="relative group">
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-emerald-500 transition-colors" />
                                     <input
-                                        type="email"
+                                        type={mode === 'login' ? "text" : "email"}
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        placeholder="nombre@ejemplo.com"
+                                        placeholder={mode === 'login' ? "nombre@ejemplo.com o usuario" : "nombre@ejemplo.com"}
                                         className="w-full pl-10 pr-4 py-2.5 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all text-sm"
                                         required
                                     />
