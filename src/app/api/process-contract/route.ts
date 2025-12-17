@@ -63,11 +63,22 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
         // Validate file extension
         const fileName = file.name.toLowerCase();
         const fileExtension = fileName.split('.').pop() || '';
-        const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx'];
+        const ALLOWED_EXTENSIONS = ['pdf', 'docx'];
+
+        // Special handling for .doc files (old Word format)
+        if (fileExtension === 'doc') {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'Los archivos .doc (Word 97-2003) no están soportados. Por favor, convierta el documento a .docx o PDF antes de subirlo. Puede hacerlo abriendo el archivo en Word y guardándolo como "Documento de Word (.docx)".'
+                },
+                { status: 400 }
+            );
+        }
 
         if (!ALLOWED_EXTENSIONS.includes(fileExtension)) {
             return NextResponse.json(
-                { success: false, error: `Invalid file type. Allowed: ${ALLOWED_EXTENSIONS.join(', ')}` },
+                { success: false, error: `Tipo de archivo no válido. Formatos permitidos: PDF, DOCX` },
                 { status: 400 }
             );
         }
@@ -101,7 +112,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
                     }
                     // Extract text from PDF
                     extractedText = await parsePdf(buffer);
-                } else if (fileExtension === 'docx' || fileExtension === 'doc') {
+                } else if (fileExtension === 'docx') {
                     // Extract text from Word documents using mammoth
                     try {
                         const result = await mammoth.extractRawText({ buffer });
