@@ -418,7 +418,7 @@ export default function ContractsTable({ contracts, isLoading, onView, onDelete,
                                                             router.push(`/contracts/${contract.id}`);
                                                         }}
                                                         className="p-2 rounded-xl text-zinc-500 hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
-                                                        title={language === 'es' ? 'Ver PDF' : 'View PDF'}
+                                                        title={language === 'es' ? 'Ver Documento' : 'View Document'}
                                                     >
                                                         <File className="w-4 h-4" />
                                                     </button>

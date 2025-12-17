@@ -465,7 +465,7 @@ function AnalysisHistoryContent() {
                                                         className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
                                                     >
                                                         <ArrowUpRight className="w-4 h-4" />
-                                                        {language === 'es' ? 'Ver PDF' : 'View PDF'}
+                                                        {language === 'es' ? 'Ver Documento' : 'View Document'}
                                                     </button>
                                                     <button
                                                         onClick={() => setExpandedId(null)}
@@ -596,7 +596,7 @@ function AnalysisHistoryContent() {
                                                     <button
                                                         onClick={() => handleViewDocument(analysis.id)}
                                                         className="p-2 rounded-xl bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
-                                                        title={language === 'es' ? 'Ver PDF' : 'View PDF'}
+                                                        title={language === 'es' ? 'Ver Documento' : 'View Document'}
                                                     >
                                                         <ArrowUpRight className="w-4 h-4" />
                                                     </button>
