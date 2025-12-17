@@ -572,10 +572,10 @@ export default function FileUpload({ onUploadSuccess, customQuery }: FileUploadP
 
                         <div className="space-y-2 max-w-sm">
                             <p className="text-xl font-semibold text-white tracking-tight">
-                                {isDragActive ? t('dropHere') : t('dropzoneText')}
+                                {isDragActive ? t('dropHere') : (language === 'es' ? 'Analiza tus Contratos' : 'Analyze your Contracts')}
                             </p>
                             <p className="text-base text-zinc-400 font-light">
-                                {t('dropzoneOr')} <span className="text-primary font-medium hover:underline">{t('browseFiles')}</span>
+                                {language === 'es' ? 'Sube documentos legales para análisis instantáneo' : 'Upload legal documents for instant analysis'}
                             </p>
                         </div>
 
