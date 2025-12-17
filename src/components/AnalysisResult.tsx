@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/lib/supabase';
 import {
     Shield,
     AlertTriangle,
@@ -34,6 +35,7 @@ import {
 } from '@/utils/businessTools';
 import TagSelector from './TagSelector';
 import ReanalysisModal from './ReanalysisModal';
+import SuggestedTaskCard, { generateSuggestedTasks } from './SuggestedTaskCard';
 
 export interface ContractAnalysis {
     id?: string;
@@ -81,6 +83,44 @@ export default function AnalysisResult({ analysis, onDismiss, onRename, onUpdate
     const [isEditingName, setIsEditingName] = useState(false);
     const [editedName, setEditedName] = useState(analysis.fileName);
     const [showReanalysisModal, setShowReanalysisModal] = useState(false);
+
+    // Suggested Tasks state
+    const [teamMembers, setTeamMembers] = useState<Array<{ id: string; name: string; email: string; avatar: string }>>([]);
+    const [showSuggestedTasks, setShowSuggestedTasks] = useState(true);
+
+    // Fetch team members
+    useEffect(() => {
+        const fetchTeamMembers = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.access_token) return;
+
+                const res = await fetch('/api/team-members', {
+                    headers: { 'Authorization': `Bearer ${session.access_token}` }
+                });
+
+                if (res.ok) {
+                    const result = await res.json();
+                    if (result.success && result.data) {
+                        setTeamMembers(result.data);
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to fetch team members:', err);
+            }
+        };
+
+        fetchTeamMembers();
+    }, []);
+
+    // Generate suggested tasks based on analysis
+    const suggestedTasks = generateSuggestedTasks({
+        riskScore: analysis.riskScore,
+        abusiveClauses: analysis.abusiveClauses,
+        alerts: analysis.alerts,
+        renewalDate: analysis.renewalDate,
+        terminationClauseReference: analysis.terminationClauseReference
+    }, language as 'es' | 'en');
 
     const navigateToPdfWithSearch = (searchTerm: string) => {
         if (!analysis.id) return;
@@ -676,6 +716,43 @@ export default function AnalysisResult({ analysis, onDismiss, onRename, onUpdate
                                     <CheckCircle className="w-3.5 h-3.5" />
                                 </div>
                                 {actionFeedback}
+                            </div>
+                        )}
+
+                        {/* Suggested Tasks Section */}
+                        {suggestedTasks.length > 0 && (
+                            <div className="mt-6 pt-6 border-t border-white/5">
+                                <button
+                                    onClick={() => setShowSuggestedTasks(!showSuggestedTasks)}
+                                    className="w-full flex items-center justify-between mb-4 group"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400">
+                                            <Sparkles className="w-4 h-4" />
+                                        </div>
+                                        <h3 className="text-sm font-semibold text-white">
+                                            {language === 'es' ? 'Tareas Sugeridas' : 'Suggested Tasks'}
+                                        </h3>
+                                        <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-purple-500/20 text-purple-300">
+                                            {suggestedTasks.length}
+                                        </span>
+                                    </div>
+                                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showSuggestedTasks ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {showSuggestedTasks && (
+                                    <div className="space-y-3 animate-in slide-in-from-top-2">
+                                        {suggestedTasks.map(task => (
+                                            <SuggestedTaskCard
+                                                key={task.id}
+                                                task={task}
+                                                teamMembers={teamMembers}
+                                                language={language as 'es' | 'en'}
+                                                contractName={analysis.fileName}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
