@@ -5,6 +5,7 @@ import { extractContractDataWithAI } from '@/lib/ai-mock';
 import { ProcessContractResponse } from '@/types/contract';
 import { APP_CONFIG, getAdaptiveModel } from '@/config/constants';
 import { ContractMetadataSchema } from '@/lib/schemas';
+import mammoth from 'mammoth';
 
 // Flag to use real AI or mock (set via environment variable)
 const USE_REAL_AI = process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.length > 0;
@@ -59,67 +60,71 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
             );
         }
 
-        // Validate file type
-        const fileExtension = file.name.toLowerCase().split('.').pop();
-        const isValidExtension = APP_CONFIG.UPLOAD.ALLOWED_EXTENSIONS.includes(fileExtension || '');
-        const isValidMime = Object.keys(APP_CONFIG.UPLOAD.ALLOWED_FILE_TYPES).includes(file.type);
+        // Validate file extension
+        const fileName = file.name.toLowerCase();
+        const fileExtension = fileName.split('.').pop() || '';
+        const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx'];
 
-        if (!isValidMime && !isValidExtension) {
+        if (!ALLOWED_EXTENSIONS.includes(fileExtension)) {
             return NextResponse.json(
-                { success: false, error: 'Invalid file type. Please upload a PDF or DOCX file.' },
+                { success: false, error: `Invalid file type. Allowed: ${ALLOWED_EXTENSIONS.join(', ')}` },
                 { status: 400 }
             );
         }
 
-        // Validate file size (200MB max)
-        if (file.size > APP_CONFIG.UPLOAD.MAX_FILE_SIZE) {
-            const maxSizeMB = APP_CONFIG.UPLOAD.MAX_FILE_SIZE / (1024 * 1024);
+        // Validate file size
+        const MAX_FILE_SIZE = APP_CONFIG.UPLOAD.MAX_FILE_SIZE; // Use APP_CONFIG.UPLOAD.MAX_FILE_SIZE as it's already defined
+        if (file.size > MAX_FILE_SIZE) {
+            const maxSizeMB = MAX_FILE_SIZE / (1024 * 1024);
             return NextResponse.json(
-                { success: false, error: `File too large. Maximum size is ${maxSizeMB}MB.` },
+                { success: false, error: `File too large. Maximum size: ${maxSizeMB}MB` },
                 { status: 400 }
             );
         }
 
-        // 2. Adaptive Model Selection based on file size
-        const adaptiveModelName = getAdaptiveModel(file.size);
-
+        let extractedText = '';
         let extractedData;
-        let extractedText = ''; // Store extracted text for database persistence
+
+        // Get adaptive model name for Gemini
+        const adaptiveModelName = getAdaptiveModel(file.size); // Keep original logic for adaptive model based on file size
 
         // 3. Processing Logic
         if (USE_REAL_AI) {
             try {
-                // Step 1: Convert file to Buffer
-                const arrayBuffer = await file.arrayBuffer();
-                const buffer = Buffer.from(arrayBuffer);
+                const buffer = Buffer.from(await file.arrayBuffer());
 
-                // SECURITY: Magic Number Validation
-                // Check if it's really a PDF by reading the first 4 bytes
+                // Security check for PDF files
                 if (fileExtension === 'pdf') {
-                    const header = buffer.subarray(0, 5).toString('ascii'); // %PDF-
+                    const header = buffer.slice(0, 5).toString('ascii');
                     if (!header.startsWith('%PDF-')) {
                         throw new Error('Security Error: File has .pdf extension but invalid PDF signature. Processing aborted.');
                     }
-                }
-
-                // Step 2: Extract text from PDF
-                if (fileExtension === 'pdf') {
+                    // Extract text from PDF
                     extractedText = await parsePdf(buffer);
+                } else if (fileExtension === 'docx' || fileExtension === 'doc') {
+                    // Extract text from Word documents using mammoth
+                    try {
+                        const result = await mammoth.extractRawText({ buffer });
+                        extractedText = result.value;
 
-                    // Step 3: Analyze with Gemini AI (using adaptive model)
-                    extractedData = await analyzeContractText(
-                        extractedText,
-                        customQuery || undefined,
-                        dataPoints,
-                        adaptiveModelName // Pass the adaptive model name
-                    );
-                } else if (fileExtension === 'docx') {
-                    // Placeholder for DOCX handling if you implement it later
-                    // For now, fail safe
-                    throw new Error('DOCX processing not yet enabled in this environment');
+                        if (!extractedText || extractedText.trim().length < 50) {
+                            throw new Error('Could not extract sufficient text from Word document');
+                        }
+                    } catch (docError) {
+                        console.error('Word document parsing error:', docError);
+                        throw new Error(`Failed to parse Word document: ${docError instanceof Error ? docError.message : 'Unknown error'}`);
+                    }
                 } else {
                     throw new Error(`Unsupported file type: ${fileExtension}`);
                 }
+
+                // Analyze with Gemini AI
+                extractedData = await analyzeContractText(
+                    extractedText,
+                    customQuery || undefined,
+                    dataPoints,
+                    adaptiveModelName
+                );
 
             } catch (aiError) {
                 console.error('AI Processing Error:', aiError);

@@ -20,6 +20,7 @@
     "framer-motion": "^12.23.25",
     "lru-cache": "^10.4.3",
     "lucide-react": "^0.556.0",
+    "mammoth": "^1.11.0",
     "next": "^14.2.33",
     "pdf-parse": "^1.1.1",
     "react": "^18.3.1",
