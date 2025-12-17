@@ -1,30 +1,24 @@
-import type { Metadata } from "next";
-import Footer from "@/components/Footer";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { Toaster } from 'sonner';
+import { AuthProvider } from '@/contexts/AuthContext';
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import { Toaster } from "@/components/ui/sonner";
-import PrivacyModal from "@/components/PrivacyModal";
+import Footer from '@/components/Footer';
+import PrivacyModal from '@/components/PrivacyModal';
 
-const inter = Inter({
-  variable: "--font-sans",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-mono",
-  subsets: ["latin"],
-  display: "swap",
-});
+const inter = Inter({ subsets: ["latin"], variable: '--font-inter' });
+const outfit = Outfit({ subsets: ["latin"], variable: '--font-outfit' });
 
 export const metadata: Metadata = {
-  title: "Helios | Intelligent Contract Analysis",
-  description: "Advanced AI-powered contract analysis and management system for enterprise legal teams. Developed by YSN Solutions.",
-  keywords: ["contract management", "AI", "document analysis", "contract intelligence", "YSN Solutions", "Helios"],
-  authors: [{ name: "YSN Solutions" }],
-  creator: "YSN Solutions",
+  title: "Helios | Contract Intelligence",
+  description: "AI-powered contract analysis platform.",
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -34,21 +28,25 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
-      <body
-        className={`${inter.variable} ${jetbrainsMono.variable} antialiased min-h-screen bg-[#09090b]`}
-      >
+      <body className={`${inter.variable} ${outfit.variable} font-sans bg-[#09090b] text-zinc-100 antialiased selection:bg-emerald-500/30 selection:text-emerald-300`}>
         <AuthProvider>
           <LanguageProvider>
             <div className="flex flex-col min-h-screen">
               {children}
-              <Footer />
             </div>
             <PrivacyModal />
-            <Toaster />
+            <Footer />
+            <Toaster
+              position="top-center"
+              theme="dark"
+              toastOptions={{
+                style: {
+                  background: '#18181b',
+                  border: '1px solid #27272a',
+                  color: '#fff',
+                }
+              }}
+            />
           </LanguageProvider>
         </AuthProvider>
       </body>

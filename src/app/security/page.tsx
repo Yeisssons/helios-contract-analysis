@@ -1,11 +1,26 @@
 'use client';
 
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Shield, Lock, Database, Server, FileText, CheckCircle, ExternalLink, Mail } from 'lucide-react';
+import { Shield, Lock, Database, Server, FileText, CheckCircle, ExternalLink, Mail, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SecurityPage() {
     const { language } = useLanguage();
+
+    const sections = {
+        architecture: {
+            title: language === 'es' ? 'Arquitectura Segura' : 'Secure Architecture',
+            desc: language === 'es'
+                ? 'Helios está construido sobre una arquitectura "Privacy-First" que garantiza el aislamiento total de tus datos. Utilizamos Supabase con Row Level Security (RLS) para asegurar que cada documento solo sea accesible por su propietario legítimo.'
+                : 'Helios is built on a "Privacy-First" architecture that ensures total data isolation. We use Supabase with Row Level Security (RLS) to ensure that each document is only accessible by its legitimate owner.'
+        },
+        retention: {
+            title: language === 'es' ? 'Retención y Control de Datos' : 'Data Retention & Control',
+            desc: language === 'es'
+                ? 'Tú tienes el control absoluto. Tus documentos se almacenan de forma segura mientras los necesites y puedes eliminarlos permanentemente en cualquier momento. Al eliminar un archivo, se borra de nuestros servidores y de la base de datos de forma irreversible.'
+                : 'You have absolute control. Your documents are stored securely as long as you need them and you can permanently delete them at any time. When you delete a file, it is irreversibly erased from our servers and database.'
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#09090b] text-zinc-100">
@@ -87,13 +102,38 @@ export default function SecurityPage() {
                     </div>
                 </div>
 
-                {/* Technical Architecture */}
-                <div className="grid md:grid-cols-2 gap-12 items-center">
+                {/* Technical Architecture Detail */}
+                <div className="grid md:grid-cols-2 gap-12 items-start">
+                    <div className="space-y-8">
+                        {/* Architecture Block */}
+                        <div>
+                            <div className="flex items-center gap-3 mb-4">
+                                <Database className="w-6 h-6 text-emerald-400" />
+                                <h2 className="text-2xl font-bold text-white">{sections.architecture.title}</h2>
+                            </div>
+                            <p className="text-zinc-400 leading-relaxed">
+                                {sections.architecture.desc}
+                            </p>
+                        </div>
+
+                        {/* Retention Block */}
+                        <div>
+                            <div className="flex items-center gap-3 mb-4">
+                                <Trash2 className="w-6 h-6 text-red-400" />
+                                <h2 className="text-2xl font-bold text-white">{sections.retention.title}</h2>
+                            </div>
+                            <p className="text-zinc-400 leading-relaxed">
+                                {sections.retention.desc}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Certification List */}
                     <div>
                         <h2 id="certified" className="text-3xl font-bold text-white mb-6">
                             {language === 'es' ? 'Infraestructura Certificada' : 'Certified Infrastructure'}
                         </h2>
-                        <ul className="space-y-4">
+                        <ul className="space-y-4 mb-8">
                             {[
                                 language === 'es' ? 'Google Cloud Platform (ISO 27001, SOC 2)' : 'Google Cloud Platform (ISO 27001, SOC 2)',
                                 language === 'es' ? 'Supabase Enterprise (GDPR Compliant)' : 'Supabase Enterprise (GDPR Compliant)',
@@ -106,29 +146,22 @@ export default function SecurityPage() {
                                 </li>
                             ))}
                         </ul>
-                    </div>
-                    <div className="p-8 rounded-3xl bg-slate-900 border border-slate-800">
-                        <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-6">
-                            Data Processing Agreement
-                        </h3>
-                        <div className="space-y-4 text-sm text-slate-300">
-                            <p>
-                                {language === 'es'
-                                    ? 'Actuamos como "Data Processors" (Encargados) bajo el RGPD. Tú eres el "Data Controller" (Responsable).'
-                                    : 'We act as "Data Processors" under GDPR. You are the "Data Controller".'}
-                            </p>
-                            <p>
-                                {language === 'es'
-                                    ? 'Tienes derecho a: Acceso, Rectificación, y Borrado permanente de tus datos en cualquier momento desde tu panel de control.'
-                                    : 'You have the right to: Access, Rectification, and Permanent Deletion of your data at any time from your dashboard.'}
-                            </p>
-                            <div className="pt-4">
-                                <Link
-                                    href="/"
-                                    className="text-emerald-400 hover:text-emerald-300 font-medium inline-flex items-center gap-2"
-                                >
-                                    {language === 'es' ? 'Volver al Dashboard' : 'Return to Dashboard'} <ExternalLink className="w-4 h-4" />
-                                </Link>
+
+                        <div className="p-8 rounded-3xl bg-slate-900 border border-slate-800">
+                            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-6">
+                                Data Processing Agreement
+                            </h3>
+                            <div className="space-y-4 text-sm text-slate-300">
+                                <p>
+                                    {language === 'es'
+                                        ? 'Actuamos como "Data Processors" (Encargados) bajo el RGPD. Tú eres el "Data Controller" (Responsable).'
+                                        : 'We act as "Data Processors" under GDPR. You are the "Data Controller".'}
+                                </p>
+                                <p>
+                                    {language === 'es'
+                                        ? 'Tienes derecho a: Acceso, Rectificación, y Borrado permanente de tus datos en cualquier momento desde tu panel de control.'
+                                        : 'You have the right to: Access, Rectification, and Permanent Deletion of your data at any time from your dashboard.'}
+                                </p>
                             </div>
                         </div>
                     </div>
