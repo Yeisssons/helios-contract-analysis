@@ -73,7 +73,7 @@ export default function PoliciesPage() {
                             <p>
                                 <strong>Titular:</strong> YSN Solutions<br />
                                 <strong>Contacto:</strong> solutionsysn@gmail.com<br />
-                                <strong>Domicilio:</strong> Madrid, España
+                                <strong>Domicilio:</strong> Vila-real, España
                             </p>
                             <p>
                                 El contenido de esta plataforma está protegido por derechos de propiedad intelectual. Queda prohibida su reproducción sin autorización expresa.

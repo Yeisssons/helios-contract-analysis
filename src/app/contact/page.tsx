@@ -47,7 +47,7 @@ export default function ContactPage() {
                         <h3 className="text-xl font-semibold mb-2">Oficina Central</h3>
                         <p className="text-zinc-400 mb-6">YSN Solutions HQ</p>
                         <div className="text-zinc-300">
-                            <p>Madrid, España</p>
+                            <p>Vila-real, España</p>
                             <p className="text-sm text-zinc-500 mt-2">Atención presencial solo con cita previa</p>
                         </div>
                     </div>

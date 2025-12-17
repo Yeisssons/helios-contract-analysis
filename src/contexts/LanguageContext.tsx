@@ -108,8 +108,8 @@ const translations = {
         autoExtraction: 'Extracción Automática',
 
         // Upload Section
-        uploadTitle: 'Subir Contrato',
-        uploadDescription: 'Sube un archivo PDF o DOCX para extraer automáticamente los datos de renovación',
+        uploadTitle: 'Análisis Documental',
+        uploadDescription: 'Procesa cualquier tipo de documento (legal, financiero, técnico) al instante',
         dropzoneText: 'Arrastra y suelta tu contrato aquí',
         dropzoneOr: 'o',
         browseFiles: 'buscar archivos',
