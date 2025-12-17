@@ -20,9 +20,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Helios | Intelligent Contract Analysis by YSN Solutions",
+  title: "YSN Legal Platform | Contract Intelligence",
   description: "Advanced AI-powered contract analysis and management system for enterprise legal teams. Powered by YSN Solutions.",
-  keywords: ["contract management", "AI", "document analysis", "contract intelligence", "YSN Solutions", "Helios"],
+  keywords: ["contract management", "AI", "document analysis", "contract intelligence", "YSN Solutions", "Legal Tech"],
   authors: [{ name: "YSN Solutions" }],
   creator: "YSN Solutions",
 };
