@@ -15,8 +15,8 @@ const translations = {
         autoExtraction: 'Auto Extraction',
 
         // Upload Section
-        uploadTitle: 'Upload Contract',
-        uploadDescription: 'Upload a PDF or DOCX contract file to automatically extract renewal data',
+        uploadTitle: 'From Data to Decisions',
+        uploadDescription: 'Turn your files and data into clear insights to decide better, faster',
         dropzoneText: 'Drag & drop your contract here',
         dropzoneOr: 'or',
         browseFiles: 'browse files',
