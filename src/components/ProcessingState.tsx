@@ -176,9 +176,9 @@ export default function ProcessingState() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1 }}
             >
-                <p className="mt-2 text-sm text-slate-400">YSN AI is analyzing your contract...</p>
+                <p className="mt-2 text-sm text-slate-400">Helios AI is analyzing your contract...</p>
                 <p className="text-xs text-zinc-500 font-medium tracking-widest uppercase">
-                    YSN AI Engine
+                    Helios AI Engine
                 </p>
             </motion.div>
         </div>

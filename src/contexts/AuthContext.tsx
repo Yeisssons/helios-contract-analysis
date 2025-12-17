@@ -94,9 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 email,
                 password,
                 options: {
-                    emailRedirectTo: process.env.NEXT_PUBLIC_SITE_URL
-                        ? `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
-                        : `${window.location.origin}/auth/callback`,
+                    emailRedirectTo: `${window.location.origin}/auth/callback`,
                 }
             });
             return { error };
@@ -110,9 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: process.env.NEXT_PUBLIC_SITE_URL
-                        ? `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
-                        : `${window.location.origin}/auth/callback`,
+                    redirectTo: `${window.location.origin}/auth/callback`,
                     queryParams: {
                         access_type: 'offline',
                         prompt: 'consent',

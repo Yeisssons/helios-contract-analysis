@@ -31,8 +31,8 @@ export default function SecurityPage() {
                     </h1>
                     <p className="text-xl text-zinc-400 max-w-2xl leading-relaxed">
                         {language === 'es'
-                            ? 'Entendemos la sensibilidad de tus documentos legales. Por eso hemos construido YSN Legal Platform con una arquitectura "Privacy-First".'
-                            : 'We understand the sensitivity of your legal documents. That\'s why we built YSN Legal Platform with a "Privacy-First" architecture.'}
+                            ? 'Entendemos la sensibilidad de tus documentos legales. Por eso hemos construido Helios con una arquitectura "Privacy-First".'
+                            : 'We understand the sensitivity of your legal documents. That\'s why we built Helios with a "Privacy-First" architecture.'}
                     </p>
                 </div>
             </div>

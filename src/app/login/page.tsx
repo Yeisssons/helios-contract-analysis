@@ -101,11 +101,11 @@ export default function LoginPage() {
                         {/* Logo */}
                         <div className="inline-flex items-center gap-3 mb-6">
                             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-500 flex items-center justify-center shadow-lg shadow-emerald-500/25">
-                                <span className="text-white font-bold text-xl">Y</span>
+                                <span className="text-white font-bold text-xl">H</span>
                             </div>
                             <div className="text-left">
-                                <h1 className="text-xl font-bold text-white leading-tight">YSN Legal</h1>
-                                <p className="text-[10px] text-emerald-400 font-medium tracking-wider uppercase">Platform</p>
+                                <h1 className="text-xl font-bold text-white leading-tight">Helios</h1>
+                                <p className="text-[10px] text-emerald-400 font-medium tracking-wider uppercase">Contract AI</p>
                             </div>
                         </div>
 

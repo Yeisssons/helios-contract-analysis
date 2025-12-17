@@ -40,7 +40,7 @@ export default function Header() {
                         </div>
                         <div className="flex flex-col hidden sm:flex">
                             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-zinc-400 tracking-tight">
-                                YSN Legal Platform
+                                Helios
                             </span>
                             <span className="text-[10px] uppercase tracking-widest text-zinc-600 font-medium leading-none opacity-50">
                                 by YSN Solutions
