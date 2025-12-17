@@ -549,7 +549,8 @@ function HomeContent() {
             <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-sm text-zinc-500">
               <p className="font-light">{t('copyright')}</p>
               <div className="flex items-center gap-6">
-                <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+                <a href="/security" className="hover:text-white transition-colors">{language === 'es' ? 'Centro de Seguridad' : 'Security Center'}</a>
+                <a href="/security" className="hover:text-white transition-colors">Privacy Policy</a>
                 <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
                 <p className="flex items-center gap-1.5 pl-6 border-l border-white/10">
                   {t('poweredBy')}

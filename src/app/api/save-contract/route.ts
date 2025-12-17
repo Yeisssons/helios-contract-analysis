@@ -123,6 +123,18 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // 5. Audit Log
+        if (data) {
+            const { logAudit } = await import('@/lib/audit');
+            await logAudit({
+                userId: userId,
+                action: 'UPLOAD',
+                resource: 'contract',
+                resourceId: data.id,
+                details: { fileName: data.file_name, size: 0 } // Size not passed here but valuable if added later
+            });
+        }
+
         return NextResponse.json({ success: true, contract: data }, { status: 201 });
 
     } catch (error) {

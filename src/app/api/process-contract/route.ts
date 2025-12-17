@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parsePdf } from '@/lib/pdfParser';
+import { detectFileType } from '@/lib/fileValidation';
 import { analyzeContractText } from '@/lib/gemini';
 import { extractContractDataWithAI } from '@/lib/ai-mock';
 import { ProcessContractResponse } from '@/types/contract';
@@ -104,15 +105,20 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
             try {
                 const buffer = Buffer.from(await file.arrayBuffer());
 
-                // Security check for PDF files
+                // Security check: Validate Magic Numbers
+                const detectedType = detectFileType(buffer);
+
                 if (fileExtension === 'pdf') {
-                    const header = buffer.slice(0, 5).toString('ascii');
-                    if (!header.startsWith('%PDF-')) {
-                        throw new Error('Security Error: File has .pdf extension but invalid PDF signature. Processing aborted.');
+                    if (detectedType !== 'pdf') {
+                        throw new Error('Security Error: File extension is .pdf but binary signature does not match. Potential masked malware.');
                     }
                     // Extract text from PDF
                     extractedText = await parsePdf(buffer);
                 } else if (fileExtension === 'docx') {
+                    if (detectedType !== 'docx') {
+                        // Note: plain DOCX is a zip, so it matches PK.. signature
+                        throw new Error('Security Error: Invalid DOCX file signature.');
+                    }
                     // Extract text from Word documents using mammoth
                     try {
                         const result = await mammoth.extractRawText({ buffer });
@@ -158,6 +164,16 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
             sector: currentSector,
             createdAt: new Date().toISOString(),
         };
+
+        // Audit Log
+        if (USE_REAL_AI) {
+            const { logAudit } = await import('@/lib/audit');
+            // We don't have user_id here directly unless we verify session token OR pass it from client.
+            // Ideally we should verify session in this route too.
+            // For now, let's assume we can get it from header or subsequent save step will log it.
+            // Actually, this route returns data to client, which then calls /save-contract.
+            // Let's log in /save-contract where we HAVE the session validation!
+        }
 
         return NextResponse.json({
             success: true,

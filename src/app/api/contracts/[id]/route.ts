@@ -162,6 +162,17 @@ export async function DELETE(
         }
 
         console.log('✅ Contract deleted successfully');
+
+        // Audit Log
+        const { logAudit } = await import('@/lib/audit');
+        await logAudit({
+            userId: user.id,
+            action: 'DELETE',
+            resource: 'contract',
+            resourceId: id,
+            details: { fileName: contract?.file_path || 'unknown' }
+        });
+
         return NextResponse.json({ success: true, message: 'Contract deleted successfully' }, { status: 200 });
     } catch (error) {
         console.error('❌ Delete contract error:', error);

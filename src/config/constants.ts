@@ -22,7 +22,7 @@ export const APP_CONFIG = {
         // High intelligence model for smaller files (better quality)
         MODEL_STANDARD: process.env.GEMINI_MODEL_STANDARD || 'gemini-2.5-flash',
         // High speed model for larger files (prevents timeouts)
-        MODEL_FAST: process.env.GEMINI_MODEL_FAST || 'gemini-1.5-flash-8b',
+        MODEL_FAST: process.env.GEMINI_MODEL_FAST || 'gemini-2.5-flash-lite',
     },
     DEFAULTS: {
         SECTOR: 'legal',

@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { Toaster } from "@/components/ui/sonner";
+import PrivacyModal from "@/components/PrivacyModal";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -39,8 +41,11 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased min-h-screen bg-[#09090b]`}
       >
         <AuthProvider>
-          {children}
-          <Toaster />
+          <LanguageProvider>
+            {children}
+            <PrivacyModal />
+            <Toaster />
+          </LanguageProvider>
         </AuthProvider>
       </body>
     </html>

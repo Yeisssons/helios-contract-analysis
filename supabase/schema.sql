@@ -69,4 +69,28 @@ USING (auth.uid() = user_id);
 -- Policy: Users can view their own files (owner column usually matches user_id)
 -- CREATE POLICY "Users can view own files"
 -- ON storage.objects FOR SELECT
--- USING (bucket_id = 'documents' AND owner = auth.uid());
+-- 4. Audit Logging
+CREATE TABLE IF NOT EXISTS public.audit_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    action TEXT NOT NULL,         -- e.g., 'UPLOAD', 'VIEW', 'DELETE', 'EXPORT'
+    resource TEXT NOT NULL,       -- e.g., 'contract', 'user_profile'
+    resource_id TEXT,             -- ID of the affected resource
+    details JSONB DEFAULT '{}'::jsonb,
+    ip_address TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- RLS for Audit Logs
+ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+
+-- Users can only view their own logs
+CREATE POLICY "Users can view own audit logs"
+ON public.audit_logs FOR SELECT
+USING (auth.uid() = user_id);
+
+-- Only service role can insert (handled via admin client in API routes)
+-- or authenticated users if we want client-side logging (rare)
+-- For now, let's allow inserts if user matches, but typically we want server-side control.
+-- Actually, strict audit usually requires server-only write to prevent tampering.
+-- We will insert via supabaseAdmin (service role) so no insert policy needed for 'public' role.
