@@ -18,6 +18,7 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ContractData, SortField, SortDirection } from '@/types/contract';
 import { ContractAnalysis } from './AnalysisResult';
+import { exportSingleContractAnalysis } from '@/utils/excelExport';
 
 interface ContractsTableProps {
     contracts: ContractData[];
@@ -437,12 +438,18 @@ export default function ContractsTable({ contracts, isLoading, onView, onDelete,
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            onDownload && onDownload(contract.fileName, contract.filePath);
+                                                            exportSingleContractAnalysis(contract, language);
                                                         }}
                                                         className="p-2 rounded-xl text-zinc-500 hover:text-white hover:bg-white/10 transition-colors"
-                                                        title={language === 'es' ? 'Descargar' : 'Download'}
+                                                        title={language === 'es' ? 'Descargar análisis' : 'Download analysis'}
                                                     >
-                                                        <Download className="w-4 h-4" />
+                                                        <span className="relative">
+                                                            <Download className="w-4 h-4" />
+                                                            <span className="absolute -bottom-1 -right-1 flex h-2 w-2">
+                                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                                            </span>
+                                                        </span>
                                                     </button>
 
                                                     {onDelete && (
