@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import FileUpload from '@/components/FileUpload';
 import ContractsTable from '@/components/ContractsTable';
@@ -20,6 +21,7 @@ const HISTORY_STORAGE_KEY = 'contratoalert_history';
 
 function HomeContent() {
   const { t, language } = useLanguage();
+  const { user } = useAuth();
   const [contracts, setContracts] = useState<ContractData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [latestAnalysis, setLatestAnalysis] = useState<ContractAnalysis | null>(null);
@@ -180,8 +182,12 @@ function HomeContent() {
   }, []);
 
   useEffect(() => {
-    fetchContracts();
-  }, [fetchContracts]);
+    if (user) {
+      fetchContracts();
+    } else {
+      setIsLoading(false);
+    }
+  }, [fetchContracts, user]);
 
   // Handle successful upload
   // We accept the processed ContractData AND the original File

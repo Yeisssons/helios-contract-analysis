@@ -42,7 +42,7 @@ export default function SecurityPage() {
                 {/* Core Pillars */}
                 <div className="grid md:grid-cols-3 gap-8">
                     {/* Private AI */}
-                    <div className="p-8 rounded-2xl bg-zinc-900 border border-white/5 hover:border-emerald-500/30 transition-colors group">
+                    <div id="private-ai" className="p-8 rounded-2xl bg-zinc-900 border border-white/5 hover:border-emerald-500/30 transition-colors group">
                         <div className="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                             <Lock className="w-6 h-6" />
                         </div>
@@ -57,7 +57,7 @@ export default function SecurityPage() {
                     </div>
 
                     {/* Encryption */}
-                    <div className="p-8 rounded-2xl bg-zinc-900 border border-white/5 hover:border-emerald-500/30 transition-colors group">
+                    <div id="encryption" className="p-8 rounded-2xl bg-zinc-900 border border-white/5 hover:border-emerald-500/30 transition-colors group">
                         <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                             <Shield className="w-6 h-6" />
                         </div>
@@ -72,7 +72,7 @@ export default function SecurityPage() {
                     </div>
 
                     {/* Isolation */}
-                    <div className="p-8 rounded-2xl bg-zinc-900 border border-white/5 hover:border-emerald-500/30 transition-colors group">
+                    <div id="isolation" className="p-8 rounded-2xl bg-zinc-900 border border-white/5 hover:border-emerald-500/30 transition-colors group">
                         <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                             <Server className="w-6 h-6" />
                         </div>
@@ -90,7 +90,7 @@ export default function SecurityPage() {
                 {/* Technical Architecture */}
                 <div className="grid md:grid-cols-2 gap-12 items-center">
                     <div>
-                        <h2 className="text-3xl font-bold text-white mb-6">
+                        <h2 id="certified" className="text-3xl font-bold text-white mb-6">
                             {language === 'es' ? 'Infraestructura Certificada' : 'Certified Infrastructure'}
                         </h2>
                         <ul className="space-y-4">

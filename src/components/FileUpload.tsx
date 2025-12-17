@@ -4,6 +4,7 @@ import { useCallback, useState, useEffect, useMemo } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, Check, AlertCircle, X, Shield, Settings, ChevronDown, Building2, Star, User, Plus, Save, Edit2, Trash2, Loader2, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ContractData, ProcessContractResponse } from '@/types/contract';
@@ -612,41 +613,41 @@ export default function FileUpload({ onUploadSuccess, customQuery }: FileUploadP
 
             {/* Trust Badges */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-4">
-                <div className="flex flex-col items-center text-center gap-2 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group cursor-help" title={language === 'es' ? 'Tus datos viajan y se almacenan seguros con encriptación de grado militar' : 'Your data travels and is stored securely with military-grade encryption'}>
+                <Link href="/security#encryption" className="flex flex-col items-center text-center gap-2 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group cursor-help" title={language === 'es' ? 'Tus datos viajan y se almacenan seguros con encriptación de grado militar' : 'Your data travels and is stored securely with military-grade encryption'}>
                     <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:text-emerald-300 group-hover:bg-emerald-500/20 transition-colors">
                         <Lock className="w-5 h-5" />
                     </div>
                     <span className="text-[10px] sm:text-xs font-medium text-slate-400 group-hover:text-slate-300">
                         {language === 'es' ? 'Encriptación AES-256' : 'AES-256 Encryption'}
                     </span>
-                </div>
+                </Link>
 
-                <div className="flex flex-col items-center text-center gap-2 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group cursor-help" title={language === 'es' ? 'No utilizamos tus documentos para entrenar nuestros modelos de IA' : 'We do not use your documents to train our AI models'}>
+                <Link href="/security#private-ai" className="flex flex-col items-center text-center gap-2 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group cursor-help" title={language === 'es' ? 'No utilizamos tus documentos para entrenar nuestros modelos de IA' : 'We do not use your documents to train our AI models'}>
                     <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 group-hover:text-blue-300 group-hover:bg-blue-500/20 transition-colors">
                         <Shield className="w-5 h-5" />
                     </div>
                     <span className="text-[10px] sm:text-xs font-medium text-slate-400 group-hover:text-slate-300">
                         {language === 'es' ? 'Procesamiento Privado' : 'Private Processing'}
                     </span>
-                </div>
+                </Link>
 
-                <div className="flex flex-col items-center text-center gap-2 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group cursor-help" title={language === 'es' ? 'Cumplimos con la normativa europea de protección de datos' : 'We comply with European data protection regulations'}>
+                <Link href="/security#certified" className="flex flex-col items-center text-center gap-2 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group cursor-help" title={language === 'es' ? 'Cumplimos con la normativa europea de protección de datos' : 'We comply with European data protection regulations'}>
                     <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400 group-hover:text-purple-300 group-hover:bg-purple-500/20 transition-colors">
                         <Building2 className="w-5 h-5" />
                     </div>
                     <span className="text-[10px] sm:text-xs font-medium text-slate-400 group-hover:text-slate-300">
                         {language === 'es' ? 'Cumplimiento RGPD' : 'GDPR Compliant'}
                     </span>
-                </div>
+                </Link>
 
-                <div className="flex flex-col items-center text-center gap-2 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group cursor-help" title={language === 'es' ? 'Infraestructura certificada ISO 27001 (Google & Supabase)' : 'ISO 27001 Certified Infrastructure (Google & Supabase)'}>
+                <Link href="/security#certified" className="flex flex-col items-center text-center gap-2 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group cursor-help" title={language === 'es' ? 'Infraestructura certificada ISO 27001 (Google & Supabase)' : 'ISO 27001 Certified Infrastructure (Google & Supabase)'}>
                     <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400 group-hover:text-amber-300 group-hover:bg-amber-500/20 transition-colors">
                         <Check className="w-5 h-5" />
                     </div>
                     <span className="text-[10px] sm:text-xs font-medium text-slate-400 group-hover:text-slate-300">
                         {language === 'es' ? 'ISO 27001' : 'ISO 27001'}
                     </span>
-                </div>
+                </Link>
             </div>
 
             {/* Template Creation Modal */}

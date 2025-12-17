@@ -58,9 +58,10 @@ export function useAdmin() {
                     .from('admin_users')
                     .select('id')
                     .eq('user_id', user.id)
-                    .single();
+                    .eq('user_id', user.id)
+                    .maybeSingle();
 
-                if (dbError && dbError.code !== 'PGRST116') {
+                if (dbError) {
                     console.error('Error checking admin status:', dbError);
                 }
 
