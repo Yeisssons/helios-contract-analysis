@@ -4,12 +4,19 @@ import { useEffect } from 'react';
 
 /**
  * Anti-scraping & Inspection deterrents
- * - Disables right-click
+ * - Disables right-click for non-admin users
  * - Prints console warnings
+ * @param isAdmin - If true, bypass all restrictions
  */
-export function useAntiScraping() {
+export function useAntiScraping(isAdmin: boolean = false) {
     useEffect(() => {
-        // 1. Console Warning for DevTools
+        // Skip ALL restrictions for admins
+        if (isAdmin) {
+            console.log('%c🔓 Admin Mode: Developer tools enabled', 'color: #10b981; font-weight: bold;');
+            return;
+        }
+
+        // 1. Console Warning for DevTools (non-admin, production only)
         if (process.env.NODE_ENV === 'production') {
             const warningTitle = 'Stop!';
             const warningDesc = 'This is a browser feature intended for developers. If someone told you to copy-paste something here to enable a feature or "hack" someone\'s account, it is a scam and will give them access to your account.';
@@ -24,7 +31,7 @@ export function useAntiScraping() {
             );
         }
 
-        // 2. Disable Right Click & Keyboard Shortcuts
+        // 2. Disable Right Click & Keyboard Shortcuts (non-admin only)
         const handleContextMenu = (e: MouseEvent) => {
             e.preventDefault();
             return false;
@@ -49,5 +56,5 @@ export function useAntiScraping() {
             document.removeEventListener('contextmenu', handleContextMenu);
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, []);
+    }, [isAdmin]);
 }
