@@ -5,6 +5,13 @@ import { useRouter } from 'next/navigation';
 import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
 import Header from '@/components/Header';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import dynamic from 'next/dynamic';
+
+// Lazy load analytics dashboard
+const AnalyticsDashboard = dynamic(
+    () => import('@/components/analytics/AnalyticsDashboard'),
+    { ssr: false, loading: () => <div className="animate-pulse bg-zinc-800 h-96 rounded-xl" /> }
+);
 import {
     FileText,
     Calendar,
@@ -59,6 +66,7 @@ function AnalysisHistoryContent() {
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [summaryId, setSummaryId] = useState<string | null>(null);  // For quick summary view
     const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
+    const [activeTab, setActiveTab] = useState<'analyses' | 'dashboard'>('analyses');
 
     // Handle URL parameter for auto-expand
     useEffect(() => {
@@ -224,722 +232,755 @@ function AnalysisHistoryContent() {
                                 </p>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Visual Stats Dashboard */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600/20 to-purple-600/5 border border-purple-500/30 p-5">
-                            <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/10 rounded-full blur-2xl" />
-                            <div className="relative">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Target className="w-5 h-5 text-purple-400" />
-                                    <span className="text-sm text-purple-300/80">
-                                        {language === 'es' ? 'Total' : 'Total'}
-                                    </span>
-                                </div>
-                                <p className="text-4xl font-bold text-white">{totalAnalyses}</p>
-                                <p className="text-xs text-purple-400/60 mt-1">
-                                    {language === 'es' ? 'análisis realizados' : 'analyses performed'}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-600/20 to-amber-600/5 border border-amber-500/30 p-5">
-                            <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/10 rounded-full blur-2xl" />
-                            <div className="relative">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <TrendingUp className="w-5 h-5 text-amber-400" />
-                                    <span className="text-sm text-amber-300/80">
-                                        {language === 'es' ? 'Riesgo Medio' : 'Avg Risk'}
-                                    </span>
-                                </div>
-                                <p className="text-4xl font-bold text-white">{avgRisk}</p>
-                                <p className="text-xs text-amber-400/60 mt-1">/10</p>
-                            </div>
-                        </div>
-
-                        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-600/20 to-red-600/5 border border-red-500/30 p-5">
-                            <div className="absolute top-0 right-0 w-20 h-20 bg-red-500/10 rounded-full blur-2xl" />
-                            <div className="relative">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <AlertTriangle className="w-5 h-5 text-red-400" />
-                                    <span className="text-sm text-red-300/80">
-                                        {language === 'es' ? 'Alto Riesgo' : 'High Risk'}
-                                    </span>
-                                </div>
-                                <p className="text-4xl font-bold text-white">{highRiskCount}</p>
-                                <p className="text-xs text-red-400/60 mt-1">
-                                    {language === 'es' ? 'requieren atención' : 'need attention'}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600/20 to-emerald-600/5 border border-emerald-500/30 p-5">
-                            <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-full blur-2xl" />
-                            <div className="relative">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Shield className="w-5 h-5 text-emerald-400" />
-                                    <span className="text-sm text-emerald-300/80">
-                                        {language === 'es' ? 'Con Alertas' : 'With Alerts'}
-                                    </span>
-                                </div>
-                                <p className="text-4xl font-bold text-white">{alertsCount}</p>
-                                <p className="text-xs text-emerald-400/60 mt-1">
-                                    {language === 'es' ? 'cláusulas detectadas' : 'clauses detected'}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Controls Bar */}
-                    <div className="flex flex-wrap gap-4 items-center mb-6">
-                        {/* Search */}
-                        <div className="relative flex-1 min-w-[250px]">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                            <input
-                                type="text"
-                                placeholder={language === 'es' ? 'Buscar análisis...' : 'Search analyses...'}
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
-                            />
-                        </div>
-
-                        {/* Sector Filter Pills */}
-                        <div className="flex items-center gap-2 overflow-x-auto pb-2">
-                            {sectors.map(sector => (
-                                <button
-                                    key={sector}
-                                    onClick={() => setSelectedSector(sector || 'all')}
-                                    className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${selectedSector === sector
-                                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/25'
-                                        : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/50 hover:text-white'
-                                        }`}
-                                >
-                                    {sector === 'all'
-                                        ? (language === 'es' ? 'Todos' : 'All')
-                                        : getSectorLabel(sector)}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* View Mode Toggle */}
-                        <div className="flex items-center gap-1 bg-slate-800/50 rounded-xl p-1">
+                        {/* Tab Toggle */}
+                        <div className="flex gap-2 mt-4 border-b border-zinc-800">
                             <button
-                                onClick={() => setViewMode('cards')}
-                                className={`p-2.5 rounded-lg transition-all ${viewMode === 'cards' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                                onClick={() => setActiveTab('analyses')}
+                                className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'analyses'
+                                    ? 'text-white border-b-2 border-purple-500'
+                                    : 'text-zinc-400 hover:text-white'
+                                    }`}
                             >
-                                <Grid3X3 className="w-5 h-5" />
+                                {language === 'es' ? 'Análisis' : 'Analyses'}
                             </button>
                             <button
-                                onClick={() => setViewMode('list')}
-                                className={`p-2.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                                onClick={() => setActiveTab('dashboard')}
+                                className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'dashboard'
+                                    ? 'text-white border-b-2 border-emerald-500'
+                                    : 'text-zinc-400 hover:text-white'
+                                    }`}
                             >
-                                <List className="w-5 h-5" />
+                                {language === 'es' ? 'Dashboard' : 'Dashboard'} ⚡
                             </button>
                         </div>
                     </div>
 
-                    {/* Featured Expanded Analysis Section - Shows at top when an analysis is expanded */}
-                    <AnimatePresence>
-                        {expandedId && (
-                            <motion.div
-                                initial={{ opacity: 0, y: -20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.3 }}
-                                className="mb-8"
-                            >
-                                {(() => {
-                                    const expandedAnalysis = analyses.find(a => a.id === expandedId);
-                                    if (!expandedAnalysis) return null;
-                                    const riskColors = getRiskColor(expandedAnalysis.riskScore);
+                    {/* Dashboard Tab */}
+                    {activeTab === 'dashboard' && (
+                        <AnalyticsDashboard />
+                    )}
 
-                                    return (
-                                        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-900/30 via-slate-800/50 to-slate-800/50 border-2 border-purple-500/50 shadow-xl shadow-purple-500/10">
-                                            {/* Header Bar */}
-                                            <div className="flex items-center justify-between px-6 py-4 bg-purple-500/10 border-b border-purple-500/30">
-                                                <div className="flex items-center gap-4">
-                                                    <div className={`w-14 h-14 rounded-xl ${riskColors.bg} ${riskColors.border} border flex items-center justify-center`}>
-                                                        <span className={`text-2xl font-bold ${riskColors.text}`}>
-                                                            {expandedAnalysis.riskScore?.toFixed(0) || '-'}
-                                                        </span>
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="text-xl font-bold text-white">{expandedAnalysis.fileName}</h3>
-                                                        <div className="flex items-center gap-2 text-sm text-slate-400">
-                                                            <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-xs">
-                                                                {getSectorLabel(expandedAnalysis.sector)}
-                                                            </span>
-                                                            <span>•</span>
-                                                            <span>{formatDate(expandedAnalysis.createdAt)}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    onClick={() => setExpandedId(null)}
-                                                    className="p-2 rounded-xl bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
-                                                    title={language === 'es' ? 'Cerrar' : 'Close'}
-                                                >
-                                                    <X className="w-5 h-5" />
-                                                </button>
-                                            </div>
+                    {/* Analyses Tab - Existing Content */}
+                    {activeTab === 'analyses' && (
+                        <>
 
-                                            {/* Content */}
-                                            <div className="p-6">
-                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                                    {/* Extracted Data */}
-                                                    <div>
-                                                        <h4 className="text-sm font-semibold text-purple-400 mb-3 flex items-center gap-2">
-                                                            <FileText className="w-4 h-4" />
-                                                            {language === 'es' ? 'Datos Extraídos' : 'Extracted Data'}
-                                                            <span className="text-xs text-slate-500">({Object.keys(expandedAnalysis.extractedData || {}).length})</span>
-                                                        </h4>
-                                                        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                                                            {Object.entries(expandedAnalysis.extractedData || {}).map(([key, value]) => (
-                                                                <div key={key} className="p-3 rounded-lg bg-slate-900/50 border border-slate-700/30 hover:border-purple-500/30 transition-colors">
-                                                                    <p className="text-xs text-slate-500 mb-1">
-                                                                        {getDataPointTranslation(key, language)}
-                                                                    </p>
-                                                                    <p className="text-sm text-white">
-                                                                        {String(value) || '-'}
-                                                                    </p>
-                                                                </div>
-                                                            ))}
-                                                            {Object.keys(expandedAnalysis.extractedData || {}).length === 0 && (
-                                                                <p className="text-slate-500 text-sm italic py-4 text-center">
-                                                                    {language === 'es' ? 'Sin datos extraídos' : 'No data extracted'}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Alerts & Clauses */}
-                                                    <div>
-                                                        <h4 className="text-sm font-semibold text-red-400 mb-3 flex items-center gap-2">
-                                                            <AlertTriangle className="w-4 h-4" />
-                                                            {language === 'es' ? 'Alertas y Cláusulas' : 'Alerts & Clauses'}
-                                                            <span className="text-xs text-slate-500">({expandedAnalysis.abusiveClauses?.length || 0})</span>
-                                                        </h4>
-                                                        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                                                            {(expandedAnalysis.abusiveClauses || []).map((clause: any, idx: number) => (
-                                                                <div key={idx} className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 hover:border-red-500/40 transition-colors">
-                                                                    <p className="text-sm text-red-300">
-                                                                        ⚠️ {typeof clause === 'string' ? clause : clause.description || clause.text || JSON.stringify(clause)}
-                                                                    </p>
-                                                                </div>
-                                                            ))}
-                                                            {(expandedAnalysis.alerts || []).map((alert: any, idx: number) => (
-                                                                <div key={`alert-${idx}`} className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 hover:border-amber-500/40 transition-colors">
-                                                                    <p className="text-sm text-amber-300">
-                                                                        ⚠️ {typeof alert === 'string' ? alert : alert.message || JSON.stringify(alert)}
-                                                                    </p>
-                                                                </div>
-                                                            ))}
-                                                            {(expandedAnalysis.abusiveClauses?.length || 0) === 0 && (expandedAnalysis.alerts?.length || 0) === 0 && (
-                                                                <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center">
-                                                                    <p className="text-sm text-emerald-400 flex items-center justify-center gap-2">
-                                                                        <CheckCircle className="w-5 h-5" />
-                                                                        {language === 'es' ? '¡Sin alertas detectadas!' : 'No alerts detected!'}
-                                                                    </p>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Summary if available */}
-                                                {expandedAnalysis.summary && (
-                                                    <div className="mt-6 p-4 rounded-lg bg-slate-900/50 border border-slate-700/30">
-                                                        <h4 className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">
-                                                            {language === 'es' ? 'Resumen' : 'Summary'}
-                                                        </h4>
-                                                        <p className="text-sm text-slate-300">{expandedAnalysis.summary}</p>
-                                                    </div>
-                                                )}
-
-                                                {/* Action buttons */}
-                                                <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-slate-700/50">
-                                                    <button
-                                                        onClick={() => handleViewDocument(expandedAnalysis.id)}
-                                                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
-                                                    >
-                                                        <ArrowUpRight className="w-4 h-4" />
-                                                        {language === 'es' ? 'Ver Documento' : 'View Document'}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setExpandedId(null)}
-                                                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 transition-colors"
-                                                    >
-                                                        <EyeOff className="w-4 h-4" />
-                                                        {language === 'es' ? 'Cerrar Análisis' : 'Close Analysis'}
-                                                    </button>
-                                                </div>
-                                            </div>
+                            {/* Visual Stats Dashboard */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600/20 to-purple-600/5 border border-purple-500/30 p-5">
+                                    <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/10 rounded-full blur-2xl" />
+                                    <div className="relative">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Target className="w-5 h-5 text-purple-400" />
+                                            <span className="text-sm text-purple-300/80">
+                                                {language === 'es' ? 'Total' : 'Total'}
+                                            </span>
                                         </div>
-                                    );
-                                })()}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                                        <p className="text-4xl font-bold text-white">{totalAnalyses}</p>
+                                        <p className="text-xs text-purple-400/60 mt-1">
+                                            {language === 'es' ? 'análisis realizados' : 'analyses performed'}
+                                        </p>
+                                    </div>
+                                </div>
 
-                    {/* Analysis Cards */}
-                    {isLoading ? (
-                        <div className="flex items-center justify-center py-20">
-                            <div className="relative">
-                                <div className="w-16 h-16 border-4 border-purple-500/30 rounded-full" />
-                                <div className="absolute top-0 left-0 w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-                            </div>
-                        </div>
-                    ) : filteredAnalyses.length === 0 ? (
-                        <div className="text-center py-20">
-                            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-800/50 flex items-center justify-center">
-                                <BarChart3 className="w-10 h-10 text-slate-600" />
-                            </div>
-                            <p className="text-slate-400 text-lg">
-                                {searchTerm || selectedSector !== 'all'
-                                    ? (language === 'es' ? 'No se encontraron análisis' : 'No analyses found')
-                                    : (language === 'es' ? 'Aún no hay análisis' : 'No analyses yet')}
-                            </p>
-                            <p className="text-slate-500 text-sm mt-2">
-                                {language === 'es' ? 'Sube un documento para comenzar' : 'Upload a document to get started'}
-                            </p>
-                        </div>
-                    ) : (
-                        <div className={viewMode === 'cards' ? 'grid grid-cols-1 lg:grid-cols-2 gap-4' : 'space-y-3'}>
-                            {filteredAnalyses.map((analysis, index) => {
-                                const riskColors = getRiskColor(analysis.riskScore);
-                                const isExpanded = expandedId === analysis.id;
-                                const dataPointsCount = Object.keys(analysis.extractedData || {}).length;
+                                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-600/20 to-amber-600/5 border border-amber-500/30 p-5">
+                                    <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/10 rounded-full blur-2xl" />
+                                    <div className="relative">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <TrendingUp className="w-5 h-5 text-amber-400" />
+                                            <span className="text-sm text-amber-300/80">
+                                                {language === 'es' ? 'Riesgo Medio' : 'Avg Risk'}
+                                            </span>
+                                        </div>
+                                        <p className="text-4xl font-bold text-white">{avgRisk}</p>
+                                        <p className="text-xs text-amber-400/60 mt-1">/10</p>
+                                    </div>
+                                </div>
 
-                                return (
-                                    <motion.div
-                                        key={analysis.id}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: index * 0.05 }}
-                                        className={`group relative overflow-hidden rounded-2xl bg-slate-800/40 backdrop-blur-xl border transition-all duration-300 ${isExpanded
-                                            ? 'border-purple-500/50 shadow-xl shadow-purple-500/10'
-                                            : 'border-slate-700/50 hover:border-slate-600/50'
-                                            } ${viewMode === 'cards' && isExpanded ? 'lg:col-span-2' : ''}`}
+                                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-600/20 to-red-600/5 border border-red-500/30 p-5">
+                                    <div className="absolute top-0 right-0 w-20 h-20 bg-red-500/10 rounded-full blur-2xl" />
+                                    <div className="relative">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <AlertTriangle className="w-5 h-5 text-red-400" />
+                                            <span className="text-sm text-red-300/80">
+                                                {language === 'es' ? 'Alto Riesgo' : 'High Risk'}
+                                            </span>
+                                        </div>
+                                        <p className="text-4xl font-bold text-white">{highRiskCount}</p>
+                                        <p className="text-xs text-red-400/60 mt-1">
+                                            {language === 'es' ? 'requieren atención' : 'need attention'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600/20 to-emerald-600/5 border border-emerald-500/30 p-5">
+                                    <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-full blur-2xl" />
+                                    <div className="relative">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Shield className="w-5 h-5 text-emerald-400" />
+                                            <span className="text-sm text-emerald-300/80">
+                                                {language === 'es' ? 'Con Alertas' : 'With Alerts'}
+                                            </span>
+                                        </div>
+                                        <p className="text-4xl font-bold text-white">{alertsCount}</p>
+                                        <p className="text-xs text-emerald-400/60 mt-1">
+                                            {language === 'es' ? 'cláusulas detectadas' : 'clauses detected'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Controls Bar */}
+                            <div className="flex flex-wrap gap-4 items-center mb-6">
+                                {/* Search */}
+                                <div className="relative flex-1 min-w-[250px]">
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                    <input
+                                        type="text"
+                                        placeholder={language === 'es' ? 'Buscar análisis...' : 'Search analyses...'}
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
+                                    />
+                                </div>
+
+                                {/* Sector Filter Pills */}
+                                <div className="flex items-center gap-2 overflow-x-auto pb-2">
+                                    {sectors.map(sector => (
+                                        <button
+                                            key={sector}
+                                            onClick={() => setSelectedSector(sector || 'all')}
+                                            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${selectedSector === sector
+                                                ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/25'
+                                                : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/50 hover:text-white'
+                                                }`}
+                                        >
+                                            {sector === 'all'
+                                                ? (language === 'es' ? 'Todos' : 'All')
+                                                : getSectorLabel(sector)}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* View Mode Toggle */}
+                                <div className="flex items-center gap-1 bg-slate-800/50 rounded-xl p-1">
+                                    <button
+                                        onClick={() => setViewMode('cards')}
+                                        className={`p-2.5 rounded-lg transition-all ${viewMode === 'cards' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}
                                     >
-                                        {/* Card Header */}
-                                        <div className="p-5">
-                                            <div className="flex items-start gap-4">
-                                                {/* Risk Score Circle */}
-                                                <div className={`relative flex-shrink-0 w-16 h-16 rounded-2xl ${riskColors.bg} ${riskColors.border} border flex items-center justify-center`}>
-                                                    <span className={`text-2xl font-bold ${riskColors.text}`}>
-                                                        {analysis.riskScore?.toFixed(0) || '-'}
-                                                    </span>
-                                                    <span className={`absolute -bottom-1 text-[10px] ${riskColors.text}`}>
-                                                        /10
-                                                    </span>
-                                                </div>
+                                        <Grid3X3 className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={() => setViewMode('list')}
+                                        className={`p-2.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                                    >
+                                        <List className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
 
-                                                {/* Info */}
-                                                <div className="flex-1 min-w-0">
-                                                    <h3 className="text-white font-semibold text-lg truncate mb-1">
-                                                        {analysis.fileName}
-                                                    </h3>
-                                                    <div className="flex flex-wrap items-center gap-2 text-sm">
-                                                        <span className="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-medium">
-                                                            {getSectorLabel(analysis.sector)}
-                                                        </span>
-                                                        <span className="text-slate-500">•</span>
-                                                        <span className="text-slate-400 flex items-center gap-1">
-                                                            <Calendar className="w-3.5 h-3.5" />
-                                                            {formatDate(analysis.createdAt)}
-                                                        </span>
-                                                        {(analysis.abusiveClauses?.length || 0) > 0 && (
-                                                            <>
-                                                                <span className="text-slate-500">•</span>
-                                                                <span className="text-red-400 flex items-center gap-1">
-                                                                    <AlertTriangle className="w-3.5 h-3.5" />
-                                                                    {analysis.abusiveClauses?.length} {language === 'es' ? 'alertas' : 'alerts'}
+                            {/* Featured Expanded Analysis Section - Shows at top when an analysis is expanded */}
+                            <AnimatePresence>
+                                {expandedId && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -20 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="mb-8"
+                                    >
+                                        {(() => {
+                                            const expandedAnalysis = analyses.find(a => a.id === expandedId);
+                                            if (!expandedAnalysis) return null;
+                                            const riskColors = getRiskColor(expandedAnalysis.riskScore);
+
+                                            return (
+                                                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-900/30 via-slate-800/50 to-slate-800/50 border-2 border-purple-500/50 shadow-xl shadow-purple-500/10">
+                                                    {/* Header Bar */}
+                                                    <div className="flex items-center justify-between px-6 py-4 bg-purple-500/10 border-b border-purple-500/30">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className={`w-14 h-14 rounded-xl ${riskColors.bg} ${riskColors.border} border flex items-center justify-center`}>
+                                                                <span className={`text-2xl font-bold ${riskColors.text}`}>
+                                                                    {expandedAnalysis.riskScore?.toFixed(0) || '-'}
                                                                 </span>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {/* Actions */}
-                                                <div className="flex items-center gap-2">
-                                                    {/* Quick Summary Button */}
-                                                    <button
-                                                        onClick={() => setSummaryId(summaryId === analysis.id ? null : analysis.id)}
-                                                        className={`flex items-center gap-2 px-3 py-2 rounded-xl font-medium transition-all ${summaryId === analysis.id
-                                                            ? 'bg-amber-600 text-white'
-                                                            : 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
-                                                            }`}
-                                                        title={language === 'es' ? 'Resumen rápido' : 'Quick summary'}
-                                                    >
-                                                        <Zap className="w-4 h-4" />
-                                                        <span className="hidden sm:inline text-sm">
-                                                            {language === 'es' ? 'Resumen' : 'Summary'}
-                                                        </span>
-                                                    </button>
-                                                    {/* Full Analysis Button */}
-                                                    <button
-                                                        onClick={() => toggleExpanded(analysis.id)}
-                                                        className={`flex items-center gap-2 px-3 py-2 rounded-xl font-medium transition-all ${isExpanded
-                                                            ? 'bg-purple-600 text-white'
-                                                            : 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30'
-                                                            }`}
-                                                        title={language === 'es' ? 'Análisis completo' : 'Full analysis'}
-                                                    >
-                                                        {isExpanded ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                                        <span className="hidden sm:inline text-sm">
-                                                            {language === 'es'
-                                                                ? (isExpanded ? 'Ocultar' : 'Completo')
-                                                                : (isExpanded ? 'Hide' : 'Full')}</span>
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleViewDocument(analysis.id)}
-                                                        className="p-2 rounded-xl bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
-                                                        title={language === 'es' ? 'Ver Documento' : 'View Document'}
-                                                    >
-                                                        <ArrowUpRight className="w-4 h-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(analysis.id, analysis.fileName)}
-                                                        className="p-2 rounded-xl text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                                                        title={language === 'es' ? 'Eliminar' : 'Delete'}
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            {/* Quick Stats Row */}
-                                            <div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-700/50">
-                                                <div className="flex items-center gap-2 text-sm">
-                                                    <Zap className="w-4 h-4 text-amber-400" />
-                                                    <span className="text-slate-400">
-                                                        {dataPointsCount} {language === 'es' ? 'datos' : 'data points'}
-                                                    </span>
-                                                </div>
-                                                {analysis.renewalDate && (
-                                                    <div className="flex items-center gap-2 text-sm">
-                                                        <Clock className="w-4 h-4 text-blue-400" />
-                                                        <span className="text-slate-400">
-                                                            {language === 'es' ? 'Renueva' : 'Renews'}: {formatDate(analysis.renewalDate)}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Quick Summary Section */}
-                                        <AnimatePresence>
-                                            {summaryId === analysis.id && (
-                                                <motion.div
-                                                    initial={{ height: 0, opacity: 0 }}
-                                                    animate={{ height: 'auto', opacity: 1 }}
-                                                    exit={{ height: 0, opacity: 0 }}
-                                                    transition={{ duration: 0.2 }}
-                                                    className="overflow-hidden"
-                                                >
-                                                    <div className="px-5 py-4 bg-amber-500/5 border-t border-amber-500/20">
-                                                        <h4 className="text-sm font-bold text-amber-400 mb-3 flex items-center gap-2">
-                                                            <Zap className="w-4 h-4" />
-                                                            {language === 'es' ? 'Resumen Rápido' : 'Quick Summary'}
-                                                        </h4>
-                                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                                            <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
-                                                                <p className="text-xs text-slate-500 mb-1">{language === 'es' ? 'Riesgo' : 'Risk'}</p>
-                                                                <p className={`text-lg font-bold ${getRiskColor(analysis.riskScore).text}`}>
-                                                                    {analysis.riskScore?.toFixed(1) || '-'}/10
-                                                                </p>
                                                             </div>
-                                                            <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
-                                                                <p className="text-xs text-slate-500 mb-1">{language === 'es' ? 'Alertas' : 'Alerts'}</p>
-                                                                <p className="text-lg font-bold text-red-400">
-                                                                    {analysis.abusiveClauses?.length || 0}
-                                                                </p>
-                                                            </div>
-                                                            <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
-                                                                <p className="text-xs text-slate-500 mb-1">{language === 'es' ? 'Datos' : 'Data'}</p>
-                                                                <p className="text-lg font-bold text-purple-400">
-                                                                    {Object.keys(analysis.extractedData || {}).length}
-                                                                </p>
-                                                            </div>
-                                                            <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
-                                                                <p className="text-xs text-slate-500 mb-1">{language === 'es' ? 'Renovación' : 'Renewal'}</p>
-                                                                <p className="text-sm font-medium text-blue-400 truncate">
-                                                                    {analysis.renewalDate ? formatDate(analysis.renewalDate) : '-'}
-                                                                </p>
+                                                            <div>
+                                                                <h3 className="text-xl font-bold text-white">{expandedAnalysis.fileName}</h3>
+                                                                <div className="flex items-center gap-2 text-sm text-slate-400">
+                                                                    <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-xs">
+                                                                        {getSectorLabel(expandedAnalysis.sector)}
+                                                                    </span>
+                                                                    <span>•</span>
+                                                                    <span>{formatDate(expandedAnalysis.createdAt)}</span>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        {/* Top 3 Alerts Preview */}
-                                                        {(analysis.abusiveClauses?.length || 0) > 0 && (
-                                                            <div className="mt-3">
-                                                                <p className="text-xs text-slate-500 mb-2">{language === 'es' ? 'Alertas principales:' : 'Top alerts:'}</p>
-                                                                <div className="space-y-1">
-                                                                    {analysis.abusiveClauses?.slice(0, 3).map((clause: any, idx: number) => (
-                                                                        <div key={idx} className="text-xs text-red-300 bg-red-500/10 px-2 py-1 rounded truncate">
-                                                                            ⚠️ {typeof clause === 'string' ? clause.substring(0, 100) : (clause.description || clause.text || '').substring(0, 100)}...
+                                                        <button
+                                                            onClick={() => setExpandedId(null)}
+                                                            className="p-2 rounded-xl bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+                                                            title={language === 'es' ? 'Cerrar' : 'Close'}
+                                                        >
+                                                            <X className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Content */}
+                                                    <div className="p-6">
+                                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                                            {/* Extracted Data */}
+                                                            <div>
+                                                                <h4 className="text-sm font-semibold text-purple-400 mb-3 flex items-center gap-2">
+                                                                    <FileText className="w-4 h-4" />
+                                                                    {language === 'es' ? 'Datos Extraídos' : 'Extracted Data'}
+                                                                    <span className="text-xs text-slate-500">({Object.keys(expandedAnalysis.extractedData || {}).length})</span>
+                                                                </h4>
+                                                                <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                                                    {Object.entries(expandedAnalysis.extractedData || {}).map(([key, value]) => (
+                                                                        <div key={key} className="p-3 rounded-lg bg-slate-900/50 border border-slate-700/30 hover:border-purple-500/30 transition-colors">
+                                                                            <p className="text-xs text-slate-500 mb-1">
+                                                                                {getDataPointTranslation(key, language)}
+                                                                            </p>
+                                                                            <p className="text-sm text-white">
+                                                                                {String(value) || '-'}
+                                                                            </p>
                                                                         </div>
                                                                     ))}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-
-                                        {/* Expanded Analysis View - ENHANCED VERSION */}
-                                        <AnimatePresence>
-                                            {isExpanded && (
-                                                <motion.div
-                                                    initial={{ height: 0, opacity: 0 }}
-                                                    animate={{ height: 'auto', opacity: 1 }}
-                                                    exit={{ height: 0, opacity: 0 }}
-                                                    transition={{ duration: 0.3 }}
-                                                    className="overflow-hidden"
-                                                >
-                                                    <div className="px-5 pb-6 border-t border-purple-500/30 bg-gradient-to-b from-purple-500/5 to-transparent">
-                                                        {/* Top Row: Risk Score + Key Dates */}
-                                                        <div className="pt-6 grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                                                            {/* Risk Score Visual */}
-                                                            <div className="lg:col-span-1">
-                                                                <div className={`p-5 rounded-2xl ${riskColors.bg} border ${riskColors.border} relative overflow-hidden`}>
-                                                                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50" />
-                                                                    <div className="relative flex items-center gap-5">
-                                                                        {/* Circular Progress */}
-                                                                        <div className="relative w-20 h-20 flex-shrink-0">
-                                                                            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                                                                                <path
-                                                                                    className="text-black/20"
-                                                                                    strokeDasharray="100, 100"
-                                                                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                                                                    fill="none"
-                                                                                    stroke="currentColor"
-                                                                                    strokeWidth="3"
-                                                                                />
-                                                                                <path
-                                                                                    className={riskColors.text}
-                                                                                    strokeDasharray={`${((analysis.riskScore || 0) / 10) * 100}, 100`}
-                                                                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                                                                    fill="none"
-                                                                                    stroke="currentColor"
-                                                                                    strokeWidth="3"
-                                                                                    strokeLinecap="round"
-                                                                                    style={{ filter: "drop-shadow(0 0 4px currentColor)" }}
-                                                                                />
-                                                                            </svg>
-                                                                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                                                                <span className={`text-xl font-bold ${riskColors.text}`}>
-                                                                                    {analysis.riskScore?.toFixed(1) || '-'}
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className="relative z-10">
-                                                                            <p className={`text-lg font-bold ${riskColors.text} mb-1`}>
-                                                                                {(analysis.riskScore || 0) < 4
-                                                                                    ? (language === 'es' ? 'Riesgo Bajo' : 'Low Risk')
-                                                                                    : (analysis.riskScore || 0) < 7.5
-                                                                                        ? (language === 'es' ? 'Riesgo Medio' : 'Medium Risk')
-                                                                                        : (language === 'es' ? 'Riesgo Alto' : 'High Risk')}
-                                                                            </p>
-                                                                            <p className="text-xs text-slate-400">
-                                                                                {language === 'es' ? 'Puntuación AI' : 'AI Score'}
-                                                                            </p>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Key Dates */}
-                                                            <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-3">
-                                                                <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-700/30 hover:border-slate-600/50 transition-colors">
-                                                                    <div className="flex items-center gap-2 mb-2">
-                                                                        <Calendar className="w-4 h-4 text-blue-400" />
-                                                                        <span className="text-xs text-slate-500 font-medium uppercase tracking-wide">
-                                                                            {language === 'es' ? 'Inicio' : 'Start'}
-                                                                        </span>
-                                                                    </div>
-                                                                    <p className="text-sm font-semibold text-white">
-                                                                        {analysis.effectiveDate ? formatDate(analysis.effectiveDate) : '-'}
-                                                                    </p>
-                                                                </div>
-                                                                <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 hover:border-amber-500/40 transition-colors">
-                                                                    <div className="flex items-center gap-2 mb-2">
-                                                                        <Clock className="w-4 h-4 text-amber-400" />
-                                                                        <span className="text-xs text-amber-400/70 font-medium uppercase tracking-wide">
-                                                                            {language === 'es' ? 'Renovación' : 'Renewal'}
-                                                                        </span>
-                                                                    </div>
-                                                                    <p className="text-sm font-bold text-amber-400">
-                                                                        {analysis.renewalDate ? formatDate(analysis.renewalDate) : '-'}
-                                                                    </p>
-                                                                </div>
-                                                                <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-700/30">
-                                                                    <div className="flex items-center gap-2 mb-2">
-                                                                        <Target className="w-4 h-4 text-purple-400" />
-                                                                        <span className="text-xs text-slate-500 font-medium uppercase tracking-wide">
-                                                                            {language === 'es' ? 'Tipo' : 'Type'}
-                                                                        </span>
-                                                                    </div>
-                                                                    <p className="text-sm font-semibold text-white truncate">
-                                                                        {analysis.contractType || 'General'}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Summary Section */}
-                                                        {analysis.summary && (
-                                                            <div className="mb-6 p-5 rounded-xl bg-gradient-to-r from-blue-500/5 to-purple-500/5 border border-blue-500/20">
-                                                                <h4 className="text-xs font-bold text-blue-400 mb-3 uppercase tracking-wider flex items-center gap-2">
-                                                                    <Zap className="w-4 h-4" />
-                                                                    {language === 'es' ? 'Resumen AI' : 'AI Summary'}
-                                                                </h4>
-                                                                <p className="text-sm text-slate-300 leading-relaxed">{analysis.summary}</p>
-                                                            </div>
-                                                        )}
-
-                                                        {/* Main Content: Data + Alerts */}
-                                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                                            {/* Extracted Data with Audit Style */}
-                                                            <div>
-                                                                <h4 className="text-sm font-bold text-emerald-400 mb-4 flex items-center gap-2">
-                                                                    <Shield className="w-4 h-4" />
-                                                                    {language === 'es' ? 'Datos Extraídos' : 'Extracted Data'}
-                                                                    <span className="text-xs text-slate-500 font-normal">
-                                                                        ({Object.keys(analysis.extractedData || {}).length})
-                                                                    </span>
-                                                                </h4>
-                                                                <div className="space-y-2 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
-                                                                    {Object.entries(analysis.extractedData || {}).map(([key, value]) => {
-                                                                        const hasValue = value && value !== 'No especificado' && value !== 'Not specified';
-                                                                        return (
-                                                                            <div
-                                                                                key={key}
-                                                                                className={`group p-3 rounded-xl border transition-all ${hasValue
-                                                                                    ? 'bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40'
-                                                                                    : 'bg-slate-900/30 border-slate-700/30 opacity-60'}`}
-                                                                            >
-                                                                                <div className="flex items-center justify-between mb-1">
-                                                                                    <p className={`text-xs font-semibold uppercase tracking-wide ${hasValue ? 'text-emerald-400' : 'text-slate-500'}`}>
-                                                                                        {getDataPointTranslation(key, language)}
-                                                                                    </p>
-                                                                                    {hasValue ? (
-                                                                                        <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                                                                                    ) : (
-                                                                                        <X className="w-3.5 h-3.5 text-slate-600" />
-                                                                                    )}
-                                                                                </div>
-                                                                                <p className={`text-sm leading-relaxed ${hasValue ? 'text-white' : 'text-slate-500 italic'}`}>
-                                                                                    {hasValue ? String(value) : (language === 'es' ? 'No detectado' : 'Not detected')}
-                                                                                </p>
-                                                                            </div>
-                                                                        );
-                                                                    })}
-                                                                    {Object.keys(analysis.extractedData || {}).length === 0 && (
-                                                                        <div className="p-6 text-center rounded-xl bg-slate-900/30 border border-slate-700/30">
-                                                                            <FileText className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-                                                                            <p className="text-slate-500 text-sm">
-                                                                                {language === 'es' ? 'Sin datos extraídos' : 'No data extracted'}
-                                                                            </p>
-                                                                        </div>
+                                                                    {Object.keys(expandedAnalysis.extractedData || {}).length === 0 && (
+                                                                        <p className="text-slate-500 text-sm italic py-4 text-center">
+                                                                            {language === 'es' ? 'Sin datos extraídos' : 'No data extracted'}
+                                                                        </p>
                                                                     )}
                                                                 </div>
                                                             </div>
 
-                                                            {/* Alerts & Abusive Clauses */}
+                                                            {/* Alerts & Clauses */}
                                                             <div>
-                                                                <h4 className="text-sm font-bold text-red-400 mb-4 flex items-center gap-2">
+                                                                <h4 className="text-sm font-semibold text-red-400 mb-3 flex items-center gap-2">
                                                                     <AlertTriangle className="w-4 h-4" />
-                                                                    {language === 'es' ? 'Alertas y Cláusulas Abusivas' : 'Alerts & Abusive Clauses'}
-                                                                    <span className="text-xs text-slate-500 font-normal">
-                                                                        ({(analysis.abusiveClauses?.length || 0) + (analysis.alerts?.length || 0)})
-                                                                    </span>
+                                                                    {language === 'es' ? 'Alertas y Cláusulas' : 'Alerts & Clauses'}
+                                                                    <span className="text-xs text-slate-500">({expandedAnalysis.abusiveClauses?.length || 0})</span>
                                                                 </h4>
-                                                                <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
-                                                                    {/* Abusive Clauses */}
-                                                                    {(analysis.abusiveClauses || []).map((clause: any, idx: number) => (
-                                                                        <div
-                                                                            key={idx}
-                                                                            className="group p-4 rounded-xl bg-red-500/10 border border-red-500/30 hover:border-red-500/50 hover:shadow-[0_0_15px_rgba(239,68,68,0.1)] transition-all cursor-pointer"
-                                                                            onClick={() => handleViewDocument(analysis.id)}
-                                                                        >
-                                                                            <div className="flex items-start gap-3">
-                                                                                <div className="p-1.5 rounded-lg bg-red-500/20 text-red-400 mt-0.5">
-                                                                                    <ShieldAlert className="w-4 h-4" />
-                                                                                </div>
-                                                                                <div className="flex-1">
-                                                                                    <p className="text-sm text-red-200 leading-relaxed font-medium">
-                                                                                        {typeof clause === 'string' ? clause : clause.explanation || clause.description || clause.text || JSON.stringify(clause)}
-                                                                                    </p>
-                                                                                    {typeof clause === 'object' && clause.reference && (
-                                                                                        <p className="text-xs text-red-400/60 mt-2 font-mono">
-                                                                                            📍 {clause.reference}
-                                                                                        </p>
-                                                                                    )}
-                                                                                </div>
-                                                                            </div>
+                                                                <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                                                    {(expandedAnalysis.abusiveClauses || []).map((clause: any, idx: number) => (
+                                                                        <div key={idx} className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 hover:border-red-500/40 transition-colors">
+                                                                            <p className="text-sm text-red-300">
+                                                                                ⚠️ {typeof clause === 'string' ? clause : clause.description || clause.text || JSON.stringify(clause)}
+                                                                            </p>
                                                                         </div>
                                                                     ))}
-
-                                                                    {/* Regular Alerts */}
-                                                                    {(analysis.alerts || []).map((alert: any, idx: number) => (
-                                                                        <div
-                                                                            key={`alert-${idx}`}
-                                                                            className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 hover:border-amber-500/40 transition-all"
-                                                                        >
-                                                                            <div className="flex items-start gap-3">
-                                                                                <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
-                                                                                <p className="text-sm text-amber-200">
-                                                                                    {typeof alert === 'string' ? alert : alert.message || JSON.stringify(alert)}
-                                                                                </p>
-                                                                            </div>
+                                                                    {(expandedAnalysis.alerts || []).map((alert: any, idx: number) => (
+                                                                        <div key={`alert-${idx}`} className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 hover:border-amber-500/40 transition-colors">
+                                                                            <p className="text-sm text-amber-300">
+                                                                                ⚠️ {typeof alert === 'string' ? alert : alert.message || JSON.stringify(alert)}
+                                                                            </p>
                                                                         </div>
                                                                     ))}
-
-                                                                    {/* No Alerts */}
-                                                                    {(analysis.abusiveClauses?.length || 0) === 0 && (analysis.alerts?.length || 0) === 0 && (
-                                                                        <div className="p-6 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
-                                                                            <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-3">
-                                                                                <CheckCircle className="w-6 h-6 text-emerald-400" />
-                                                                            </div>
-                                                                            <p className="text-sm font-medium text-emerald-400">
+                                                                    {(expandedAnalysis.abusiveClauses?.length || 0) === 0 && (expandedAnalysis.alerts?.length || 0) === 0 && (
+                                                                        <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center">
+                                                                            <p className="text-sm text-emerald-400 flex items-center justify-center gap-2">
+                                                                                <CheckCircle className="w-5 h-5" />
                                                                                 {language === 'es' ? '¡Sin alertas detectadas!' : 'No alerts detected!'}
                                                                             </p>
-                                                                            <p className="text-xs text-emerald-400/60 mt-1">
-                                                                                {language === 'es' ? 'El documento parece seguro' : 'Document appears safe'}
-                                                                            </p>
                                                                         </div>
                                                                     )}
                                                                 </div>
                                                             </div>
                                                         </div>
 
-                                                        {/* Action Buttons */}
-                                                        <div className="mt-6 pt-5 border-t border-slate-700/50 flex flex-wrap items-center justify-center gap-4">
+                                                        {/* Summary if available */}
+                                                        {expandedAnalysis.summary && (
+                                                            <div className="mt-6 p-4 rounded-lg bg-slate-900/50 border border-slate-700/30">
+                                                                <h4 className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">
+                                                                    {language === 'es' ? 'Resumen' : 'Summary'}
+                                                                </h4>
+                                                                <p className="text-sm text-slate-300">{expandedAnalysis.summary}</p>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Action buttons */}
+                                                        <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-slate-700/50">
                                                             <button
-                                                                onClick={() => handleViewDocument(analysis.id)}
-                                                                className="flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl transition-all shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 hover:scale-105 active:scale-95"
+                                                                onClick={() => handleViewDocument(expandedAnalysis.id)}
+                                                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
                                                             >
                                                                 <ArrowUpRight className="w-4 h-4" />
-                                                                {language === 'es' ? 'Ver Documento Completo' : 'View Full Document'}
+                                                                {language === 'es' ? 'Ver Documento' : 'View Document'}
                                                             </button>
                                                             <button
                                                                 onClick={() => setExpandedId(null)}
-                                                                className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-medium rounded-xl border border-slate-700 hover:border-slate-600 transition-all"
+                                                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 transition-colors"
                                                             >
                                                                 <EyeOff className="w-4 h-4" />
-                                                                {language === 'es' ? 'Cerrar Vista' : 'Close View'}
+                                                                {language === 'es' ? 'Cerrar Análisis' : 'Close Analysis'}
                                                             </button>
                                                         </div>
                                                     </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
+                                                </div>
+                                            );
+                                        })()}
                                     </motion.div>
-                                );
-                            })}
-                        </div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* Analysis Cards */}
+                            {isLoading ? (
+                                <div className="flex items-center justify-center py-20">
+                                    <div className="relative">
+                                        <div className="w-16 h-16 border-4 border-purple-500/30 rounded-full" />
+                                        <div className="absolute top-0 left-0 w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                                    </div>
+                                </div>
+                            ) : filteredAnalyses.length === 0 ? (
+                                <div className="text-center py-20">
+                                    <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-800/50 flex items-center justify-center">
+                                        <BarChart3 className="w-10 h-10 text-slate-600" />
+                                    </div>
+                                    <p className="text-slate-400 text-lg">
+                                        {searchTerm || selectedSector !== 'all'
+                                            ? (language === 'es' ? 'No se encontraron análisis' : 'No analyses found')
+                                            : (language === 'es' ? 'Aún no hay análisis' : 'No analyses yet')}
+                                    </p>
+                                    <p className="text-slate-500 text-sm mt-2">
+                                        {language === 'es' ? 'Sube un documento para comenzar' : 'Upload a document to get started'}
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className={viewMode === 'cards' ? 'grid grid-cols-1 lg:grid-cols-2 gap-4' : 'space-y-3'}>
+                                    {filteredAnalyses.map((analysis, index) => {
+                                        const riskColors = getRiskColor(analysis.riskScore);
+                                        const isExpanded = expandedId === analysis.id;
+                                        const dataPointsCount = Object.keys(analysis.extractedData || {}).length;
+
+                                        return (
+                                            <motion.div
+                                                key={analysis.id}
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: index * 0.05 }}
+                                                className={`group relative overflow-hidden rounded-2xl bg-slate-800/40 backdrop-blur-xl border transition-all duration-300 ${isExpanded
+                                                    ? 'border-purple-500/50 shadow-xl shadow-purple-500/10'
+                                                    : 'border-slate-700/50 hover:border-slate-600/50'
+                                                    } ${viewMode === 'cards' && isExpanded ? 'lg:col-span-2' : ''}`}
+                                            >
+                                                {/* Card Header */}
+                                                <div className="p-5">
+                                                    <div className="flex items-start gap-4">
+                                                        {/* Risk Score Circle */}
+                                                        <div className={`relative flex-shrink-0 w-16 h-16 rounded-2xl ${riskColors.bg} ${riskColors.border} border flex items-center justify-center`}>
+                                                            <span className={`text-2xl font-bold ${riskColors.text}`}>
+                                                                {analysis.riskScore?.toFixed(0) || '-'}
+                                                            </span>
+                                                            <span className={`absolute -bottom-1 text-[10px] ${riskColors.text}`}>
+                                                                /10
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Info */}
+                                                        <div className="flex-1 min-w-0">
+                                                            <h3 className="text-white font-semibold text-lg truncate mb-1">
+                                                                {analysis.fileName}
+                                                            </h3>
+                                                            <div className="flex flex-wrap items-center gap-2 text-sm">
+                                                                <span className="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-medium">
+                                                                    {getSectorLabel(analysis.sector)}
+                                                                </span>
+                                                                <span className="text-slate-500">•</span>
+                                                                <span className="text-slate-400 flex items-center gap-1">
+                                                                    <Calendar className="w-3.5 h-3.5" />
+                                                                    {formatDate(analysis.createdAt)}
+                                                                </span>
+                                                                {(analysis.abusiveClauses?.length || 0) > 0 && (
+                                                                    <>
+                                                                        <span className="text-slate-500">•</span>
+                                                                        <span className="text-red-400 flex items-center gap-1">
+                                                                            <AlertTriangle className="w-3.5 h-3.5" />
+                                                                            {analysis.abusiveClauses?.length} {language === 'es' ? 'alertas' : 'alerts'}
+                                                                        </span>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Actions */}
+                                                        <div className="flex items-center gap-2">
+                                                            {/* Quick Summary Button */}
+                                                            <button
+                                                                onClick={() => setSummaryId(summaryId === analysis.id ? null : analysis.id)}
+                                                                className={`flex items-center gap-2 px-3 py-2 rounded-xl font-medium transition-all ${summaryId === analysis.id
+                                                                    ? 'bg-amber-600 text-white'
+                                                                    : 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
+                                                                    }`}
+                                                                title={language === 'es' ? 'Resumen rápido' : 'Quick summary'}
+                                                            >
+                                                                <Zap className="w-4 h-4" />
+                                                                <span className="hidden sm:inline text-sm">
+                                                                    {language === 'es' ? 'Resumen' : 'Summary'}
+                                                                </span>
+                                                            </button>
+                                                            {/* Full Analysis Button */}
+                                                            <button
+                                                                onClick={() => toggleExpanded(analysis.id)}
+                                                                className={`flex items-center gap-2 px-3 py-2 rounded-xl font-medium transition-all ${isExpanded
+                                                                    ? 'bg-purple-600 text-white'
+                                                                    : 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30'
+                                                                    }`}
+                                                                title={language === 'es' ? 'Análisis completo' : 'Full analysis'}
+                                                            >
+                                                                {isExpanded ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                                <span className="hidden sm:inline text-sm">
+                                                                    {language === 'es'
+                                                                        ? (isExpanded ? 'Ocultar' : 'Completo')
+                                                                        : (isExpanded ? 'Hide' : 'Full')}</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleViewDocument(analysis.id)}
+                                                                className="p-2 rounded-xl bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
+                                                                title={language === 'es' ? 'Ver Documento' : 'View Document'}
+                                                            >
+                                                                <ArrowUpRight className="w-4 h-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDelete(analysis.id, analysis.fileName)}
+                                                                className="p-2 rounded-xl text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                                                title={language === 'es' ? 'Eliminar' : 'Delete'}
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Quick Stats Row */}
+                                                    <div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-700/50">
+                                                        <div className="flex items-center gap-2 text-sm">
+                                                            <Zap className="w-4 h-4 text-amber-400" />
+                                                            <span className="text-slate-400">
+                                                                {dataPointsCount} {language === 'es' ? 'datos' : 'data points'}
+                                                            </span>
+                                                        </div>
+                                                        {analysis.renewalDate && (
+                                                            <div className="flex items-center gap-2 text-sm">
+                                                                <Clock className="w-4 h-4 text-blue-400" />
+                                                                <span className="text-slate-400">
+                                                                    {language === 'es' ? 'Renueva' : 'Renews'}: {formatDate(analysis.renewalDate)}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Quick Summary Section */}
+                                                <AnimatePresence>
+                                                    {summaryId === analysis.id && (
+                                                        <motion.div
+                                                            initial={{ height: 0, opacity: 0 }}
+                                                            animate={{ height: 'auto', opacity: 1 }}
+                                                            exit={{ height: 0, opacity: 0 }}
+                                                            transition={{ duration: 0.2 }}
+                                                            className="overflow-hidden"
+                                                        >
+                                                            <div className="px-5 py-4 bg-amber-500/5 border-t border-amber-500/20">
+                                                                <h4 className="text-sm font-bold text-amber-400 mb-3 flex items-center gap-2">
+                                                                    <Zap className="w-4 h-4" />
+                                                                    {language === 'es' ? 'Resumen Rápido' : 'Quick Summary'}
+                                                                </h4>
+                                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                                                    <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                                                                        <p className="text-xs text-slate-500 mb-1">{language === 'es' ? 'Riesgo' : 'Risk'}</p>
+                                                                        <p className={`text-lg font-bold ${getRiskColor(analysis.riskScore).text}`}>
+                                                                            {analysis.riskScore?.toFixed(1) || '-'}/10
+                                                                        </p>
+                                                                    </div>
+                                                                    <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                                                                        <p className="text-xs text-slate-500 mb-1">{language === 'es' ? 'Alertas' : 'Alerts'}</p>
+                                                                        <p className="text-lg font-bold text-red-400">
+                                                                            {analysis.abusiveClauses?.length || 0}
+                                                                        </p>
+                                                                    </div>
+                                                                    <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                                                                        <p className="text-xs text-slate-500 mb-1">{language === 'es' ? 'Datos' : 'Data'}</p>
+                                                                        <p className="text-lg font-bold text-purple-400">
+                                                                            {Object.keys(analysis.extractedData || {}).length}
+                                                                        </p>
+                                                                    </div>
+                                                                    <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                                                                        <p className="text-xs text-slate-500 mb-1">{language === 'es' ? 'Renovación' : 'Renewal'}</p>
+                                                                        <p className="text-sm font-medium text-blue-400 truncate">
+                                                                            {analysis.renewalDate ? formatDate(analysis.renewalDate) : '-'}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                                {/* Top 3 Alerts Preview */}
+                                                                {(analysis.abusiveClauses?.length || 0) > 0 && (
+                                                                    <div className="mt-3">
+                                                                        <p className="text-xs text-slate-500 mb-2">{language === 'es' ? 'Alertas principales:' : 'Top alerts:'}</p>
+                                                                        <div className="space-y-1">
+                                                                            {analysis.abusiveClauses?.slice(0, 3).map((clause: any, idx: number) => (
+                                                                                <div key={idx} className="text-xs text-red-300 bg-red-500/10 px-2 py-1 rounded truncate">
+                                                                                    ⚠️ {typeof clause === 'string' ? clause.substring(0, 100) : (clause.description || clause.text || '').substring(0, 100)}...
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+
+                                                {/* Expanded Analysis View - ENHANCED VERSION */}
+                                                <AnimatePresence>
+                                                    {isExpanded && (
+                                                        <motion.div
+                                                            initial={{ height: 0, opacity: 0 }}
+                                                            animate={{ height: 'auto', opacity: 1 }}
+                                                            exit={{ height: 0, opacity: 0 }}
+                                                            transition={{ duration: 0.3 }}
+                                                            className="overflow-hidden"
+                                                        >
+                                                            <div className="px-5 pb-6 border-t border-purple-500/30 bg-gradient-to-b from-purple-500/5 to-transparent">
+                                                                {/* Top Row: Risk Score + Key Dates */}
+                                                                <div className="pt-6 grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                                                                    {/* Risk Score Visual */}
+                                                                    <div className="lg:col-span-1">
+                                                                        <div className={`p-5 rounded-2xl ${riskColors.bg} border ${riskColors.border} relative overflow-hidden`}>
+                                                                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50" />
+                                                                            <div className="relative flex items-center gap-5">
+                                                                                {/* Circular Progress */}
+                                                                                <div className="relative w-20 h-20 flex-shrink-0">
+                                                                                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                                                                        <path
+                                                                                            className="text-black/20"
+                                                                                            strokeDasharray="100, 100"
+                                                                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                                                                            fill="none"
+                                                                                            stroke="currentColor"
+                                                                                            strokeWidth="3"
+                                                                                        />
+                                                                                        <path
+                                                                                            className={riskColors.text}
+                                                                                            strokeDasharray={`${((analysis.riskScore || 0) / 10) * 100}, 100`}
+                                                                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                                                                            fill="none"
+                                                                                            stroke="currentColor"
+                                                                                            strokeWidth="3"
+                                                                                            strokeLinecap="round"
+                                                                                            style={{ filter: "drop-shadow(0 0 4px currentColor)" }}
+                                                                                        />
+                                                                                    </svg>
+                                                                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                                                        <span className={`text-xl font-bold ${riskColors.text}`}>
+                                                                                            {analysis.riskScore?.toFixed(1) || '-'}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div className="relative z-10">
+                                                                                    <p className={`text-lg font-bold ${riskColors.text} mb-1`}>
+                                                                                        {(analysis.riskScore || 0) < 4
+                                                                                            ? (language === 'es' ? 'Riesgo Bajo' : 'Low Risk')
+                                                                                            : (analysis.riskScore || 0) < 7.5
+                                                                                                ? (language === 'es' ? 'Riesgo Medio' : 'Medium Risk')
+                                                                                                : (language === 'es' ? 'Riesgo Alto' : 'High Risk')}
+                                                                                    </p>
+                                                                                    <p className="text-xs text-slate-400">
+                                                                                        {language === 'es' ? 'Puntuación AI' : 'AI Score'}
+                                                                                    </p>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Key Dates */}
+                                                                    <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                                        <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-700/30 hover:border-slate-600/50 transition-colors">
+                                                                            <div className="flex items-center gap-2 mb-2">
+                                                                                <Calendar className="w-4 h-4 text-blue-400" />
+                                                                                <span className="text-xs text-slate-500 font-medium uppercase tracking-wide">
+                                                                                    {language === 'es' ? 'Inicio' : 'Start'}
+                                                                                </span>
+                                                                            </div>
+                                                                            <p className="text-sm font-semibold text-white">
+                                                                                {analysis.effectiveDate ? formatDate(analysis.effectiveDate) : '-'}
+                                                                            </p>
+                                                                        </div>
+                                                                        <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 hover:border-amber-500/40 transition-colors">
+                                                                            <div className="flex items-center gap-2 mb-2">
+                                                                                <Clock className="w-4 h-4 text-amber-400" />
+                                                                                <span className="text-xs text-amber-400/70 font-medium uppercase tracking-wide">
+                                                                                    {language === 'es' ? 'Renovación' : 'Renewal'}
+                                                                                </span>
+                                                                            </div>
+                                                                            <p className="text-sm font-bold text-amber-400">
+                                                                                {analysis.renewalDate ? formatDate(analysis.renewalDate) : '-'}
+                                                                            </p>
+                                                                        </div>
+                                                                        <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-700/30">
+                                                                            <div className="flex items-center gap-2 mb-2">
+                                                                                <Target className="w-4 h-4 text-purple-400" />
+                                                                                <span className="text-xs text-slate-500 font-medium uppercase tracking-wide">
+                                                                                    {language === 'es' ? 'Tipo' : 'Type'}
+                                                                                </span>
+                                                                            </div>
+                                                                            <p className="text-sm font-semibold text-white truncate">
+                                                                                {analysis.contractType || 'General'}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Summary Section */}
+                                                                {analysis.summary && (
+                                                                    <div className="mb-6 p-5 rounded-xl bg-gradient-to-r from-blue-500/5 to-purple-500/5 border border-blue-500/20">
+                                                                        <h4 className="text-xs font-bold text-blue-400 mb-3 uppercase tracking-wider flex items-center gap-2">
+                                                                            <Zap className="w-4 h-4" />
+                                                                            {language === 'es' ? 'Resumen AI' : 'AI Summary'}
+                                                                        </h4>
+                                                                        <p className="text-sm text-slate-300 leading-relaxed">{analysis.summary}</p>
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Main Content: Data + Alerts */}
+                                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                                                    {/* Extracted Data with Audit Style */}
+                                                                    <div>
+                                                                        <h4 className="text-sm font-bold text-emerald-400 mb-4 flex items-center gap-2">
+                                                                            <Shield className="w-4 h-4" />
+                                                                            {language === 'es' ? 'Datos Extraídos' : 'Extracted Data'}
+                                                                            <span className="text-xs text-slate-500 font-normal">
+                                                                                ({Object.keys(analysis.extractedData || {}).length})
+                                                                            </span>
+                                                                        </h4>
+                                                                        <div className="space-y-2 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                                                                            {Object.entries(analysis.extractedData || {}).map(([key, value]) => {
+                                                                                const hasValue = value && value !== 'No especificado' && value !== 'Not specified';
+                                                                                return (
+                                                                                    <div
+                                                                                        key={key}
+                                                                                        className={`group p-3 rounded-xl border transition-all ${hasValue
+                                                                                            ? 'bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40'
+                                                                                            : 'bg-slate-900/30 border-slate-700/30 opacity-60'}`}
+                                                                                    >
+                                                                                        <div className="flex items-center justify-between mb-1">
+                                                                                            <p className={`text-xs font-semibold uppercase tracking-wide ${hasValue ? 'text-emerald-400' : 'text-slate-500'}`}>
+                                                                                                {getDataPointTranslation(key, language)}
+                                                                                            </p>
+                                                                                            {hasValue ? (
+                                                                                                <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                                                                                            ) : (
+                                                                                                <X className="w-3.5 h-3.5 text-slate-600" />
+                                                                                            )}
+                                                                                        </div>
+                                                                                        <p className={`text-sm leading-relaxed ${hasValue ? 'text-white' : 'text-slate-500 italic'}`}>
+                                                                                            {hasValue ? String(value) : (language === 'es' ? 'No detectado' : 'Not detected')}
+                                                                                        </p>
+                                                                                    </div>
+                                                                                );
+                                                                            })}
+                                                                            {Object.keys(analysis.extractedData || {}).length === 0 && (
+                                                                                <div className="p-6 text-center rounded-xl bg-slate-900/30 border border-slate-700/30">
+                                                                                    <FileText className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                                                                                    <p className="text-slate-500 text-sm">
+                                                                                        {language === 'es' ? 'Sin datos extraídos' : 'No data extracted'}
+                                                                                    </p>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Alerts & Abusive Clauses */}
+                                                                    <div>
+                                                                        <h4 className="text-sm font-bold text-red-400 mb-4 flex items-center gap-2">
+                                                                            <AlertTriangle className="w-4 h-4" />
+                                                                            {language === 'es' ? 'Alertas y Cláusulas Abusivas' : 'Alerts & Abusive Clauses'}
+                                                                            <span className="text-xs text-slate-500 font-normal">
+                                                                                ({(analysis.abusiveClauses?.length || 0) + (analysis.alerts?.length || 0)})
+                                                                            </span>
+                                                                        </h4>
+                                                                        <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                                                                            {/* Abusive Clauses */}
+                                                                            {(analysis.abusiveClauses || []).map((clause: any, idx: number) => (
+                                                                                <div
+                                                                                    key={idx}
+                                                                                    className="group p-4 rounded-xl bg-red-500/10 border border-red-500/30 hover:border-red-500/50 hover:shadow-[0_0_15px_rgba(239,68,68,0.1)] transition-all cursor-pointer"
+                                                                                    onClick={() => handleViewDocument(analysis.id)}
+                                                                                >
+                                                                                    <div className="flex items-start gap-3">
+                                                                                        <div className="p-1.5 rounded-lg bg-red-500/20 text-red-400 mt-0.5">
+                                                                                            <ShieldAlert className="w-4 h-4" />
+                                                                                        </div>
+                                                                                        <div className="flex-1">
+                                                                                            <p className="text-sm text-red-200 leading-relaxed font-medium">
+                                                                                                {typeof clause === 'string' ? clause : clause.explanation || clause.description || clause.text || JSON.stringify(clause)}
+                                                                                            </p>
+                                                                                            {typeof clause === 'object' && clause.reference && (
+                                                                                                <p className="text-xs text-red-400/60 mt-2 font-mono">
+                                                                                                    📍 {clause.reference}
+                                                                                                </p>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            ))}
+
+                                                                            {/* Regular Alerts */}
+                                                                            {(analysis.alerts || []).map((alert: any, idx: number) => (
+                                                                                <div
+                                                                                    key={`alert-${idx}`}
+                                                                                    className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 hover:border-amber-500/40 transition-all"
+                                                                                >
+                                                                                    <div className="flex items-start gap-3">
+                                                                                        <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                                                                                        <p className="text-sm text-amber-200">
+                                                                                            {typeof alert === 'string' ? alert : alert.message || JSON.stringify(alert)}
+                                                                                        </p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            ))}
+
+                                                                            {/* No Alerts */}
+                                                                            {(analysis.abusiveClauses?.length || 0) === 0 && (analysis.alerts?.length || 0) === 0 && (
+                                                                                <div className="p-6 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+                                                                                    <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-3">
+                                                                                        <CheckCircle className="w-6 h-6 text-emerald-400" />
+                                                                                    </div>
+                                                                                    <p className="text-sm font-medium text-emerald-400">
+                                                                                        {language === 'es' ? '¡Sin alertas detectadas!' : 'No alerts detected!'}
+                                                                                    </p>
+                                                                                    <p className="text-xs text-emerald-400/60 mt-1">
+                                                                                        {language === 'es' ? 'El documento parece seguro' : 'Document appears safe'}
+                                                                                    </p>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Action Buttons */}
+                                                                <div className="mt-6 pt-5 border-t border-slate-700/50 flex flex-wrap items-center justify-center gap-4">
+                                                                    <button
+                                                                        onClick={() => handleViewDocument(analysis.id)}
+                                                                        className="flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl transition-all shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 hover:scale-105 active:scale-95"
+                                                                    >
+                                                                        <ArrowUpRight className="w-4 h-4" />
+                                                                        {language === 'es' ? 'Ver Documento Completo' : 'View Full Document'}
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => setExpandedId(null)}
+                                                                        className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-medium rounded-xl border border-slate-700 hover:border-slate-600 transition-all"
+                                                                    >
+                                                                        <EyeOff className="w-4 h-4" />
+                                                                        {language === 'es' ? 'Cerrar Vista' : 'Close View'}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </motion.div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </>
                     )}
                 </main>
             </div>
