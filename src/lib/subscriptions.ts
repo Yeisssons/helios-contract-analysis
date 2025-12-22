@@ -4,24 +4,30 @@ import { SupabaseClient } from '@supabase/supabase-js';
 export const PLAN_LIMITS = {
     free: {
         documentsPerMonth: 5,
+        teamMembers: 0, // No team access
         hasChat: false,
         hasAdvancedAI: false,
         hasTemplates: false,
         hasRenewalAlerts: false,
+        hasSectors: false,
     },
     pro: {
         documentsPerMonth: Infinity,
+        teamMembers: 5, // 5 team members included
         hasChat: true,
         hasAdvancedAI: true,
         hasTemplates: true,
         hasRenewalAlerts: true,
+        hasSectors: true,
     },
     enterprise: {
         documentsPerMonth: Infinity,
+        teamMembers: Infinity, // Unlimited
         hasChat: true,
         hasAdvancedAI: true,
         hasTemplates: true,
         hasRenewalAlerts: true,
+        hasSectors: true,
     },
 } as const;
 

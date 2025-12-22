@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
 import LanguageToggle from './LanguageToggle';
 import ConnectionStatus from './ConnectionStatus';
-import { Home, Calendar, FileText, BarChart3, LogOut, User, Shield, Sparkles } from 'lucide-react';
+import { Home, Calendar, FileText, BarChart3, LogOut, User, Shield, Sparkles, Users } from 'lucide-react';
 
 export default function Header() {
     const { t, language } = useLanguage();
@@ -20,6 +20,7 @@ export default function Header() {
         { href: '/contracts', labelEs: 'Documentos', labelEn: 'Documents', icon: FileText },
         { href: '/analysis', labelEs: 'Análisis', labelEn: 'Analysis', icon: BarChart3 },
         { href: '/calendar', labelEs: 'Calendario', labelEn: 'Calendar', icon: Calendar },
+        { href: '/team', labelEs: 'Equipo', labelEn: 'Team', icon: Users },
     ];
 
     const handleSignOut = async () => {

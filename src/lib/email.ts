@@ -308,3 +308,118 @@ export async function sendRenewalAlertEmail({
     return sendEmail({ to, subject, html });
 }
 
+/**
+ * Send email invitation to join a team
+ */
+export async function sendTeamInviteEmail({
+    to,
+    teamName,
+    inviterEmail,
+    isNewUser,
+    language = 'es'
+}: {
+    to: string;
+    teamName: string;
+    inviterEmail: string;
+    isNewUser: boolean;
+    language?: 'es' | 'en';
+}) {
+    const isSpanish = language === 'es';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://helios.ysnsolutions.com';
+
+    const subject = isSpanish
+        ? `Has sido invitado a unirte al equipo "${teamName}" en Helios`
+        : `You've been invited to join team "${teamName}" on Helios`;
+
+    const ctaUrl = isNewUser
+        ? `${appUrl}/signup?email=${encodeURIComponent(to)}&team=${encodeURIComponent(teamName)}`
+        : `${appUrl}/team`;
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #09090b; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" style="max-width: 520px; width: 100%; background: linear-gradient(135deg, #18181b 0%, #09090b 100%); border-radius: 16px; border: 1px solid #27272a; overflow: hidden;">
+                    
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding: 32px 32px 24px 32px; text-align: center; border-bottom: 1px solid #27272a;">
+                            <h1 style="margin: 0; color: #10b981; font-size: 28px; font-weight: 700;">
+                                ☀️ Helios
+                            </h1>
+                            <p style="margin: 8px 0 0 0; color: #52525b; font-size: 12px;">
+                                ${isSpanish ? 'Inteligencia Contractual' : 'Contract Intelligence'}
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 32px;">
+                            <h2 style="color: #ffffff; font-size: 22px; margin: 0 0 16px 0;">
+                                ${isSpanish ? '¡Has sido invitado!' : 'You\'ve been invited!'}
+                            </h2>
+                            
+                            <p style="color: #a1a1aa; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">
+                                ${isSpanish
+            ? `<strong style="color: #ffffff;">${inviterEmail}</strong> te ha invitado a unirte al equipo <strong style="color: #10b981;">"${teamName}"</strong> en Helios.`
+            : `<strong style="color: #ffffff;">${inviterEmail}</strong> has invited you to join the team <strong style="color: #10b981;">"${teamName}"</strong> on Helios.`
+        }
+                            </p>
+
+                            ${isNewUser ? `
+                            <p style="color: #71717a; font-size: 14px; line-height: 1.5; margin: 0 0 24px 0; padding: 16px; background: #18181b; border-radius: 8px; border-left: 3px solid #10b981;">
+                                ${isSpanish
+                ? 'Como aún no tienes cuenta, al hacer clic en el botón podrás registrarte. Tu equipo te estará esperando.'
+                : 'Since you don\'t have an account yet, clicking the button will let you sign up. Your team will be waiting.'
+            }
+                            </p>
+                            ` : ''}
+
+                            <!-- CTA Button -->
+                            <table role="presentation" style="width: 100%;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="${ctaUrl}" 
+                                           style="display: inline-block; padding: 14px 32px; background: #10b981; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px; border-radius: 8px;">
+                                            ${isNewUser
+            ? (isSpanish ? 'Crear Cuenta y Unirme' : 'Create Account & Join')
+            : (isSpanish ? 'Ver Mi Equipo' : 'View My Team')
+        }
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 24px 32px; border-top: 1px solid #27272a; text-align: center;">
+                            <p style="color: #52525b; font-size: 12px; margin: 0;">
+                                ${isSpanish
+            ? 'Este email fue enviado automáticamente por Helios Contract Intelligence'
+            : 'This email was sent automatically by Helios Contract Intelligence'}
+                            </p>
+                            <p style="color: #3f3f46; font-size: 12px; margin: 8px 0 0 0;">
+                                © ${new Date().getFullYear()} YSN Solutions
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+    `.trim();
+
+    return sendEmail({ to, subject, html });
+}
