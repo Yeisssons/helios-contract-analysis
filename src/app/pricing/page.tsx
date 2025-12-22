@@ -1,11 +1,63 @@
 'use client';
 
-import { Check, Zap, Building2, ArrowLeft, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { Check, Zap, Building2, ArrowLeft, Sparkles, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+
+// Replace with your actual Stripe Price ID from your Dashboard
+// const STRIPE_PRICE_ID_PRO = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO || 'price_1Q3...';
+// For now, we'll use a placeholder that the user needs to update
+const STRIPE_PRICE_ID_PRO = 'price_1Qvn5P2eZvKYlo2CLpM'; // Example placeholder
 
 export default function PricingPage() {
     const { language } = useLanguage();
+    const { user, session } = useAuth();
+    const router = useRouter();
+    const [loading, setLoading] = useState(false);
+
+    const handleCheckout = async (priceId: string) => {
+        if (!user) {
+            toast.error(language === 'es' ? 'Inicia sesión para continuar' : 'Please login to continue');
+            router.push('/login?redirect=/pricing');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const response = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session?.access_token || ''}`,
+                },
+                body: JSON.stringify({
+                    priceId,
+                    redirectUrl: window.location.origin + '/dashboard',
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                console.error('Checkout error:', data);
+                toast.error(language === 'es' ? 'Error al iniciar pago' : 'Failed to start payment');
+                setLoading(false);
+                return;
+            }
+
+            // Redirect to Stripe Checkout
+            window.location.href = data.url;
+
+        } catch (error) {
+            console.error('Checkout exception:', error);
+            toast.error(language === 'es' ? 'Error de conexión' : 'Connection error');
+            setLoading(false);
+        }
+    };
 
     const t = {
         back: language === 'es' ? 'Volver al Inicio' : 'Back to Home',
@@ -15,7 +67,8 @@ export default function PricingPage() {
             : 'Choose the plan that best fits your needs. No surprises, no hidden costs.',
         monthly: language === 'es' ? '/mes' : '/month',
         getStarted: language === 'es' ? 'Comenzar Gratis' : 'Get Started Free',
-        upgrade: language === 'es' ? 'Próximamente' : 'Coming Soon',
+        upgrade: language === 'es' ? 'Obtener Pro' : 'Get Pro',
+        upgradeProcessing: language === 'es' ? 'Procesando...' : 'Processing...',
         contactSales: language === 'es' ? 'Contactar Ventas' : 'Contact Sales',
         popular: language === 'es' ? 'Más Popular' : 'Most Popular',
 
@@ -161,10 +214,18 @@ export default function PricingPage() {
                             ))}
                         </ul>
                         <button
-                            disabled
-                            className="w-full py-3 rounded-xl bg-emerald-500/20 text-emerald-400 font-semibold text-center cursor-not-allowed opacity-70"
+                            onClick={() => handleCheckout(STRIPE_PRICE_ID_PRO)}
+                            disabled={loading}
+                            className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-semibold text-center transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                            {t.upgrade}
+                            {loading ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    {t.upgradeProcessing}
+                                </>
+                            ) : (
+                                t.upgrade
+                            )}
                         </button>
                     </div>
 
