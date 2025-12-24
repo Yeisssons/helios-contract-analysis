@@ -463,6 +463,32 @@ export default function PricingPage() {
                                         feature: isSpanish ? '🤖 Modelo de IA' : '🤖 AI Model',
                                         free: 'Gemini 2.5 Flash', pro: 'Gemini 3 Flash', enterprise: isSpanish ? 'GPT-5 / Claude / Gemini (elección)' : 'GPT-5 / Claude / Gemini (choice)'
                                     },
+                                    { separator: isSpanish ? '🎯 Análisis Avanzado' : '🎯 Advanced Analysis' },
+                                    {
+                                        feature: isSpanish ? '📉 Puntuación de Riesgo AI' : '📉 AI Risk Score',
+                                        free: false, pro: true, enterprise: true
+                                    },
+                                    {
+                                        feature: isSpanish ? '⚠️ Detección de Cláusulas Abusivas' : '⚠️ Abusive Clauses Detection',
+                                        free: false, pro: true, enterprise: true
+                                    },
+                                    {
+                                        feature: isSpanish ? '🚨 Alertas Automáticas' : '🚨 Automatic Alerts',
+                                        free: false, pro: true, enterprise: true
+                                    },
+                                    {
+                                        feature: isSpanish ? '✨ Tareas Sugeridas por IA' : '✨ AI Suggested Tasks',
+                                        free: false, pro: true, enterprise: true
+                                    },
+                                    {
+                                        feature: isSpanish ? '📅 Agendar Recordatorios' : '📅 Schedule Reminders',
+                                        free: false, pro: true, enterprise: true
+                                    },
+                                    {
+                                        feature: isSpanish ? '✉️ Redactar Email de Cancelación' : '✉️ Draft Cancellation Email',
+                                        free: false, pro: true, enterprise: true
+                                    },
+                                    { separator: isSpanish ? '📸 Captura y Formatos' : '📸 Capture & Formats' },
                                     {
                                         feature: isSpanish ? '📸 OCR de imágenes' : '📸 Image OCR',
                                         free: false, pro: true, enterprise: true
@@ -475,6 +501,7 @@ export default function PricingPage() {
                                         feature: isSpanish ? '🖼️ Formatos soportados' : '🖼️ Supported formats',
                                         free: 'PDF, DOCX', pro: 'PDF, DOCX, JPG, PNG, WebP', enterprise: isSpanish ? 'Todos' : 'All'
                                     },
+                                    { separator: isSpanish ? '💼 Productividad' : '💼 Productivity' },
                                     {
                                         feature: isSpanish ? '💬 Chat con documentos' : '💬 Chat with documents',
                                         free: false, pro: true, enterprise: true
@@ -491,6 +518,7 @@ export default function PricingPage() {
                                         feature: isSpanish ? '📈 Exportación Excel' : '📈 Excel export',
                                         free: true, pro: true, enterprise: true
                                     },
+                                    { separator: isSpanish ? '🔒 Seguridad y Soporte' : '🔒 Security & Support' },
                                     {
                                         feature: isSpanish ? '🔐 SSO (SAML/OIDC)' : '🔐 SSO (SAML/OIDC)',
                                         free: false, pro: false, enterprise: true
@@ -508,30 +536,38 @@ export default function PricingPage() {
                                         free: '-', pro: '99%', enterprise: '99.5%'
                                     },
                                 ].map((row, i) => (
-                                    <tr key={i} className="hover:bg-zinc-900/30">
-                                        <td className="py-4 px-6 text-white font-medium">{row.feature}</td>
-                                        <td className="py-4 px-4 text-center">
-                                            {typeof row.free === 'boolean' ? (
-                                                row.free ? <Check className="w-5 h-5 text-emerald-500 mx-auto" /> : <X className="w-5 h-5 text-zinc-600 mx-auto" />
-                                            ) : (
-                                                <span className="text-zinc-400">{row.free}</span>
-                                            )}
-                                        </td>
-                                        <td className="py-4 px-4 text-center">
-                                            {typeof row.pro === 'boolean' ? (
-                                                row.pro ? <Check className="w-5 h-5 text-emerald-500 mx-auto" /> : <X className="w-5 h-5 text-zinc-600 mx-auto" />
-                                            ) : (
-                                                <span className="text-emerald-400">{row.pro}</span>
-                                            )}
-                                        </td>
-                                        <td className="py-4 px-4 text-center">
-                                            {typeof row.enterprise === 'boolean' ? (
-                                                row.enterprise ? <Check className="w-5 h-5 text-purple-500 mx-auto" /> : <X className="w-5 h-5 text-zinc-600 mx-auto" />
-                                            ) : (
-                                                <span className="text-purple-400">{row.enterprise}</span>
-                                            )}
-                                        </td>
-                                    </tr>
+                                    'separator' in row ? (
+                                        <tr key={i} className="bg-zinc-900/50">
+                                            <td colSpan={4} className="py-3 px-6 text-sm font-bold text-zinc-400 uppercase tracking-wider">
+                                                {row.separator}
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        <tr key={i} className="hover:bg-zinc-900/30">
+                                            <td className="py-4 px-6 text-white font-medium">{row.feature}</td>
+                                            <td className="py-4 px-4 text-center">
+                                                {typeof row.free === 'boolean' ? (
+                                                    row.free ? <Check className="w-5 h-5 text-emerald-500 mx-auto" /> : <X className="w-5 h-5 text-zinc-600 mx-auto" />
+                                                ) : (
+                                                    <span className="text-zinc-400">{row.free}</span>
+                                                )}
+                                            </td>
+                                            <td className="py-4 px-4 text-center">
+                                                {typeof row.pro === 'boolean' ? (
+                                                    row.pro ? <Check className="w-5 h-5 text-emerald-500 mx-auto" /> : <X className="w-5 h-5 text-zinc-600 mx-auto" />
+                                                ) : (
+                                                    <span className="text-emerald-400">{row.pro}</span>
+                                                )}
+                                            </td>
+                                            <td className="py-4 px-4 text-center">
+                                                {typeof row.enterprise === 'boolean' ? (
+                                                    row.enterprise ? <Check className="w-5 h-5 text-purple-500 mx-auto" /> : <X className="w-5 h-5 text-zinc-600 mx-auto" />
+                                                ) : (
+                                                    <span className="text-purple-400">{row.enterprise}</span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    )
                                 ))}
                             </tbody>
                         </table>
