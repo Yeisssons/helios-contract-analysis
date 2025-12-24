@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
             .select('id, status, priority, created_at, updated_at')
             .eq('created_by', user.id);
 
-        if (tasksError) {
+        if (tasksError && tasksError.code !== 'PGRST205') {
             console.error('Error fetching tasks:', tasksError);
         }
 
