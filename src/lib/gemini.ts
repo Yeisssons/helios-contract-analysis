@@ -126,10 +126,10 @@ export async function analyzeContractText(
     // Fallback model chain for resilience
     // Prioritized by: availability in free tier, speed, reliability
     const MODEL_CHAIN = [
-        modelName || 'gemini-2.5-flash',       // Primary (fastest)
-        'gemini-2.5-flash-lite',               // Fallback 1: Same speed, separate quota!
-        'gemini-2.5-pro',                      // Fallback 2: High intelligence, slower
-        // Removed legacy 1.5 models as requested
+        'gemini-3-flash',                      // Primary: Latest, best performance
+        modelName || 'gemini-2.5-flash',       // Fallback 1: Fast and reliable
+        'gemini-2.5-flash-lite',               // Fallback 2: Same speed, separate quota!
+        'gemini-2.5-pro',                      // Fallback 3: High intelligence, slower
     ];
 
     const systemPrompt = buildSystemPrompt(customQuery, dataPoints);
