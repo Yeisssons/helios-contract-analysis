@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, X, Send, MessageSquare, Bot, User, Trash2, ChevronDown } from 'lucide-react';
+import { Sparkles, X, Send, MessageSquare, Bot, User, Trash2, ChevronDown, Lock, Zap } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import rehypeSanitize from 'rehype-sanitize';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -23,9 +23,10 @@ interface ChatSession {
 interface ContractChatProps {
     contracts: ContractData[];
     initialContractId?: string;
+    userPlan?: 'free' | 'pro' | 'enterprise';
 }
 
-export default function ContractChat({ contracts, initialContractId }: ContractChatProps) {
+export default function ContractChat({ contracts, initialContractId, userPlan = 'free' }: ContractChatProps) {
     const { language } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
     const [selectedContractId, setSelectedContractId] = useState<string>(initialContractId || '');
@@ -308,13 +309,37 @@ export default function ContractChat({ contracts, initialContractId }: ContractC
                     animate={{ scale: 1, opacity: 1 }}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => setIsOpen(true)}
-                    className="flex items-center gap-3 px-6 py-4 bg-indigo-600 text-white rounded-full shadow-xl shadow-indigo-600/25 hover:shadow-indigo-600/40 transition-all group"
+                    onClick={() => {
+                        if (userPlan === 'free') {
+                            window.location.href = '/pricing';
+                        } else {
+                            setIsOpen(true);
+                        }
+                    }}
+                    className={`flex items-center gap-3 px-6 py-4 rounded-full shadow-xl transition-all group ${userPlan === 'free'
+                            ? 'bg-zinc-800 text-zinc-400 border border-white/5 hover:border-purple-500/50'
+                            : 'bg-indigo-600 text-white shadow-indigo-600/25 hover:shadow-indigo-600/40'
+                        }`}
                 >
-                    <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                    <span className="font-semibold">
-                        {language === 'es' ? 'Consultar Agente' : 'Ask Expert'}
-                    </span>
+                    {userPlan === 'free' ? (
+                        <>
+                            <div className="relative">
+                                <MessageSquare className="w-5 h-5 opacity-50" />
+                                <Lock className="w-3 h-3 text-purple-400 absolute -top-1 -right-1" />
+                            </div>
+                            <span className="font-semibold text-zinc-400 group-hover:text-purple-300 transition-colors">
+                                {language === 'es' ? 'Consultar Agente (Pro)' : 'Ask Expert (Pro)'}
+                            </span>
+                            <Zap className="w-3 h-3 text-purple-400 animate-pulse" />
+                        </>
+                    ) : (
+                        <>
+                            <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            <span className="font-semibold">
+                                {language === 'es' ? 'Consultar Agente' : 'Ask Expert'}
+                            </span>
+                        </>
+                    )}
                 </motion.button>
             )}
         </div>

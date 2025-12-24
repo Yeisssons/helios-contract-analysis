@@ -26,9 +26,11 @@ import {
     Plus,
     UserPlus,
     X,
-    Mail
+    Mail,
+    Lock
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface CalendarDocument {
     id: string;
@@ -111,6 +113,7 @@ function CalendarPageContent() {
     const [filterStatus, setFilterStatus] = useState<'all' | 'urgent' | 'upcoming' | 'active'>('all');
 
     const [user, setUser] = useState<any>(null);
+    const [userPlan, setUserPlan] = useState<'free' | 'pro' | 'enterprise'>('free');
     const [customTasks, setCustomTasks] = useState<CustomTask[]>([]);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -123,10 +126,22 @@ function CalendarPageContent() {
     useEffect(() => {
         const checkUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
+            if (user) {
+                setUser(user);
+                // Fetch profile to get plan
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('plan')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profile?.plan) {
+                    setUserPlan(profile.plan as any);
+                }
+            }
         };
         checkUser();
-    }, [supabase]);
+    }, []);
 
     // Fetch db events
     useEffect(() => {
@@ -803,8 +818,8 @@ END:VCALENDAR`;
                         <button
                             onClick={() => setFilterEventType('all')}
                             className={`px-3 py-1.5 rounded-full text-sm transition-all ${filterEventType === 'all'
-                                    ? 'bg-white text-slate-900 font-medium'
-                                    : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50'
+                                ? 'bg-white text-slate-900 font-medium'
+                                : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50'
                                 }`}
                         >
                             {language === 'es' ? 'Todos' : 'All'} ({stats.totalEvents})
@@ -817,8 +832,8 @@ END:VCALENDAR`;
                                     key={key}
                                     onClick={() => setFilterEventType(key)}
                                     className={`px-3 py-1.5 rounded-full text-sm transition-all flex items-center gap-1.5 ${filterEventType === key
-                                            ? 'bg-emerald-500 text-white font-medium'
-                                            : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50'
+                                        ? 'bg-emerald-500 text-white font-medium'
+                                        : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50'
                                         }`}
                                 >
                                     <span>{config.icon}</span>
@@ -1174,7 +1189,7 @@ END:VCALENDAR`;
                                 <label className="block text-sm font-medium text-slate-300 mb-1 flex items-center gap-2">
                                     <UserPlus className="w-4 h-4 text-emerald-400" />
                                     {language === 'es' ? 'Asignar a' : 'Assign to'}
-                                    {teamMembers.length === 0 && (
+                                    {userPlan !== 'free' && teamMembers.length === 0 && (
                                         <button
                                             type="button"
                                             onClick={() => setShowTeamModal(true)}
@@ -1184,27 +1199,42 @@ END:VCALENDAR`;
                                         </button>
                                     )}
                                 </label>
-                                <select
-                                    value={newTask.assignedTo}
-                                    onChange={(e) => setNewTask(prev => ({ ...prev, assignedTo: e.target.value }))}
-                                    className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                                >
-                                    <option value="">
-                                        {language === 'es' ? '-- Sin asignar --' : '-- Unassigned --'}
-                                    </option>
-                                    {teamMembers.map((member: TeamMember) => (
-                                        <option key={member.id} value={member.id}>
-                                            {member.avatar} {member.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                {newTask.assignedTo && (
-                                    <p className="text-xs text-blue-400 mt-1 flex items-center gap-1">
-                                        <Mail className="w-3 h-3" />
-                                        {language === 'es'
-                                            ? `Se abrirá Gmail para enviar email a: ${teamMembers.find((m: TeamMember) => m.id === newTask.assignedTo)?.email}`
-                                            : `Gmail will open to send email to: ${teamMembers.find((m: TeamMember) => m.id === newTask.assignedTo)?.email}`}
-                                    </p>
+
+                                {userPlan === 'free' ? (
+                                    <Link
+                                        href="/pricing"
+                                        className="w-full px-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-slate-400 flex items-center justify-between group hover:border-purple-500/50 transition-colors"
+                                    >
+                                        <span className="text-sm">
+                                            {language === 'es' ? 'Solo en planes Pro/Enterprise' : 'Only in Pro/Enterprise plans'}
+                                        </span>
+                                        <Lock className="w-4 h-4 text-purple-400" />
+                                    </Link>
+                                ) : (
+                                    <>
+                                        <select
+                                            value={newTask.assignedTo}
+                                            onChange={(e) => setNewTask(prev => ({ ...prev, assignedTo: e.target.value }))}
+                                            className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                        >
+                                            <option value="">
+                                                {language === 'es' ? '-- Sin asignar --' : '-- Unassigned --'}
+                                            </option>
+                                            {teamMembers.map((member: TeamMember) => (
+                                                <option key={member.id} value={member.id}>
+                                                    {member.avatar} {member.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {newTask.assignedTo && (
+                                            <p className="text-xs text-blue-400 mt-1 flex items-center gap-1">
+                                                <Mail className="w-3 h-3" />
+                                                {language === 'es'
+                                                    ? `Se abrirá Gmail para enviar email a: ${teamMembers.find((m: TeamMember) => m.id === newTask.assignedTo)?.email}`
+                                                    : `Gmail will open to send email to: ${teamMembers.find((m: TeamMember) => m.id === newTask.assignedTo)?.email}`}
+                                            </p>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </div>

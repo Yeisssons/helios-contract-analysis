@@ -28,6 +28,7 @@ function HomeContent() {
   const [history, setHistory] = useState<ContractAnalysis[]>([]);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [userPlan, setUserPlan] = useState<'free' | 'pro' | 'enterprise'>('free');
 
   // Create a session file cache to store uploaded File objects
   // Key: fileName, Value: File object
@@ -42,12 +43,25 @@ function HomeContent() {
 
         if (!session?.access_token) return;
 
-        const response = await fetch('/api/contracts', {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        });
-        const result: ContractsListResponse = await response.json();
+        // Fetch contracts and profile (plan)
+        const [contractsRes, profileRes] = await Promise.all([
+          fetch('/api/contracts', {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            }
+          }),
+          supabase
+            .from('profiles')
+            .select('plan')
+            .eq('id', session.user.id)
+            .single()
+        ]);
+
+        const result: ContractsListResponse = await contractsRes.json();
+
+        if (profileRes.data?.plan) {
+          setUserPlan(profileRes.data.plan as any);
+        }
 
         if (result.success && result.data) {
           // Convert Supabase data to ContractAnalysis format
@@ -562,10 +576,8 @@ function HomeContent() {
         </main>
 
         {/* Premium Footer */}
-        {/* Floating Query Widget        */}
-
-        {/* Floating Query Widget        */}
-        <ContractChat contracts={contracts as any} />
+        {/* Floating Query Widget */}
+        <ContractChat contracts={contracts as any} userPlan={userPlan} />
       </div>
     </div>
   );

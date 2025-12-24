@@ -41,6 +41,7 @@ function ContractDetailContent() {
     const [editedContract, setEditedContract] = useState<ContractDetail | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [showToast, setShowToast] = useState(false);
+    const [userPlan, setUserPlan] = useState<'free' | 'pro' | 'enterprise'>('free');
     const [showSearchPanel, setShowSearchPanel] = useState(!!searchTerm);
 
     useEffect(() => {
@@ -56,16 +57,27 @@ function ContractDetailContent() {
                     throw new Error('Not authenticated');
                 }
 
-                // Fetch contract data
-                const response = await fetch(`/api/contracts/${contractId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${session.access_token}`
-                    }
-                });
-                const result = await response.json();
+                // Fetch contract and profile (plan)
+                const [contractRes, profileRes] = await Promise.all([
+                    fetch(`/api/contracts/${contractId}`, {
+                        headers: {
+                            'Authorization': `Bearer ${session.access_token}`
+                        }
+                    }),
+                    supabase
+                        .from('profiles')
+                        .select('plan')
+                        .eq('id', session.user.id)
+                        .single()
+                ]);
 
+                const result = await contractRes.json();
                 if (!result.success || !result.data) {
                     throw new Error(result.error || 'Contract not found');
+                }
+
+                if (profileRes.data?.plan) {
+                    setUserPlan(profileRes.data.plan as any);
                 }
 
                 setContract(result.data);
@@ -540,6 +552,7 @@ function ContractDetailContent() {
                 <ContractChat
                     contracts={[contract as any]}
                     initialContractId={contract.id}
+                    userPlan={userPlan}
                 />
             )}
         </div>
