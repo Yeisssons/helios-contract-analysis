@@ -274,4 +274,75 @@ function getOneYearFromNow(): string {
     return date.toISOString().split('T')[0];
 }
 
+/**
+ * Extracts text from an image using Gemini Vision (multimodal)
+ * Used for OCR of scanned documents and photos
+ * 
+ * @param imageBuffer - The image file buffer
+ * @param mimeType - MIME type of the image (image/jpeg, image/png, image/webp)
+ * @param fileName - Original file name for logging
+ * @returns Extracted text from the image
+ */
+export async function extractTextFromImage(
+    imageBuffer: Buffer,
+    mimeType: string,
+    fileName: string
+): Promise<string> {
+    if (!process.env.GEMINI_API_KEY) {
+        throw new Error('GEMINI_API_KEY environment variable is not set');
+    }
+
+    console.log(`📸 Gemini Vision OCR: Processing ${fileName} (${(imageBuffer.length / 1024).toFixed(0)}KB)`);
+
+    // Use gemini-2.5-flash which has good vision capabilities
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+    const imagePart = {
+        inlineData: {
+            mimeType: mimeType,
+            data: imageBuffer.toString('base64'),
+        },
+    };
+
+    const prompt = `You are an OCR (Optical Character Recognition) expert. Extract ALL text visible in this image.
+
+INSTRUCTIONS:
+1. Extract every piece of text you can see in the image
+2. Maintain the original layout and structure as much as possible
+3. Preserve paragraph breaks and bullet points
+4. If text is handwritten, do your best to transcribe it
+5. If there are tables, preserve the table structure
+6. Include headers, footers, page numbers if visible
+7. If text is partially obscured or unclear, indicate with [unclear] or [illegible]
+8. Do NOT add any interpretation or analysis - just extract the raw text
+
+OUTPUT FORMAT:
+Return ONLY the extracted text, nothing else. No explanations, no markdown formatting.
+If no text is found, return: [NO TEXT DETECTED]`;
+
+    try {
+        const result = await model.generateContent([prompt, imagePart]);
+        const response = await result.response;
+        const extractedText = response.text();
+
+        console.log(`✅ Gemini Vision OCR: Extracted ${extractedText.length} characters from ${fileName}`);
+
+        return extractedText || '[NO TEXT DETECTED]';
+    } catch (error) {
+        console.error(`❌ Gemini Vision OCR Error for ${fileName}:`, error);
+
+        // Try fallback to gemini-1.5-flash if 2.5 fails
+        try {
+            console.log(`🔄 Retrying with gemini-1.5-flash...`);
+            const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+            const result = await fallbackModel.generateContent([prompt, imagePart]);
+            const response = await result.response;
+            return response.text() || '[NO TEXT DETECTED]';
+        } catch (fallbackError) {
+            console.error(`❌ Fallback OCR also failed:`, fallbackError);
+            return `[OCR FAILED: Could not extract text from ${fileName}]`;
+        }
+    }
+}
+
 export default analyzeContractText;

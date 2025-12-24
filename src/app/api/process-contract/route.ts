@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parsePdf } from '@/lib/pdfParser';
 import { detectFileType } from '@/lib/fileValidation';
-import { analyzeContractText } from '@/lib/gemini';
+import { analyzeContractText, extractTextFromImage } from '@/lib/gemini';
 import { extractContractDataWithAI } from '@/lib/ai-mock';
 import { ProcessContractResponse } from '@/types/contract';
 import { APP_CONFIG, getAdaptiveModel } from '@/config/constants';
@@ -129,10 +129,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
                         combinedExtractedText += `\n\n--- Page from ${file.name} ---\n\n${result.value}`;
 
                     } else if (['jpg', 'jpeg', 'png', 'webp'].includes(fileExtension)) {
-                        // For images, we'll add a placeholder - actual OCR would use Gemini Vision
-                        // TODO: Implement Gemini Vision multimodal for image content extraction
-                        combinedExtractedText += `\n\n--- Scanned Image: ${file.name} (${(file.size / 1024).toFixed(0)}KB) ---\n`;
-                        combinedExtractedText += `[Image content - requires Gemini Vision processing]\n`;
+                        // Use Gemini Vision for OCR of scanned images
+                        const imageText = await extractTextFromImage(buffer, file.type, file.name);
+                        combinedExtractedText += `\n\n--- Scanned Image: ${file.name} ---\n\n${imageText}`;
                     }
                 }
 
