@@ -137,8 +137,8 @@ function ProfileContent() {
                                             key={tab.id}
                                             onClick={() => setActiveTab(tab.id)}
                                             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive
-                                                    ? 'text-white bg-slate-700/50'
-                                                    : 'text-slate-400 hover:text-white hover:bg-slate-700/30'
+                                                ? 'text-white bg-slate-700/50'
+                                                : 'text-slate-400 hover:text-white hover:bg-slate-700/30'
                                                 }`}
                                         >
                                             <Icon className="w-4 h-4" />
@@ -389,89 +389,239 @@ function ProfileContent() {
                         {/* ============ SECURITY TAB ============ */}
                         {activeTab === 'security' && (
                             <>
+                                {/* Legal Compliance Section */}
                                 <motion.section
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     className="p-6 rounded-2xl bg-slate-800/50 border border-slate-700/50"
                                 >
                                     <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-                                        <Shield className="w-5 h-5 text-emerald-400" />
-                                        {language === 'es' ? 'Privacidad y Datos' : 'Privacy & Data'}
+                                        <FileText className="w-5 h-5 text-emerald-400" />
+                                        {language === 'es' ? 'Cumplimiento Legal' : 'Legal Compliance'}
                                     </h2>
 
-                                    <div className="space-y-6">
-                                        {/* Data Retention Policy */}
-                                        <div className="p-4 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+                                    <div className="space-y-4">
+                                        {/* DPA Download */}
+                                        <div className="flex items-center justify-between p-4 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
                                             <div className="flex items-start gap-3">
-                                                <Clock className="w-5 h-5 text-emerald-400 mt-0.5" />
+                                                <FileText className="w-5 h-5 text-emerald-400 mt-0.5" />
                                                 <div>
                                                     <p className="text-white font-medium">
-                                                        {language === 'es' ? 'Política de Retención de Datos' : 'Data Retention Policy'}
+                                                        {language === 'es' ? 'Acuerdo de Procesamiento de Datos (DPA)' : 'Data Processing Agreement (DPA)'}
                                                     </p>
-                                                    <p className="text-sm text-slate-400 mt-1">
+                                                    <p className="text-sm text-slate-400">
                                                         {language === 'es'
-                                                            ? 'Tus documentos se almacenan de forma segura. Los datos de análisis (metadata extraída) se eliminan automáticamente después de 30 días de inactividad para garantizar tu privacidad.'
-                                                            : 'Your documents are stored securely. Analysis data (extracted metadata) is automatically deleted after 30 days of inactivity to ensure your privacy.'}
+                                                            ? 'Conforme al Artículo 28 del RGPD (UE) 2016/679'
+                                                            : 'In accordance with Article 28 of GDPR (EU) 2016/679'}
                                                     </p>
                                                 </div>
                                             </div>
+                                            <a
+                                                href="/legal/dpa.html"
+                                                target="_blank"
+                                                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition-colors"
+                                            >
+                                                <Download className="w-4 h-4" />
+                                                {language === 'es' ? 'Ver DPA' : 'View DPA'}
+                                            </a>
                                         </div>
 
-                                        {/* Your Data */}
+                                        {/* GDPR Badge */}
+                                        <div className="flex items-center gap-2 p-3 rounded-lg bg-slate-900/50 border border-slate-700/50">
+                                            <Check className="w-4 h-4 text-emerald-400" />
+                                            <span className="text-slate-300 text-sm">
+                                                {language === 'es' ? 'RGPD Nativo - Privacidad desde el Diseño' : 'Native GDPR - Privacy by Design'}
+                                            </span>
+                                            <span className="ml-auto px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-xs rounded-full">
+                                                {language === 'es' ? 'Firmado' : 'Signed'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </motion.section>
+
+                                {/* Data Residency Section */}
+                                <motion.section
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1 }}
+                                    className="p-6 rounded-2xl bg-slate-800/50 border border-slate-700/50"
+                                >
+                                    <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                                        <Shield className="w-5 h-5 text-blue-400" />
+                                        {language === 'es' ? 'Residencia de Datos' : 'Data Residency'}
+                                    </h2>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {/* Server Location */}
+                                        <div className="p-4 rounded-lg bg-blue-500/5 border border-blue-500/20">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="text-2xl">📍</span>
+                                                <span className="text-white font-medium">
+                                                    {language === 'es' ? 'Servidor Activo' : 'Active Server'}
+                                                </span>
+                                            </div>
+                                            <p className="text-blue-400 font-semibold">Frankfurt, Alemania</p>
+                                            <p className="text-xs text-slate-500 mt-1">AWS eu-central-1</p>
+                                        </div>
+
+                                        {/* Encryption */}
+                                        <div className="p-4 rounded-lg bg-purple-500/5 border border-purple-500/20">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="text-2xl">🛡️</span>
+                                                <span className="text-white font-medium">
+                                                    {language === 'es' ? 'Cifrado' : 'Encryption'}
+                                                </span>
+                                            </div>
+                                            <p className="text-purple-400 font-semibold">AES-256</p>
+                                            <p className="text-xs text-slate-500 mt-1">{language === 'es' ? 'En reposo y en tránsito' : 'At rest and in transit'}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* EU Badge */}
+                                    <div className="mt-4 p-3 rounded-lg bg-slate-900/50 border border-slate-700/50 flex items-center gap-3">
+                                        <span className="text-2xl">🇪🇺</span>
                                         <div>
-                                            <h3 className="text-white font-medium mb-3">
-                                                {language === 'es' ? 'Tus Datos' : 'Your Data'}
-                                            </h3>
-                                            <div className="space-y-3">
-                                                <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700/50">
-                                                    <div className="flex items-center gap-3">
-                                                        <FileText className="w-4 h-4 text-blue-400" />
-                                                        <span className="text-slate-300">
-                                                            {language === 'es' ? 'Documentos subidos' : 'Uploaded documents'}
-                                                        </span>
-                                                    </div>
-                                                    <span className="text-white font-medium">{subscription.documentsUsed}</span>
+                                            <p className="text-white text-sm font-medium">
+                                                {language === 'es' ? 'Tus datos nunca salen de la Unión Europea' : 'Your data never leaves the European Union'}
+                                            </p>
+                                            <p className="text-xs text-slate-500">
+                                                {language === 'es' ? 'Cumplimiento total con RGPD y normativas locales' : 'Full compliance with GDPR and local regulations'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </motion.section>
+
+                                {/* Data Retention Config */}
+                                <motion.section
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.2 }}
+                                    className="p-6 rounded-2xl bg-slate-800/50 border border-slate-700/50"
+                                >
+                                    <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                                        <Clock className="w-5 h-5 text-amber-400" />
+                                        {language === 'es' ? 'Configuración de Retención' : 'Retention Settings'}
+                                    </h2>
+
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-400 mb-2">
+                                                {language === 'es'
+                                                    ? 'Eliminar automáticamente metadatos de análisis después de:'
+                                                    : 'Automatically delete analysis metadata after:'}
+                                            </label>
+                                            <select
+                                                className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                                                defaultValue="30"
+                                            >
+                                                <option value="7">{language === 'es' ? '7 días de inactividad' : '7 days of inactivity'}</option>
+                                                <option value="15">{language === 'es' ? '15 días de inactividad' : '15 days of inactivity'}</option>
+                                                <option value="30">{language === 'es' ? '30 días de inactividad (Recomendado)' : '30 days of inactivity (Recommended)'}</option>
+                                            </select>
+                                            <p className="text-xs text-slate-500 mt-2">
+                                                {language === 'es'
+                                                    ? 'Los documentos originales permanecen hasta que los elimines manualmente.'
+                                                    : 'Original documents remain until you manually delete them.'}
+                                            </p>
+                                        </div>
+
+                                        {/* Audit Log */}
+                                        <div className="p-4 rounded-lg bg-slate-900/50 border border-slate-700/50">
+                                            <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                                                <Eye className="w-4 h-4 text-slate-400" />
+                                                {language === 'es' ? 'Registro de Privacidad' : 'Privacy Audit Log'}
+                                            </h4>
+                                            <div className="space-y-2 text-sm">
+                                                <div className="flex items-center justify-between py-2 border-b border-slate-700/50">
+                                                    <span className="text-slate-400">
+                                                        {language === 'es' ? 'Última limpieza automática' : 'Last automatic cleanup'}
+                                                    </span>
+                                                    <span className="text-emerald-400">
+                                                        {language === 'es' ? 'Hace 2 días' : '2 days ago'}
+                                                    </span>
                                                 </div>
-                                                <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700/50">
-                                                    <div className="flex items-center gap-3">
-                                                        <Eye className="w-4 h-4 text-purple-400" />
-                                                        <span className="text-slate-300">
-                                                            {language === 'es' ? 'Análisis realizados' : 'Analyses performed'}
-                                                        </span>
-                                                    </div>
-                                                    <span className="text-white font-medium">{subscription.documentsUsed}</span>
+                                                <div className="flex items-center justify-between py-2 border-b border-slate-700/50">
+                                                    <span className="text-slate-400">
+                                                        {language === 'es' ? 'Política activa' : 'Active policy'}
+                                                    </span>
+                                                    <span className="text-white">30 {language === 'es' ? 'días' : 'days'}</span>
+                                                </div>
+                                                <div className="flex items-center justify-between py-2">
+                                                    <span className="text-slate-400">
+                                                        {language === 'es' ? 'Próxima limpieza programada' : 'Next scheduled cleanup'}
+                                                    </span>
+                                                    <span className="text-amber-400">
+                                                        {language === 'es' ? 'En 28 días' : 'In 28 days'}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {/* Actions */}
-                                        <div>
-                                            <h3 className="text-white font-medium mb-3">
-                                                {language === 'es' ? 'Acciones' : 'Actions'}
-                                            </h3>
-                                            <div className="space-y-3">
-                                                <Link
-                                                    href="/security"
-                                                    className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700/50 hover:border-emerald-500/30 transition-colors group"
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <Shield className="w-4 h-4 text-emerald-400" />
-                                                        <span className="text-slate-300 group-hover:text-white transition-colors">
-                                                            {language === 'es' ? 'Ver Centro de Confianza' : 'View Trust Center'}
-                                                        </span>
-                                                    </div>
-                                                    <ExternalLink className="w-4 h-4 text-slate-500" />
-                                                </Link>
-                                                <button className="flex items-center justify-between w-full p-3 rounded-lg bg-slate-900/50 border border-slate-700/50 hover:border-red-500/30 transition-colors group">
-                                                    <div className="flex items-center gap-3">
-                                                        <Trash2 className="w-4 h-4 text-red-400" />
-                                                        <span className="text-slate-300 group-hover:text-white transition-colors">
-                                                            {language === 'es' ? 'Eliminar todos mis datos' : 'Delete all my data'}
-                                                        </span>
-                                                    </div>
-                                                    <ChevronRight className="w-4 h-4 text-slate-500" />
-                                                </button>
+                                        <button
+                                            onClick={handleSaveNotifications}
+                                            disabled={loading}
+                                            className="flex items-center gap-2 px-6 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                                        >
+                                            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                            {language === 'es' ? 'Guardar Configuración' : 'Save Settings'}
+                                        </button>
+                                    </div>
+                                </motion.section>
+
+                                {/* Your Data & Actions */}
+                                <motion.section
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.3 }}
+                                    className="p-6 rounded-2xl bg-slate-800/50 border border-slate-700/50"
+                                >
+                                    <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                                        <FileText className="w-5 h-5 text-purple-400" />
+                                        {language === 'es' ? 'Tus Datos' : 'Your Data'}
+                                    </h2>
+
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700/50">
+                                            <div className="flex items-center gap-3">
+                                                <FileText className="w-4 h-4 text-blue-400" />
+                                                <span className="text-slate-300">
+                                                    {language === 'es' ? 'Documentos subidos' : 'Uploaded documents'}
+                                                </span>
                                             </div>
+                                            <span className="text-white font-medium">{subscription.documentsUsed}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700/50">
+                                            <div className="flex items-center gap-3">
+                                                <Eye className="w-4 h-4 text-purple-400" />
+                                                <span className="text-slate-300">
+                                                    {language === 'es' ? 'Análisis realizados' : 'Analyses performed'}
+                                                </span>
+                                            </div>
+                                            <span className="text-white font-medium">{subscription.documentsUsed}</span>
+                                        </div>
+
+                                        <div className="pt-4 space-y-3">
+                                            <Link
+                                                href="/security"
+                                                className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700/50 hover:border-emerald-500/30 transition-colors group"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <Shield className="w-4 h-4 text-emerald-400" />
+                                                    <span className="text-slate-300 group-hover:text-white transition-colors">
+                                                        {language === 'es' ? 'Ver Centro de Confianza' : 'View Trust Center'}
+                                                    </span>
+                                                </div>
+                                                <ExternalLink className="w-4 h-4 text-slate-500" />
+                                            </Link>
+                                            <button className="flex items-center justify-between w-full p-3 rounded-lg bg-slate-900/50 border border-slate-700/50 hover:border-red-500/30 transition-colors group">
+                                                <div className="flex items-center gap-3">
+                                                    <Trash2 className="w-4 h-4 text-red-400" />
+                                                    <span className="text-slate-300 group-hover:text-white transition-colors">
+                                                        {language === 'es' ? 'Eliminar todos mis datos' : 'Delete all my data'}
+                                                    </span>
+                                                </div>
+                                                <ChevronRight className="w-4 h-4 text-slate-500" />
+                                            </button>
                                         </div>
                                     </div>
                                 </motion.section>

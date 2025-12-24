@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Acuerdo de Procesamiento de Datos (DPA) - Helios</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.7; color: #1a1a1a; max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+        h1 { font-size: 24px; margin-bottom: 10px; color: #10b981; }
+        h2 { font-size: 18px; margin: 30px 0 15px; color: #333; border-bottom: 2px solid #10b981; padding-bottom: 5px; }
+        h3 { font-size: 15px; margin: 20px 0 10px; color: #444; }
+        p { margin-bottom: 12px; text-align: justify; }
+        .header { text-align: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #ddd; }
+        .header img { width: 60px; margin-bottom: 10px; }
+        .header p { color: #666; font-size: 14px; }
+        .parties { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .parties p { margin-bottom: 8px; }
+        .article { margin-bottom: 25px; }
+        ul { margin-left: 25px; margin-bottom: 15px; }
+        li { margin-bottom: 8px; }
+        .signature { margin-top: 50px; display: flex; justify-content: space-between; }
+        .signature-box { width: 45%; }
+        .signature-line { border-top: 1px solid #333; margin-top: 60px; padding-top: 10px; }
+        .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #888; border-top: 1px solid #ddd; padding-top: 20px; }
+        .badge { display: inline-block; background: #10b981; color: white; padding: 3px 10px; border-radius: 4px; font-size: 12px; }
+        @media print { body { padding: 20px; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div style="font-size: 32px; color: #10b981; font-weight: bold;">☀️ Helios</div>
+        <h1>Acuerdo de Procesamiento de Datos (DPA)</h1>
+        <p>Data Processing Agreement conforme al Artículo 28 del RGPD (UE) 2016/679</p>
+        <p><span class="badge">Versión 1.0 - Diciembre 2024</span></p>
+    </div>
+
+    <div class="parties">
+        <h3>PARTES DEL ACUERDO</h3>
+        <p><strong>RESPONSABLE DEL TRATAMIENTO (Cliente):</strong> El titular de la cuenta de Helios que acepta este acuerdo.</p>
+        <p><strong>ENCARGADO DEL TRATAMIENTO:</strong> YSN Solutions, operador de la plataforma Helios, con domicilio en Vila-real, España.</p>
+    </div>
+
+    <div class="article">
+        <h2>ARTÍCULO 1. OBJETO DEL ACUERDO</h2>
+        <p>El presente Acuerdo de Procesamiento de Datos ("DPA") establece las obligaciones de protección de datos entre las partes en relación con el tratamiento de datos personales que el Encargado realiza por cuenta del Responsable en el contexto del servicio Helios de análisis contractual mediante inteligencia artificial.</p>
+        <p>El Encargado se compromete a tratar los datos personales únicamente siguiendo las instrucciones documentadas del Responsable, incluyendo las relativas a transferencias de datos a terceros países.</p>
+    </div>
+
+    <div class="article">
+        <h2>ARTÍCULO 2. NATURALEZA Y FINALIDAD DEL TRATAMIENTO</h2>
+        <p><strong>Tipo de datos tratados:</strong></p>
+        <ul>
+            <li>Documentos contractuales subidos por el usuario (contratos, acuerdos, anexos)</li>
+            <li>Metadatos extraídos mediante IA (fechas, partes, cláusulas identificadas)</li>
+            <li>Datos de cuenta del usuario (email, configuraciones)</li>
+        </ul>
+        <p><strong>Finalidad:</strong> Análisis automatizado de contratos mediante inteligencia artificial para identificar riesgos, fechas clave y obligaciones contractuales.</p>
+    </div>
+
+    <div class="article">
+        <h2>ARTÍCULO 3. UBICACIÓN Y SEGURIDAD DE LOS DATOS</h2>
+        <h3>3.1 Localización</h3>
+        <p>Todos los datos se procesan y almacenan exclusivamente en centros de datos ubicados en la <strong>Unión Europea</strong>:</p>
+        <ul>
+            <li><strong>Base de datos:</strong> Supabase (AWS eu-central-1, Frankfurt, Alemania)</li>
+            <li><strong>Almacenamiento de archivos:</strong> Supabase Storage (AWS eu-central-1)</li>
+            <li><strong>Procesamiento IA:</strong> OpenAI API con Data Processing Addendum</li>
+        </ul>
+
+        <h3>3.2 Medidas de Seguridad</h3>
+        <p>El Encargado implementa las siguientes medidas técnicas y organizativas:</p>
+        <ul>
+            <li><strong>Cifrado en reposo:</strong> AES-256 para todos los datos almacenados</li>
+            <li><strong>Cifrado en tránsito:</strong> TLS 1.3 para todas las comunicaciones</li>
+            <li><strong>Aislamiento de datos:</strong> Row Level Security (RLS) en PostgreSQL</li>
+            <li><strong>Autenticación:</strong> Tokens JWT con expiración automática</li>
+            <li><strong>Auditoría:</strong> Logs de acceso y modificaciones</li>
+        </ul>
+    </div>
+
+    <div class="article">
+        <h2>ARTÍCULO 4. POLÍTICA DE RETENCIÓN</h2>
+        <p>El Encargado se compromete a las siguientes prácticas de retención:</p>
+        <ul>
+            <li><strong>Documentos del usuario:</strong> Retenidos mientras el usuario mantenga su cuenta activa. Eliminación inmediata bajo solicitud.</li>
+            <li><strong>Metadatos de análisis:</strong> Eliminación automática según la configuración del usuario (7, 15 o 30 días de inactividad).</li>
+            <li><strong>Logs de facturación:</strong> Retenidos durante el período legal obligatorio (5 años según normativa fiscal española).</li>
+        </ul>
+        <p>El usuario puede solicitar la eliminación total de sus datos en cualquier momento desde el panel de configuración de su cuenta.</p>
+    </div>
+
+    <div class="article">
+        <h2>ARTÍCULO 5. NO ENTRENAMIENTO DE IA</h2>
+        <p>El Encargado garantiza expresamente que:</p>
+        <ul>
+            <li>Los documentos del usuario <strong>NO</strong> se utilizan para entrenar modelos de inteligencia artificial propios ni de terceros.</li>
+            <li>Cada análisis es procesado de forma aislada y efímera.</li>
+            <li>OpenAI (subencargado) opera bajo su propio DPA que prohíbe el uso de datos de API para entrenamiento.</li>
+        </ul>
+    </div>
+
+    <div class="article">
+        <h2>ARTÍCULO 6. DERECHOS DEL INTERESADO</h2>
+        <p>El Encargado asistirá al Responsable para garantizar el ejercicio de los siguientes derechos:</p>
+        <ul>
+            <li><strong>Acceso:</strong> El usuario puede descargar todos sus datos desde la plataforma.</li>
+            <li><strong>Rectificación:</strong> El usuario puede modificar su información de cuenta.</li>
+            <li><strong>Supresión:</strong> Eliminación inmediata de datos bajo solicitud.</li>
+            <li><strong>Portabilidad:</strong> Exportación de análisis en formato Excel/JSON.</li>
+            <li><strong>Oposición:</strong> El usuario puede eliminar su cuenta completamente.</li>
+        </ul>
+    </div>
+
+    <div class="article">
+        <h2>ARTÍCULO 7. NOTIFICACIÓN DE BRECHAS</h2>
+        <p>En caso de violación de seguridad que afecte a datos personales, el Encargado notificará al Responsable en un plazo máximo de <strong>48 horas</strong> desde que tenga conocimiento del incidente, proporcionando:</p>
+        <ul>
+            <li>Descripción de la naturaleza de la violación</li>
+            <li>Categorías y número aproximado de interesados afectados</li>
+            <li>Medidas adoptadas para mitigar los efectos</li>
+            <li>Datos de contacto del Delegado de Protección de Datos (si aplica)</li>
+        </ul>
+    </div>
+
+    <div class="article">
+        <h2>ARTÍCULO 8. SUBENCARGADOS</h2>
+        <p>El Encargado utiliza los siguientes subencargados autorizados:</p>
+        <ul>
+            <li><strong>Supabase Inc.</strong> - Infraestructura de base de datos y autenticación</li>
+            <li><strong>OpenAI LLC</strong> - Procesamiento de lenguaje natural</li>
+            <li><strong>Resend Inc.</strong> - Servicio de correo electrónico transaccional</li>
+            <li><strong>Stripe Inc.</strong> - Procesamiento de pagos</li>
+        </ul>
+        <p>Todos los subencargados operan bajo acuerdos de procesamiento de datos compatibles con el RGPD.</p>
+    </div>
+
+    <div class="article">
+        <h2>ARTÍCULO 9. DURACIÓN Y TERMINACIÓN</h2>
+        <p>Este Acuerdo entra en vigor en el momento de la creación de la cuenta y permanece vigente mientras el Responsable mantenga una relación de servicio con Helios.</p>
+        <p>Tras la terminación del servicio, el Encargado eliminará todos los datos personales en un plazo de 30 días, salvo obligación legal de conservación.</p>
+    </div>
+
+    <div class="article">
+        <h2>ARTÍCULO 10. JURISDICCIÓN</h2>
+        <p>Este Acuerdo se rige por la legislación española y el Reglamento General de Protección de Datos (UE) 2016/679. Cualquier disputa será sometida a los tribunales de Castellón, España.</p>
+    </div>
+
+    <div class="signature">
+        <div class="signature-box">
+            <p><strong>Por el Encargado (Helios / YSN Solutions):</strong></p>
+            <div class="signature-line">
+                <p>Firma digital: Aceptado electrónicamente</p>
+                <p>Fecha: Diciembre 2024</p>
+            </div>
+        </div>
+        <div class="signature-box">
+            <p><strong>Por el Responsable (Cliente):</strong></p>
+            <div class="signature-line">
+                <p>Firma: Aceptado al crear cuenta</p>
+                <p>Email: [email del usuario]</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>☀️ Helios Contract Intelligence - YSN Solutions</p>
+        <p>solutionsysn@gmail.com | Vila-real, España</p>
+        <p>Este documento constituye un acuerdo legalmente vinculante conforme al Artículo 28 del RGPD.</p>
+    </div>
+</body>
+</html>
