@@ -313,7 +313,7 @@ export default function ContractChat({ contracts, initialContractId }: ContractC
                 >
                     <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" />
                     <span className="font-semibold">
-                        {language === 'es' ? 'Chat con IA' : 'AI Chat'}
+                        {language === 'es' ? 'Consultar Agente' : 'Ask Expert'}
                     </span>
                 </motion.button>
             )}
