@@ -2,7 +2,7 @@
 
 import { useCallback, useState, useEffect, useMemo } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, Check, AlertCircle, X, Shield, Settings, ChevronDown, Building2, Star, User, Plus, Save, Edit2, Trash2, Loader2, Lock, ScanLine, Camera, Image, FileText as FileIcon } from 'lucide-react';
+import { Upload, Check, AlertCircle, X, Shield, Settings, ChevronDown, Building2, Star, User, Plus, Save, Edit2, Trash2, Loader2, Lock, ScanLine, Camera, Image, FileText as FileIcon, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -15,8 +15,9 @@ import { useSectors, UnifiedSector } from '@/hooks/useSectors';
 import { APP_CONFIG } from '@/config/constants';
 
 // Page limits by plan (for cost control)
+// Free: 1 page only (single file), Pro/Enterprise: multi-page
 const PAGE_LIMITS = {
-    free: 5,
+    free: 1,      // Single file only - upgrade prompt shown for multi-file
     pro: 15,
     enterprise: 50,
 };
@@ -168,11 +169,21 @@ export default function FileUpload({ onUploadSuccess, customQuery, userPlan = 'f
         setPreparedPages(prev => {
             const newPages = [...prev, ...validFiles];
             if (newPages.length > maxPages) {
-                toast.warning(
-                    language === 'es'
-                        ? `Límite: ${maxPages} páginas. Actualiza tu plan para más.`
-                        : `Limit: ${maxPages} pages. Upgrade for more.`
-                );
+                // Different message for free users (1 file limit)
+                if (userPlan === 'free') {
+                    toast.error(
+                        language === 'es'
+                            ? '📄 El plan Gratuito permite 1 archivo. Actualiza a Pro para multi-documento.'
+                            : '📄 Free plan allows 1 file. Upgrade to Pro for multi-document.',
+                        { duration: 5000 }
+                    );
+                } else {
+                    toast.warning(
+                        language === 'es'
+                            ? `Límite: ${maxPages} páginas. Actualiza tu plan para más.`
+                            : `Limit: ${maxPages} pages. Upgrade for more.`
+                    );
+                }
                 return newPages.slice(0, maxPages);
             }
             return newPages;
@@ -702,12 +713,34 @@ export default function FileUpload({ onUploadSuccess, customQuery, userPlan = 'f
                         </div>
 
                         {!isUploading && (
-                            <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/5 text-xs text-zinc-500 font-medium tracking-wide uppercase">
-                                <span>PDF</span>
-                                <span className="w-1 h-1 rounded-full bg-zinc-700" />
-                                <span>DOCX</span>
-                                <span className="w-1 h-1 rounded-full bg-zinc-700" />
-                                <span>Max {APP_CONFIG.UPLOAD.MAX_FILE_SIZE / (1024 * 1024)}MB</span>
+                            <div className="flex flex-col items-center gap-2">
+                                <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/5 text-xs text-zinc-500 font-medium tracking-wide uppercase">
+                                    <span>PDF</span>
+                                    <span className="w-1 h-1 rounded-full bg-zinc-700" />
+                                    <span>DOCX</span>
+                                    {userPlan !== 'free' && (
+                                        <>
+                                            <span className="w-1 h-1 rounded-full bg-zinc-700" />
+                                            <span>JPG</span>
+                                            <span className="w-1 h-1 rounded-full bg-zinc-700" />
+                                            <span>PNG</span>
+                                        </>
+                                    )}
+                                    <span className="w-1 h-1 rounded-full bg-zinc-700" />
+                                    <span>Max {APP_CONFIG.UPLOAD.MAX_FILE_SIZE / (1024 * 1024)}MB</span>
+                                </div>
+                                {userPlan !== 'free' && (
+                                    <div className="flex items-center gap-2 text-xs text-emerald-400">
+                                        <Zap className="w-3 h-3" />
+                                        <span>{language === 'es' ? 'Multi-documento habilitado' : 'Multi-document enabled'}</span>
+                                    </div>
+                                )}
+                                {userPlan === 'free' && (
+                                    <Link href="/pricing" className="flex items-center gap-2 text-xs text-purple-400 hover:text-purple-300 transition-colors">
+                                        <Lock className="w-3 h-3" />
+                                        <span>{language === 'es' ? 'Actualiza a Pro para multi-documento + imágenes' : 'Upgrade to Pro for multi-document + images'}</span>
+                                    </Link>
+                                )}
                             </div>
                         )}
                     </div>

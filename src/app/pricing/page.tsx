@@ -82,45 +82,63 @@ export default function PricingPage() {
         enterpriseDesc: isSpanish ? 'Solución completa para grandes organizaciones' : 'Complete solution for large organizations',
         freeFeatures: isSpanish ? [
             '5 documentos al mes',
+            '1 archivo por análisis',
             'IA: Gemini 2.5 Flash',
+            'Solo PDF y DOCX',
             'Exportación a Excel',
             'Soporte por email',
         ] : [
             '5 documents per month',
+            '1 file per analysis',
             'AI: Gemini 2.5 Flash',
+            'PDF and DOCX only',
             'Excel export',
             'Email support',
         ],
         proFeatures: isSpanish ? [
             '100 documentos al mes',
+            '📄 Multi-documento (hasta 15 páginas)',
+            '📸 Escaneo desde cámara + OCR',
             'IA: Gemini 3 Flash (Premium)',
+            'PDF, DOCX, JPG, PNG, WebP',
             'Alertas de renovación',
             'Chat con documentos',
             'Equipos (5 miembros)',
-            'Soporte prioritario',
+            'Soporte prioritario 24h',
         ] : [
             '100 documents per month',
+            '📄 Multi-document (up to 15 pages)',
+            '📸 Camera scan + OCR',
             'AI: Gemini 3 Flash (Premium)',
+            'PDF, DOCX, JPG, PNG, WebP',
             'Renewal alerts',
             'Chat with documents',
             'Teams (5 members)',
-            'Priority support',
+            'Priority support 24h',
         ],
         enterpriseFeatures: isSpanish ? [
             'Documentos ilimitados',
-            'IA: GPT-5, Claude, Gemini Pro',
+            '📄 Multi-documento (hasta 50 páginas)',
+            '📸 Escaneo profesional + OCR avanzado',
+            '🤖 Elige tu IA: GPT-5, Claude, Gemini Pro',
+            'Todos los formatos de archivo',
             'Miembros ilimitados',
             'SSO (SAML/OIDC)',
             'API dedicada',
             'SLA garantizado 99.5%',
+            'Gestor de cuenta dedicado',
             'Onboarding personalizado',
         ] : [
             'Unlimited documents',
-            'AI: GPT-5, Claude, Gemini Pro',
+            '📄 Multi-document (up to 50 pages)',
+            '📸 Professional scan + advanced OCR',
+            '🤖 Choose your AI: GPT-5, Claude, Gemini Pro',
+            'All file formats',
             'Unlimited members',
             'SSO (SAML/OIDC)',
             'Dedicated API',
             'Guaranteed 99.5% SLA',
+            'Dedicated account manager',
             'Personalized onboarding',
         ],
     };
@@ -400,6 +418,118 @@ export default function PricingPage() {
                                         </td>
                                         <td className="py-4 px-4 text-center text-zinc-500 text-sm">
                                             {row.manual.value}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                {/* ============ DETAILED PLAN COMPARISON ============ */}
+                <section className="mb-24">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl font-bold text-white mb-3">
+                            {isSpanish ? 'Comparativa Detallada de Planes' : 'Detailed Plan Comparison'}
+                        </h2>
+                        <p className="text-zinc-400">
+                            {isSpanish
+                                ? 'Todas las características por plan, explicadas'
+                                : 'All features by plan, explained'}
+                        </p>
+                    </div>
+
+                    <div className="overflow-x-auto rounded-2xl border border-zinc-800">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="bg-zinc-900/70">
+                                    <th className="text-left py-4 px-6 text-zinc-400 font-medium">{isSpanish ? 'Característica' : 'Feature'}</th>
+                                    <th className="py-4 px-4 text-center text-zinc-300 font-medium">Free</th>
+                                    <th className="py-4 px-4 text-center text-emerald-400 font-medium">Pro</th>
+                                    <th className="py-4 px-4 text-center text-purple-400 font-medium">Enterprise</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-zinc-800/50">
+                                {[
+                                    {
+                                        feature: isSpanish ? '📊 Documentos/mes' : '📊 Documents/month',
+                                        free: '5', pro: '100', enterprise: isSpanish ? 'Ilimitados' : 'Unlimited'
+                                    },
+                                    {
+                                        feature: isSpanish ? '📄 Archivos por análisis' : '📄 Files per analysis',
+                                        free: '1', pro: isSpanish ? 'Hasta 15' : 'Up to 15', enterprise: isSpanish ? 'Hasta 50' : 'Up to 50'
+                                    },
+                                    {
+                                        feature: isSpanish ? '🤖 Modelo de IA' : '🤖 AI Model',
+                                        free: 'Gemini 2.5 Flash', pro: 'Gemini 3 Flash', enterprise: isSpanish ? 'GPT-5 / Claude / Gemini (elección)' : 'GPT-5 / Claude / Gemini (choice)'
+                                    },
+                                    {
+                                        feature: isSpanish ? '📸 OCR de imágenes' : '📸 Image OCR',
+                                        free: false, pro: true, enterprise: true
+                                    },
+                                    {
+                                        feature: isSpanish ? '📱 Escaneo con cámara' : '📱 Camera scanning',
+                                        free: false, pro: true, enterprise: true
+                                    },
+                                    {
+                                        feature: isSpanish ? '🖼️ Formatos soportados' : '🖼️ Supported formats',
+                                        free: 'PDF, DOCX', pro: 'PDF, DOCX, JPG, PNG, WebP', enterprise: isSpanish ? 'Todos' : 'All'
+                                    },
+                                    {
+                                        feature: isSpanish ? '💬 Chat con documentos' : '💬 Chat with documents',
+                                        free: false, pro: true, enterprise: true
+                                    },
+                                    {
+                                        feature: isSpanish ? '🔔 Alertas de renovación' : '🔔 Renewal alerts',
+                                        free: false, pro: true, enterprise: true
+                                    },
+                                    {
+                                        feature: isSpanish ? '👥 Equipos' : '👥 Teams',
+                                        free: false, pro: isSpanish ? '5 miembros' : '5 members', enterprise: isSpanish ? 'Ilimitados' : 'Unlimited'
+                                    },
+                                    {
+                                        feature: isSpanish ? '📈 Exportación Excel' : '📈 Excel export',
+                                        free: true, pro: true, enterprise: true
+                                    },
+                                    {
+                                        feature: isSpanish ? '🔐 SSO (SAML/OIDC)' : '🔐 SSO (SAML/OIDC)',
+                                        free: false, pro: false, enterprise: true
+                                    },
+                                    {
+                                        feature: isSpanish ? '🔌 API dedicada' : '🔌 Dedicated API',
+                                        free: false, pro: false, enterprise: true
+                                    },
+                                    {
+                                        feature: isSpanish ? '📞 Soporte' : '📞 Support',
+                                        free: 'Email', pro: isSpanish ? 'Prioritario 24h' : 'Priority 24h', enterprise: isSpanish ? 'Gestor dedicado' : 'Dedicated manager'
+                                    },
+                                    {
+                                        feature: 'SLA',
+                                        free: '-', pro: '99%', enterprise: '99.5%'
+                                    },
+                                ].map((row, i) => (
+                                    <tr key={i} className="hover:bg-zinc-900/30">
+                                        <td className="py-4 px-6 text-white font-medium">{row.feature}</td>
+                                        <td className="py-4 px-4 text-center">
+                                            {typeof row.free === 'boolean' ? (
+                                                row.free ? <Check className="w-5 h-5 text-emerald-500 mx-auto" /> : <X className="w-5 h-5 text-zinc-600 mx-auto" />
+                                            ) : (
+                                                <span className="text-zinc-400">{row.free}</span>
+                                            )}
+                                        </td>
+                                        <td className="py-4 px-4 text-center">
+                                            {typeof row.pro === 'boolean' ? (
+                                                row.pro ? <Check className="w-5 h-5 text-emerald-500 mx-auto" /> : <X className="w-5 h-5 text-zinc-600 mx-auto" />
+                                            ) : (
+                                                <span className="text-emerald-400">{row.pro}</span>
+                                            )}
+                                        </td>
+                                        <td className="py-4 px-4 text-center">
+                                            {typeof row.enterprise === 'boolean' ? (
+                                                row.enterprise ? <Check className="w-5 h-5 text-purple-500 mx-auto" /> : <X className="w-5 h-5 text-zinc-600 mx-auto" />
+                                            ) : (
+                                                <span className="text-purple-400">{row.enterprise}</span>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}
