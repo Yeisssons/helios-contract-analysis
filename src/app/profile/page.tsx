@@ -51,6 +51,80 @@ function ProfileContent() {
         nextRenewal: null as string | null,
     });
 
+    // AI Preferences (Enterprise only)
+    const [aiPreferences, setAiPreferences] = useState<{
+        plan: string;
+        provider: string | null;
+        model: string | null;
+        availableModels: { provider: string; model: string; name: string; description: string }[] | null;
+    }>({ plan: 'free', provider: null, model: null, availableModels: null });
+    const [loadingAIPrefs, setLoadingAIPrefs] = useState(false);
+    const [savingAIPrefs, setSavingAIPrefs] = useState(false);
+
+    // Fetch AI preferences
+    useEffect(() => {
+        const fetchAIPreferences = async () => {
+            if (!user) return;
+            setLoadingAIPrefs(true);
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) return;
+
+                const response = await fetch('/api/user/ai-preferences', {
+                    headers: { 'Authorization': `Bearer ${session.access_token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        setAiPreferences({
+                            plan: data.data.plan,
+                            provider: data.data.preferences?.provider || null,
+                            model: data.data.preferences?.model || null,
+                            availableModels: data.data.availableModels || null,
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching AI preferences:', error);
+            } finally {
+                setLoadingAIPrefs(false);
+            }
+        };
+        fetchAIPreferences();
+    }, [user]);
+
+    // Save AI model preference (Enterprise only)
+    const handleSaveAIModel = async (provider: string, model: string) => {
+        setSavingAIPrefs(true);
+        setSuccessMsg('');
+        setErrorMsg('');
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error('No session');
+
+            const response = await fetch('/api/user/ai-preferences', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({ provider, model })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                setAiPreferences(prev => ({ ...prev, provider, model }));
+                setSuccessMsg(data.message || (language === 'es' ? 'Modelo guardado' : 'Model saved'));
+            } else {
+                setErrorMsg(data.error || 'Error');
+            }
+        } catch (error) {
+            setErrorMsg(language === 'es' ? 'Error al guardar' : 'Error saving');
+        } finally {
+            setSavingAIPrefs(false);
+        }
+    };
+
     const handleUpdatePassword = async (e: React.FormEvent) => {
         e.preventDefault();
         setErrorMsg('');
@@ -755,6 +829,100 @@ function ProfileContent() {
                                         </div>
                                     )}
                                 </motion.section>
+
+                                {/* ============ AI MODEL SELECTOR (Enterprise Only) ============ */}
+                                {aiPreferences.plan === 'enterprise' && aiPreferences.availableModels && (
+                                    <motion.section
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.1 }}
+                                        className="p-6 rounded-2xl bg-slate-800/50 border border-purple-500/30 mt-6"
+                                    >
+                                        <h2 className="text-xl font-semibold text-white mb-2 flex items-center gap-2">
+                                            <Zap className="w-5 h-5 text-purple-400" />
+                                            {language === 'es' ? 'Modelo de IA Preferido' : 'Preferred AI Model'}
+                                        </h2>
+                                        <p className="text-slate-400 text-sm mb-6">
+                                            {language === 'es'
+                                                ? 'Como usuario Enterprise, puedes elegir qué modelo de IA usar para el análisis de contratos.'
+                                                : 'As an Enterprise user, you can choose which AI model to use for contract analysis.'}
+                                        </p>
+
+                                        {loadingAIPrefs ? (
+                                            <div className="flex items-center justify-center py-8">
+                                                <div className="w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                {aiPreferences.availableModels.map((m) => (
+                                                    <button
+                                                        key={m.model}
+                                                        onClick={() => handleSaveAIModel(m.provider, m.model)}
+                                                        disabled={savingAIPrefs}
+                                                        className={`p-4 rounded-xl border text-left transition-all ${aiPreferences.model === m.model
+                                                                ? 'border-purple-500 bg-purple-500/20'
+                                                                : 'border-slate-700 hover:border-slate-600 bg-slate-900/50'
+                                                            }`}
+                                                    >
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <span className="font-medium text-white">{m.name}</span>
+                                                            {aiPreferences.model === m.model && (
+                                                                <Check className="w-5 h-5 text-purple-400" />
+                                                            )}
+                                                        </div>
+                                                        <p className="text-sm text-slate-400">{m.description}</p>
+                                                        <span className={`inline-block mt-2 px-2 py-0.5 rounded text-xs ${m.provider === 'gemini' ? 'bg-blue-500/20 text-blue-400' :
+                                                                m.provider === 'openai' ? 'bg-emerald-500/20 text-emerald-400' :
+                                                                    'bg-orange-500/20 text-orange-400'
+                                                            }`}>
+                                                            {m.provider === 'gemini' ? 'Google' :
+                                                                m.provider === 'openai' ? 'OpenAI' : 'Anthropic'}
+                                                        </span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {savingAIPrefs && (
+                                            <p className="text-center text-slate-400 mt-4 flex items-center justify-center gap-2">
+                                                <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                                                {language === 'es' ? 'Guardando...' : 'Saving...'}
+                                            </p>
+                                        )}
+                                    </motion.section>
+                                )}
+
+                                {/* Model Info for non-Enterprise users */}
+                                {aiPreferences.plan !== 'enterprise' && (
+                                    <motion.section
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.1 }}
+                                        className="p-6 rounded-2xl bg-slate-800/50 border border-slate-700/50 mt-6"
+                                    >
+                                        <h3 className="text-white font-medium mb-3 flex items-center gap-2">
+                                            <Zap className="w-4 h-4 text-purple-400" />
+                                            {language === 'es' ? 'Modelo de IA' : 'AI Model'}
+                                        </h3>
+                                        <p className="text-slate-400 text-sm mb-4">
+                                            {aiPreferences.plan === 'free'
+                                                ? (language === 'es'
+                                                    ? 'Tu plan usa Gemini 2.5 Flash para el análisis.'
+                                                    : 'Your plan uses Gemini 2.5 Flash for analysis.')
+                                                : (language === 'es'
+                                                    ? 'Tu plan usa Gemini 3 Flash para el análisis.'
+                                                    : 'Your plan uses Gemini 3 Flash for analysis.')
+                                            }
+                                        </p>
+                                        <Link
+                                            href="/pricing"
+                                            className="text-sm text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1"
+                                        >
+                                            {language === 'es' ? 'Actualiza a Enterprise para elegir tu modelo' : 'Upgrade to Enterprise to choose your model'}
+                                            <ChevronRight className="w-4 h-4" />
+                                        </Link>
+                                    </motion.section>
+                                )}
                             </>
                         )}
                     </div>
