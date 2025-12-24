@@ -2,7 +2,7 @@
 
 import { useCallback, useState, useEffect, useMemo } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, Check, AlertCircle, X, Shield, Settings, ChevronDown, Building2, Star, User, Plus, Save, Edit2, Trash2, Loader2, Lock, ScanLine, Camera, Image, FileText as FileIcon, Zap } from 'lucide-react';
+import { Upload, Check, AlertCircle, X, Shield, Settings, ChevronDown, Building2, Star, User, Plus, Save, Edit2, Trash2, Loader2, Lock, Image, FileText as FileIcon, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -40,9 +40,6 @@ export default function FileUpload({ onUploadSuccess, customQuery, userPlan = 'f
 
     // ============ DOCUMENT PREPARATION AREA STATE ============
     const [preparedPages, setPreparedPages] = useState<File[]>([]);
-    const [showScannerModal, setShowScannerModal] = useState(false);
-    const [scannerProgress, setScannerProgress] = useState(0);
-    const [isScanning, setIsScanning] = useState(false);
     const maxPages = PAGE_LIMITS[userPlan] || PAGE_LIMITS.free;
 
     // Template creation state
@@ -204,49 +201,7 @@ export default function FileUpload({ onUploadSuccess, customQuery, userPlan = 'f
         setPreparedPages([]);
     }, []);
 
-    // Simulated scanner (TWAIN stub)
-    // TODO: Integrate Dynamsoft Web TWAIN or similar SDK for real scanner support
-    const simulateScanner = useCallback(() => {
-        setIsScanning(true);
-        setScannerProgress(0);
 
-        const interval = setInterval(() => {
-            setScannerProgress(prev => {
-                if (prev >= 100) {
-                    clearInterval(interval);
-                    setIsScanning(false);
-                    setShowScannerModal(false);
-
-                    // Create a placeholder "scanned" image
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 800;
-                    canvas.height = 1100;
-                    const ctx = canvas.getContext('2d');
-                    if (ctx) {
-                        ctx.fillStyle = '#f5f5f5';
-                        ctx.fillRect(0, 0, 800, 1100);
-                        ctx.fillStyle = '#333';
-                        ctx.font = '24px Arial';
-                        ctx.textAlign = 'center';
-                        ctx.fillText(language === 'es' ? 'Documento Escaneado' : 'Scanned Document', 400, 550);
-                        ctx.font = '14px Arial';
-                        ctx.fillText(new Date().toLocaleString(), 400, 590);
-                    }
-
-                    canvas.toBlob((blob) => {
-                        if (blob) {
-                            const scannedFile = new File([blob], `scan_${Date.now()}.png`, { type: 'image/png' });
-                            addPagesToPreparation([scannedFile]);
-                        }
-                    }, 'image/png');
-
-                    toast.success(language === 'es' ? '¡Escaneo completado!' : 'Scan complete!');
-                    return 100;
-                }
-                return prev + 10;
-            });
-        }, 300);
-    }, [language, addPagesToPreparation]);
 
     // Modified onDrop: Add files to preparation instead of immediate upload
     const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -837,36 +792,7 @@ export default function FileUpload({ onUploadSuccess, customQuery, userPlan = 'f
                         })}
                     </div>
 
-                    {/* Action Buttons Row */}
-                    <div className="flex gap-3">
-                        {/* Scanner Button */}
-                        <button
-                            onClick={() => setShowScannerModal(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-300 hover:bg-slate-600/50 hover:text-white transition-colors"
-                        >
-                            <ScanLine className="w-4 h-4" />
-                            <span className="text-sm">{language === 'es' ? 'Escanear desde PC' : 'Scan from PC'}</span>
-                        </button>
 
-                        {/* Camera Button (for mobile) */}
-                        <button
-                            onClick={() => {
-                                const input = document.createElement('input');
-                                input.type = 'file';
-                                input.accept = 'image/*';
-                                input.capture = 'environment';
-                                input.onchange = (e) => {
-                                    const file = (e.target as HTMLInputElement).files?.[0];
-                                    if (file) addPagesToPreparation([file]);
-                                };
-                                input.click();
-                            }}
-                            className="flex items-center gap-2 px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-300 hover:bg-slate-600/50 hover:text-white transition-colors"
-                        >
-                            <Camera className="w-4 h-4" />
-                            <span className="text-sm">{language === 'es' ? 'Cámara' : 'Camera'}</span>
-                        </button>
-                    </div>
 
                     {/* Main Analyze Button */}
                     <button
@@ -892,82 +818,7 @@ export default function FileUpload({ onUploadSuccess, customQuery, userPlan = 'f
                 </motion.div>
             )}
 
-            {/* Scanner Modal */}
-            <AnimatePresence>
-                {showScannerModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                        <div
-                            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-                            onClick={() => !isScanning && setShowScannerModal(false)}
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="relative bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md"
-                        >
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                                    <ScanLine className="w-5 h-5 text-blue-400" />
-                                    {language === 'es' ? 'Escanear Documento' : 'Scan Document'}
-                                </h3>
-                                <button
-                                    onClick={() => !isScanning && setShowScannerModal(false)}
-                                    className="p-1 text-slate-400 hover:text-white transition-colors"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
 
-                            <div className="space-y-4">
-                                {isScanning ? (
-                                    <>
-                                        <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                                            <motion.div
-                                                className="h-full bg-gradient-to-r from-blue-500 to-cyan-500"
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${scannerProgress}%` }}
-                                            />
-                                        </div>
-                                        <p className="text-center text-slate-400 text-sm">
-                                            {language === 'es' ? 'Escaneando...' : 'Scanning...'} {scannerProgress}%
-                                        </p>
-                                    </>
-                                ) : (
-                                    <>
-                                        <p className="text-slate-400 text-sm">
-                                            {language === 'es'
-                                                ? 'Conectando con escáner local... (Requiere instalación de agente TWAIN)'
-                                                : 'Connecting to local scanner... (Requires TWAIN agent installation)'
-                                            }
-                                        </p>
-                                        {/* TODO: Integrate Dynamsoft Web TWAIN SDK here for real scanner support */}
-                                        <p className="text-xs text-slate-500 italic">
-                                            {language === 'es'
-                                                ? 'Demo: Se simulará un escaneo'
-                                                : 'Demo: A scan will be simulated'
-                                            }
-                                        </p>
-                                    </>
-                                )}
-
-                                <button
-                                    onClick={simulateScanner}
-                                    disabled={isScanning}
-                                    className="w-full py-3 bg-blue-500 hover:bg-blue-400 disabled:bg-slate-600 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
-                                >
-                                    {isScanning ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                        <ScanLine className="w-4 h-4" />
-                                    )}
-                                    {language === 'es' ? 'Iniciar Escaneo' : 'Start Scan'}
-                                </button>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
 
             {/* Trust Badges */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-4">
