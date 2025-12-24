@@ -48,7 +48,7 @@ interface CalendarEvent {
     documentId: string;
     fileName: string;
     sector?: string;
-    eventType: 'renewal' | 'payment' | 'audit' | 'review' | 'deadline' | 'expiry' | 'other';
+    eventType: 'renewal' | 'payment' | 'audit' | 'review' | 'deadline' | 'expiry' | 'meeting' | 'inspection' | 'license' | 'insurance' | 'training' | 'maintenance' | 'other';
     date: Date;
     title: string;
     description?: string;
@@ -80,8 +80,14 @@ const EVENT_TYPE_CONFIG = {
     payment: { color: 'blue', icon: '💰', labelEs: 'Pago', labelEn: 'Payment' },
     audit: { color: 'purple', icon: '🔍', labelEs: 'Auditoría', labelEn: 'Audit' },
     review: { color: 'amber', icon: '📋', labelEs: 'Revisión', labelEn: 'Review' },
-    deadline: { color: 'red', icon: '⏰', labelEs: 'Fecha límite', labelEn: 'Deadline' },
+    deadline: { color: 'red', icon: '⏰', labelEs: 'Fecha Límite', labelEn: 'Deadline' },
     expiry: { color: 'orange', icon: '📅', labelEs: 'Vencimiento', labelEn: 'Expiry' },
+    meeting: { color: 'cyan', icon: '👥', labelEs: 'Reunión', labelEn: 'Meeting' },
+    inspection: { color: 'rose', icon: '🔬', labelEs: 'Inspección', labelEn: 'Inspection' },
+    license: { color: 'indigo', icon: '📜', labelEs: 'Licencia', labelEn: 'License' },
+    insurance: { color: 'teal', icon: '🛡️', labelEs: 'Seguro', labelEn: 'Insurance' },
+    training: { color: 'violet', icon: '📚', labelEs: 'Formación', labelEn: 'Training' },
+    maintenance: { color: 'lime', icon: '🔧', labelEs: 'Mantenimiento', labelEn: 'Maintenance' },
     other: { color: 'slate', icon: '📌', labelEs: 'Otro', labelEn: 'Other' }
 };
 
@@ -599,18 +605,24 @@ END:VCALENDAR`;
 
     const EventTypeBadge = ({ type }: { type: CalendarEvent['eventType'] }) => {
         const config = EVENT_TYPE_CONFIG[type];
-        const colorClasses = {
+        const colorClasses: Record<string, string> = {
             emerald: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
             blue: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
             purple: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
             amber: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
             red: 'bg-red-500/20 text-red-300 border-red-500/30',
             orange: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
+            cyan: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+            rose: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
+            indigo: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
+            teal: 'bg-teal-500/20 text-teal-300 border-teal-500/30',
+            violet: 'bg-violet-500/20 text-violet-300 border-violet-500/30',
+            lime: 'bg-lime-500/20 text-lime-300 border-lime-500/30',
             slate: 'bg-slate-500/20 text-slate-300 border-slate-500/30'
         };
 
         return (
-            <span className={`px-2 py-0.5 text-xs font-medium rounded-full border ${colorClasses[config.color as keyof typeof colorClasses]}`}>
+            <span className={`px-2 py-0.5 text-xs font-medium rounded-full border ${colorClasses[config.color] || colorClasses.slate}`}>
                 {config.icon} {language === 'es' ? config.labelEs : config.labelEn}
             </span>
         );
@@ -648,29 +660,24 @@ END:VCALENDAR`;
                                         <CalendarIcon className="w-6 h-6 text-emerald-400" />
                                     </div>
                                     <h1 className="text-3xl font-bold text-white">
-                                        {language === 'es' ? 'Calendario de Renovaciones' : 'Renewal Calendar'}
+                                        {language === 'es' ? 'Calendario de Eventos' : 'Events Calendar'}
                                     </h1>
                                 </div>
                                 <p className="text-slate-400 ml-14">
                                     {language === 'es'
-                                        ? 'Visualiza y gestiona las fechas críticas de tus documentos'
-                                        : 'Visualize and manage critical dates for your documents'}
+                                        ? 'Gestiona todas las fechas importantes: renovaciones, pagos, auditorías y más'
+                                        : 'Manage all important dates: renewals, payments, audits and more'}
                                 </p>
                             </div>
 
                             <div className="flex items-center gap-3">
-                                {/* Team Management Button */}
+                                {/* Add Event Button */}
                                 <button
-                                    onClick={() => setShowTeamModal(true)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                                    onClick={() => handleOpenTaskModal(new Date())}
+                                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
                                 >
-                                    <Users2 className="w-4 h-4" />
-                                    {language === 'es' ? 'Equipo' : 'Team'}
-                                    {teamMembers.length > 0 && (
-                                        <span className="text-xs bg-blue-500 px-1.5 py-0.5 rounded-full">
-                                            {teamMembers.length}
-                                        </span>
-                                    )}
+                                    <Plus className="w-4 h-4" />
+                                    {language === 'es' ? 'Nuevo Evento' : 'New Event'}
                                 </button>
 
                                 {/* Export Button */}
@@ -789,6 +796,37 @@ END:VCALENDAR`;
                                 <CalendarIcon className="w-5 h-5" />
                             </button>
                         </div>
+                    </div>
+
+                    {/* Event Type Filter Chips */}
+                    <div className="flex flex-wrap gap-2 mb-6">
+                        <button
+                            onClick={() => setFilterEventType('all')}
+                            className={`px-3 py-1.5 rounded-full text-sm transition-all ${filterEventType === 'all'
+                                    ? 'bg-white text-slate-900 font-medium'
+                                    : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50'
+                                }`}
+                        >
+                            {language === 'es' ? 'Todos' : 'All'} ({stats.totalEvents})
+                        </button>
+                        {Object.entries(EVENT_TYPE_CONFIG).slice(0, 8).map(([key, config]) => {
+                            const count = stats.eventTypeCounts[key] || 0;
+                            if (count === 0 && key !== 'renewal') return null;
+                            return (
+                                <button
+                                    key={key}
+                                    onClick={() => setFilterEventType(key)}
+                                    className={`px-3 py-1.5 rounded-full text-sm transition-all flex items-center gap-1.5 ${filterEventType === key
+                                            ? 'bg-emerald-500 text-white font-medium'
+                                            : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50'
+                                        }`}
+                                >
+                                    <span>{config.icon}</span>
+                                    <span>{language === 'es' ? config.labelEs : config.labelEn}</span>
+                                    {count > 0 && <span className="text-xs opacity-75">({count})</span>}
+                                </button>
+                            );
+                        })}
                     </div>
 
                     {/* Loading */}
@@ -1056,15 +1094,10 @@ END:VCALENDAR`;
                             <div>
                                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
                                     <Plus className="w-5 h-5 text-emerald-400" />
-                                    {language === 'es' ? 'Nueva Tarea' : 'New Task'}
+                                    {language === 'es' ? 'Nuevo Evento' : 'New Event'}
                                 </h3>
                                 <p className="text-sm text-slate-400 mt-1">
-                                    {selectedDate.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
-                                        weekday: 'long',
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric'
-                                    })}
+                                    {language === 'es' ? 'Añade fechas importantes a tu calendario' : 'Add important dates to your calendar'}
                                 </p>
                             </div>
                             <button
@@ -1086,21 +1119,34 @@ END:VCALENDAR`;
                                     type="text"
                                     value={newTask.title}
                                     onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
-                                    placeholder={language === 'es' ? 'Nombre de la tarea...' : 'Task name...'}
+                                    placeholder={language === 'es' ? 'Ej: Renovación de contrato de alquiler' : 'Ex: Lease contract renewal'}
                                     className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                />
+                            </div>
+
+                            {/* Date */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">
+                                    {language === 'es' ? 'Fecha *' : 'Date *'}
+                                </label>
+                                <input
+                                    type="date"
+                                    value={newTask.date.toISOString().split('T')[0]}
+                                    onChange={(e) => setNewTask(prev => ({ ...prev, date: new Date(e.target.value) }))}
+                                    className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                 />
                             </div>
 
                             {/* Description */}
                             <div>
                                 <label className="block text-sm font-medium text-slate-300 mb-1">
-                                    {language === 'es' ? 'Descripción' : 'Description'}
+                                    {language === 'es' ? 'Notas' : 'Notes'}
                                 </label>
                                 <textarea
                                     value={newTask.description}
                                     onChange={(e) => setNewTask(prev => ({ ...prev, description: e.target.value }))}
-                                    placeholder={language === 'es' ? 'Detalles adicionales...' : 'Additional details...'}
-                                    rows={3}
+                                    placeholder={language === 'es' ? 'Detalles adicionales, números de referencia, etc.' : 'Additional details, reference numbers, etc.'}
+                                    rows={2}
                                     className="w-full px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none"
                                 />
                             </div>
