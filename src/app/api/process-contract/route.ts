@@ -32,7 +32,11 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
         }
 
         const formData = await request.formData();
-        const file = formData.get('file') as File | null;
+
+        // Support both single file (backward compat) and files[] array (multi-page)
+        const filesArray = formData.getAll('files[]') as File[];
+        const singleFile = formData.get('file') as File | null;
+        const allFiles = filesArray.length > 0 ? filesArray : (singleFile ? [singleFile] : []);
 
         // Metadata Parsing & Validation
         const rawMetadata = {
@@ -54,90 +58,91 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
         const currentSector = sector || APP_CONFIG.DEFAULTS.SECTOR;
 
         // 1. Input Validation
-        if (!file) {
+        if (allFiles.length === 0) {
             return NextResponse.json(
                 { success: false, error: 'No file provided' },
                 { status: 400 }
             );
         }
 
-        // Validate file extension
-        const fileName = file.name.toLowerCase();
-        const fileExtension = fileName.split('.').pop() || '';
-        const ALLOWED_EXTENSIONS = ['pdf', 'docx'];
+        // Validate all files
+        const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'jpg', 'jpeg', 'png', 'webp'];
+        const MAX_FILE_SIZE = APP_CONFIG.UPLOAD.MAX_FILE_SIZE;
 
-        // Special handling for .doc files (old Word format)
-        if (fileExtension === 'doc') {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: 'Los archivos .doc (Word 97-2003) no están soportados. Por favor, convierta el documento a .docx o PDF antes de subirlo. Puede hacerlo abriendo el archivo en Word y guardándolo como "Documento de Word (.docx)".'
-                },
-                { status: 400 }
-            );
+        for (const file of allFiles) {
+            const fileName = file.name.toLowerCase();
+            const fileExtension = fileName.split('.').pop() || '';
+
+            if (fileExtension === 'doc') {
+                return NextResponse.json(
+                    { success: false, error: 'Los archivos .doc no están soportados. Convierta a .docx o PDF.' },
+                    { status: 400 }
+                );
+            }
+
+            if (!ALLOWED_EXTENSIONS.includes(fileExtension)) {
+                return NextResponse.json(
+                    { success: false, error: `Tipo no válido: ${fileExtension}. Permitidos: PDF, DOCX, JPG, PNG, WEBP` },
+                    { status: 400 }
+                );
+            }
+
+            if (file.size > MAX_FILE_SIZE) {
+                const maxSizeMB = MAX_FILE_SIZE / (1024 * 1024);
+                return NextResponse.json(
+                    { success: false, error: `Archivo muy grande: ${file.name}. Máximo: ${maxSizeMB}MB` },
+                    { status: 400 }
+                );
+            }
         }
 
-        if (!ALLOWED_EXTENSIONS.includes(fileExtension)) {
-            return NextResponse.json(
-                { success: false, error: `Tipo de archivo no válido. Formatos permitidos: PDF, DOCX` },
-                { status: 400 }
-            );
-        }
-
-        // Validate file size
-        const MAX_FILE_SIZE = APP_CONFIG.UPLOAD.MAX_FILE_SIZE; // Use APP_CONFIG.UPLOAD.MAX_FILE_SIZE as it's already defined
-        if (file.size > MAX_FILE_SIZE) {
-            const maxSizeMB = MAX_FILE_SIZE / (1024 * 1024);
-            return NextResponse.json(
-                { success: false, error: `File too large. Maximum size: ${maxSizeMB}MB` },
-                { status: 400 }
-            );
-        }
-
-        let extractedText = '';
+        let combinedExtractedText = '';
         let extractedData;
 
         // Get adaptive model name for Gemini
-        const adaptiveModelName = getAdaptiveModel(file.size); // Keep original logic for adaptive model based on file size
+        const totalSize = allFiles.reduce((sum, f) => sum + f.size, 0);
+        const adaptiveModelName = getAdaptiveModel(totalSize);
 
         // 3. Processing Logic
         if (USE_REAL_AI) {
             try {
-                const buffer = Buffer.from(await file.arrayBuffer());
+                // Process each file and combine content
+                for (const file of allFiles) {
+                    const buffer = Buffer.from(await file.arrayBuffer());
+                    const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
 
-                // Security check: Validate Magic Numbers
-                const detectedType = detectFileType(buffer);
+                    // Security check: Validate Magic Numbers
+                    const detectedType = detectFileType(buffer);
 
-                if (fileExtension === 'pdf') {
-                    if (detectedType !== 'pdf') {
-                        throw new Error('Security Error: File extension is .pdf but binary signature does not match. Potential masked malware.');
-                    }
-                    // Extract text from PDF
-                    extractedText = await parsePdf(buffer);
-                } else if (fileExtension === 'docx') {
-                    if (detectedType !== 'docx') {
-                        // Note: plain DOCX is a zip, so it matches PK.. signature
-                        throw new Error('Security Error: Invalid DOCX file signature.');
-                    }
-                    // Extract text from Word documents using mammoth
-                    try {
-                        const result = await mammoth.extractRawText({ buffer });
-                        extractedText = result.value;
-
-                        if (!extractedText || extractedText.trim().length < 50) {
-                            throw new Error('Could not extract sufficient text from Word document');
+                    if (fileExtension === 'pdf') {
+                        if (detectedType !== 'pdf') {
+                            throw new Error(`Security Error: ${file.name} - Invalid PDF signature.`);
                         }
-                    } catch (docError) {
-                        console.error('Word document parsing error:', docError);
-                        throw new Error(`Failed to parse Word document: ${docError instanceof Error ? docError.message : 'Unknown error'}`);
+                        const pdfText = await parsePdf(buffer);
+                        combinedExtractedText += `\n\n--- Page from ${file.name} ---\n\n${pdfText}`;
+
+                    } else if (fileExtension === 'docx') {
+                        if (detectedType !== 'docx') {
+                            throw new Error(`Security Error: ${file.name} - Invalid DOCX signature.`);
+                        }
+                        const result = await mammoth.extractRawText({ buffer });
+                        combinedExtractedText += `\n\n--- Page from ${file.name} ---\n\n${result.value}`;
+
+                    } else if (['jpg', 'jpeg', 'png', 'webp'].includes(fileExtension)) {
+                        // For images, we'll add a placeholder - actual OCR would use Gemini Vision
+                        // TODO: Implement Gemini Vision multimodal for image content extraction
+                        combinedExtractedText += `\n\n--- Scanned Image: ${file.name} (${(file.size / 1024).toFixed(0)}KB) ---\n`;
+                        combinedExtractedText += `[Image content - requires Gemini Vision processing]\n`;
                     }
-                } else {
-                    throw new Error(`Unsupported file type: ${fileExtension}`);
+                }
+
+                if (combinedExtractedText.trim().length < 50) {
+                    throw new Error('No se pudo extraer texto suficiente de los documentos');
                 }
 
                 // Analyze with Gemini AI
                 extractedData = await analyzeContractText(
-                    extractedText,
+                    combinedExtractedText,
                     customQuery || undefined,
                     dataPoints,
                     adaptiveModelName
@@ -148,21 +153,26 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
                 throw new Error(aiError instanceof Error ? aiError.message : 'AI analysis failed');
             }
         } else {
-            // Fallback to mock for non-PDF files or when API key is not set
-            const mockText = `Mock contract text for ${file.name}`;
-            extractedText = mockText;
-            extractedData = await extractContractDataWithAI(mockText, file.name, customQuery || undefined, dataPoints);
+            // Fallback to mock
+            const mockText = `Mock contract text for ${allFiles.length} file(s)`;
+            combinedExtractedText = mockText;
+            extractedData = await extractContractDataWithAI(mockText, allFiles[0]?.name || 'unknown', customQuery || undefined, dataPoints);
         }
 
         // Return the extracted data including the raw text for database persistence
+        const combinedFileName = allFiles.length > 1
+            ? `${allFiles.length}_pages_combined`
+            : allFiles[0]?.name || 'unknown';
+
         const fullResponse = {
-            id: crypto.randomUUID(), // Generate a temporary ID for frontend keying
-            fileName: file.name,
+            id: crypto.randomUUID(),
+            fileName: combinedFileName,
             ...extractedData,
-            extractedText, // Include raw text for chat and persistence
+            extractedText: combinedExtractedText,
             requestedDataPoints: dataPoints || [],
             sector: currentSector,
             createdAt: new Date().toISOString(),
+            pageCount: allFiles.length,
         };
 
         // Audit Log

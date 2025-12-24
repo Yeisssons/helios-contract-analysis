@@ -2,7 +2,7 @@
 
 import { useCallback, useState, useEffect, useMemo } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, Check, AlertCircle, X, Shield, Settings, ChevronDown, Building2, Star, User, Plus, Save, Edit2, Trash2, Loader2, Lock } from 'lucide-react';
+import { Upload, Check, AlertCircle, X, Shield, Settings, ChevronDown, Building2, Star, User, Plus, Save, Edit2, Trash2, Loader2, Lock, ScanLine, Camera, Image, FileText as FileIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -14,12 +14,20 @@ import { getDataPointTranslation, getDataPointDescription } from '@/constants/da
 import { useSectors, UnifiedSector } from '@/hooks/useSectors';
 import { APP_CONFIG } from '@/config/constants';
 
+// Page limits by plan (for cost control)
+const PAGE_LIMITS = {
+    free: 5,
+    pro: 15,
+    enterprise: 50,
+};
+
 interface FileUploadProps {
     onUploadSuccess: (contract: ContractData) => void;
     customQuery?: string;
+    userPlan?: 'free' | 'pro' | 'enterprise';
 }
 
-export default function FileUpload({ onUploadSuccess, customQuery }: FileUploadProps) {
+export default function FileUpload({ onUploadSuccess, customQuery, userPlan = 'free' }: FileUploadProps) {
     const { t, language } = useLanguage();
     const { getUnifiedSectors, getSectorById, createTemplate, deleteTemplate, customTemplates, loading: sectorsLoading } = useSectors();
     const [isUploading, setIsUploading] = useState(false);
@@ -28,6 +36,13 @@ export default function FileUpload({ onUploadSuccess, customQuery }: FileUploadP
     const [availablePoints, setAvailablePoints] = useState<string[]>([]);
     const [selectedPoints, setSelectedPoints] = useState<string[]>([]);
     // Upload status managed by toast now
+
+    // ============ DOCUMENT PREPARATION AREA STATE ============
+    const [preparedPages, setPreparedPages] = useState<File[]>([]);
+    const [showScannerModal, setShowScannerModal] = useState(false);
+    const [scannerProgress, setScannerProgress] = useState(0);
+    const [isScanning, setIsScanning] = useState(false);
+    const maxPages = PAGE_LIMITS[userPlan] || PAGE_LIMITS.free;
 
     // Template creation state
     const [showSaveTemplate, setShowSaveTemplate] = useState(false);
@@ -135,34 +150,127 @@ export default function FileUpload({ onUploadSuccess, customQuery }: FileUploadP
         }
     };
 
+    // ============ PAGE MANAGEMENT HELPERS ============
+
+    const addPagesToPreparation = useCallback((files: File[]) => {
+        const validFiles = files.filter(file => {
+            const ext = file.name.split('.').pop()?.toLowerCase();
+            const isValidType = ['pdf', 'docx', 'jpg', 'jpeg', 'png', 'webp'].includes(ext || '');
+            const isValidSize = file.size <= APP_CONFIG.UPLOAD.MAX_FILE_SIZE;
+            return isValidType && isValidSize;
+        });
+
+        if (validFiles.length === 0) {
+            toast.error(language === 'es' ? 'Archivos no válidos' : 'Invalid files');
+            return;
+        }
+
+        setPreparedPages(prev => {
+            const newPages = [...prev, ...validFiles];
+            if (newPages.length > maxPages) {
+                toast.warning(
+                    language === 'es'
+                        ? `Límite: ${maxPages} páginas. Actualiza tu plan para más.`
+                        : `Limit: ${maxPages} pages. Upgrade for more.`
+                );
+                return newPages.slice(0, maxPages);
+            }
+            return newPages;
+        });
+
+        toast.success(
+            language === 'es'
+                ? `${validFiles.length} archivo(s) añadido(s)`
+                : `${validFiles.length} file(s) added`
+        );
+    }, [language, maxPages]);
+
+    const removePageFromPreparation = useCallback((index: number) => {
+        setPreparedPages(prev => prev.filter((_, i) => i !== index));
+    }, []);
+
+    const clearAllPages = useCallback(() => {
+        setPreparedPages([]);
+    }, []);
+
+    // Simulated scanner (TWAIN stub)
+    // TODO: Integrate Dynamsoft Web TWAIN or similar SDK for real scanner support
+    const simulateScanner = useCallback(() => {
+        setIsScanning(true);
+        setScannerProgress(0);
+
+        const interval = setInterval(() => {
+            setScannerProgress(prev => {
+                if (prev >= 100) {
+                    clearInterval(interval);
+                    setIsScanning(false);
+                    setShowScannerModal(false);
+
+                    // Create a placeholder "scanned" image
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 800;
+                    canvas.height = 1100;
+                    const ctx = canvas.getContext('2d');
+                    if (ctx) {
+                        ctx.fillStyle = '#f5f5f5';
+                        ctx.fillRect(0, 0, 800, 1100);
+                        ctx.fillStyle = '#333';
+                        ctx.font = '24px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(language === 'es' ? 'Documento Escaneado' : 'Scanned Document', 400, 550);
+                        ctx.font = '14px Arial';
+                        ctx.fillText(new Date().toLocaleString(), 400, 590);
+                    }
+
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            const scannedFile = new File([blob], `scan_${Date.now()}.png`, { type: 'image/png' });
+                            addPagesToPreparation([scannedFile]);
+                        }
+                    }, 'image/png');
+
+                    toast.success(language === 'es' ? '¡Escaneo completado!' : 'Scan complete!');
+                    return 100;
+                }
+                return prev + 10;
+            });
+        }, 300);
+    }, [language, addPagesToPreparation]);
+
+    // Modified onDrop: Add files to preparation instead of immediate upload
     const onDrop = useCallback(async (acceptedFiles: File[]) => {
         if (acceptedFiles.length === 0) return;
 
-        const file = acceptedFiles[0];
 
-        // Strict client-side validation using constants
-        if (file.size > APP_CONFIG.UPLOAD.MAX_FILE_SIZE) {
-            const maxSizeMB = APP_CONFIG.UPLOAD.MAX_FILE_SIZE / (1024 * 1024);
-            toast.error(language === 'es' ? 'Archivo demasiado grande' : 'File too large', {
-                description: language === 'es' ? `El límite es ${maxSizeMB}MB` : `Limit is ${maxSizeMB}MB`
-            });
-            return;
-        }
+
+        // Add all dropped files to preparation area
+        addPagesToPreparation(acceptedFiles);
+    }, [addPagesToPreparation]);
+
+    // Analyze all prepared pages (main submission function)
+    const analyzeAllPages = useCallback(async () => {
+        if (preparedPages.length === 0) return;
 
         setIsUploading(true);
 
         const processPromise = async () => {
-            // Step 1: Upload file to Supabase Storage
+            // Step 1: Upload first file to Supabase Storage (for reference)
+            const firstFile = preparedPages[0];
             const { uploadContractFile } = await import('@/lib/supabase');
-            const { path: filePath, error: uploadError } = await uploadContractFile(file);
+            const { path: filePath, error: uploadError } = await uploadContractFile(firstFile);
 
             if (uploadError || !filePath) {
                 throw new Error(uploadError?.message || (language === 'es' ? 'Error al subir archivo' : 'Upload failed'));
             }
 
-            // Step 2: Process contract with AI
+            // Step 2: Process all files with AI
             const formData = new FormData();
-            formData.append('file', file);
+
+            // Append all files as array
+            preparedPages.forEach((file) => {
+                formData.append('files[]', file);
+            });
+
             formData.append('dataPoints', JSON.stringify(selectedPoints));
             formData.append('sector', selectedSector);
 
@@ -195,6 +303,10 @@ export default function FileUpload({ onUploadSuccess, customQuery }: FileUploadP
                 throw new Error(language === 'es' ? 'Sesión expirada' : 'Session expired');
             }
 
+            const combinedFileName = preparedPages.length > 1
+                ? `${preparedPages.length}_pages_combined.pdf`
+                : preparedPages[0].name;
+
             const saveResponse = await fetch('/api/save-contract', {
                 method: 'POST',
                 headers: {
@@ -203,13 +315,13 @@ export default function FileUpload({ onUploadSuccess, customQuery }: FileUploadP
                 },
                 body: JSON.stringify({
                     id: result.data.id,
-                    fileName: file.name,
+                    fileName: combinedFileName,
                     filePath: filePath,
                     contractData: result.data,
                     sector: selectedSector,
                     tags: [],
                     requestedDataPoints: selectedPoints,
-                    extractedText: result.data.extractedText, // Pass raw PDF text for chat
+                    extractedText: result.data.extractedText,
                 }),
             });
 
@@ -222,9 +334,10 @@ export default function FileUpload({ onUploadSuccess, customQuery }: FileUploadP
         };
 
         toast.promise(processPromise(), {
-            loading: language === 'es' ? 'Analizando contrato...' : 'Analyzing contract...',
+            loading: language === 'es' ? `Analizando ${preparedPages.length} página(s)...` : `Analyzing ${preparedPages.length} page(s)...`,
             success: (data) => {
                 onUploadSuccess(data);
+                clearAllPages(); // Clear pages after success
                 return language === 'es' ? '¡Análisis completado!' : 'Analysis complete!';
             },
             error: (err) => {
@@ -234,12 +347,21 @@ export default function FileUpload({ onUploadSuccess, customQuery }: FileUploadP
             finally: () => setIsUploading(false)
         });
 
-    }, [onUploadSuccess, customQuery, selectedPoints, selectedSector, language]);
+    }, [preparedPages, onUploadSuccess, customQuery, selectedPoints, selectedSector, language, clearAllPages]);
+
+    // Extended file types for multi-page support
+    const acceptedFileTypes = {
+        'application/pdf': ['.pdf'],
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+        'image/jpeg': ['.jpg', '.jpeg'],
+        'image/png': ['.png'],
+        'image/webp': ['.webp'],
+    };
 
     const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
         onDrop,
-        accept: APP_CONFIG.UPLOAD.ALLOWED_FILE_TYPES,
-        maxFiles: 1,
+        accept: acceptedFileTypes,
+        maxFiles: maxPages,
         maxSize: APP_CONFIG.UPLOAD.MAX_FILE_SIZE,
         disabled: isUploading,
     });
@@ -610,6 +732,209 @@ export default function FileUpload({ onUploadSuccess, customQuery }: FileUploadP
                     )}
                 </div>
             )}
+
+            {/* ============ DOCUMENT PREPARATION AREA ============ */}
+            {preparedPages.length > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 rounded-2xl bg-slate-800/50 border border-slate-700/50 space-y-4"
+                >
+                    {/* Header with page count */}
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <FileIcon className="w-5 h-5 text-emerald-400" />
+                            <span className="font-medium text-white">
+                                {language === 'es' ? 'Páginas Preparadas' : 'Prepared Pages'}
+                            </span>
+                            <span className="px-2 py-0.5 text-xs bg-emerald-500/20 text-emerald-400 rounded-full">
+                                {preparedPages.length}/{maxPages}
+                            </span>
+                        </div>
+                        <button
+                            onClick={clearAllPages}
+                            className="text-xs text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
+                        >
+                            <Trash2 className="w-3 h-3" />
+                            {language === 'es' ? 'Limpiar todo' : 'Clear all'}
+                        </button>
+                    </div>
+
+                    {/* Thumbnail Strip */}
+                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-600">
+                        {preparedPages.map((file, index) => {
+                            const isImage = file.type.startsWith('image/');
+                            const isPdf = file.type === 'application/pdf';
+                            return (
+                                <div
+                                    key={`${file.name}-${index}`}
+                                    className="relative flex-shrink-0 w-24 h-32 rounded-lg border border-slate-600 bg-slate-700/50 overflow-hidden group"
+                                >
+                                    {isImage ? (
+                                        <img
+                                            src={URL.createObjectURL(file)}
+                                            alt={file.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex flex-col items-center justify-center p-2">
+                                            <FileIcon className={`w-8 h-8 ${isPdf ? 'text-red-400' : 'text-blue-400'}`} />
+                                            <span className="text-xs text-slate-400 mt-2 truncate w-full text-center">
+                                                {file.name.slice(0, 10)}...
+                                            </span>
+                                        </div>
+                                    )}
+                                    {/* Page number */}
+                                    <div className="absolute bottom-1 left-1 px-1.5 py-0.5 text-xs bg-black/70 text-white rounded">
+                                        {index + 1}
+                                    </div>
+                                    {/* Delete button */}
+                                    <button
+                                        onClick={() => removePageFromPreparation(index)}
+                                        className="absolute top-1 right-1 p-1 bg-red-500/80 hover:bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        <X className="w-3 h-3 text-white" />
+                                    </button>
+                                    {/* File size */}
+                                    <div className="absolute bottom-1 right-1 px-1 py-0.5 text-[10px] bg-black/70 text-slate-300 rounded">
+                                        {(file.size / 1024).toFixed(0)}KB
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Action Buttons Row */}
+                    <div className="flex gap-3">
+                        {/* Scanner Button */}
+                        <button
+                            onClick={() => setShowScannerModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-300 hover:bg-slate-600/50 hover:text-white transition-colors"
+                        >
+                            <ScanLine className="w-4 h-4" />
+                            <span className="text-sm">{language === 'es' ? 'Escanear desde PC' : 'Scan from PC'}</span>
+                        </button>
+
+                        {/* Camera Button (for mobile) */}
+                        <button
+                            onClick={() => {
+                                const input = document.createElement('input');
+                                input.type = 'file';
+                                input.accept = 'image/*';
+                                input.capture = 'environment';
+                                input.onchange = (e) => {
+                                    const file = (e.target as HTMLInputElement).files?.[0];
+                                    if (file) addPagesToPreparation([file]);
+                                };
+                                input.click();
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-300 hover:bg-slate-600/50 hover:text-white transition-colors"
+                        >
+                            <Camera className="w-4 h-4" />
+                            <span className="text-sm">{language === 'es' ? 'Cámara' : 'Camera'}</span>
+                        </button>
+                    </div>
+
+                    {/* Main Analyze Button */}
+                    <button
+                        onClick={analyzeAllPages}
+                        disabled={isUploading || preparedPages.length === 0}
+                        className="w-full py-4 px-6 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all flex items-center justify-center gap-3"
+                    >
+                        {isUploading ? (
+                            <>
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                                {language === 'es' ? 'Analizando...' : 'Analyzing...'}
+                            </>
+                        ) : (
+                            <>
+                                <Upload className="w-5 h-5" />
+                                {language === 'es'
+                                    ? `Analizar Documento (${preparedPages.length} página${preparedPages.length > 1 ? 's' : ''})`
+                                    : `Analyze Document (${preparedPages.length} page${preparedPages.length > 1 ? 's' : ''})`
+                                }
+                            </>
+                        )}
+                    </button>
+                </motion.div>
+            )}
+
+            {/* Scanner Modal */}
+            <AnimatePresence>
+                {showScannerModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div
+                            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+                            onClick={() => !isScanning && setShowScannerModal(false)}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="relative bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md"
+                        >
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                                    <ScanLine className="w-5 h-5 text-blue-400" />
+                                    {language === 'es' ? 'Escanear Documento' : 'Scan Document'}
+                                </h3>
+                                <button
+                                    onClick={() => !isScanning && setShowScannerModal(false)}
+                                    className="p-1 text-slate-400 hover:text-white transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                {isScanning ? (
+                                    <>
+                                        <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                                            <motion.div
+                                                className="h-full bg-gradient-to-r from-blue-500 to-cyan-500"
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${scannerProgress}%` }}
+                                            />
+                                        </div>
+                                        <p className="text-center text-slate-400 text-sm">
+                                            {language === 'es' ? 'Escaneando...' : 'Scanning...'} {scannerProgress}%
+                                        </p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <p className="text-slate-400 text-sm">
+                                            {language === 'es'
+                                                ? 'Conectando con escáner local... (Requiere instalación de agente TWAIN)'
+                                                : 'Connecting to local scanner... (Requires TWAIN agent installation)'
+                                            }
+                                        </p>
+                                        {/* TODO: Integrate Dynamsoft Web TWAIN SDK here for real scanner support */}
+                                        <p className="text-xs text-slate-500 italic">
+                                            {language === 'es'
+                                                ? 'Demo: Se simulará un escaneo'
+                                                : 'Demo: A scan will be simulated'
+                                            }
+                                        </p>
+                                    </>
+                                )}
+
+                                <button
+                                    onClick={simulateScanner}
+                                    disabled={isScanning}
+                                    className="w-full py-3 bg-blue-500 hover:bg-blue-400 disabled:bg-slate-600 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                                >
+                                    {isScanning ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <ScanLine className="w-4 h-4" />
+                                    )}
+                                    {language === 'es' ? 'Iniciar Escaneo' : 'Start Scan'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* Trust Badges */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-4">
