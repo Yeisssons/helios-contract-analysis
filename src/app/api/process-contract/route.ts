@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { parsePdf } from '@/lib/pdfParser';
+import { parsePdf, parsePdfWithMetadata } from '@/lib/pdfParser';
 import { detectFileType } from '@/lib/fileValidation';
 import { extractTextFromImage } from '@/lib/gemini';
 import { analyzeContractWithPlan } from '@/lib/ai-providers';
@@ -125,7 +125,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
                         if (detectedType !== 'pdf') {
                             throw new Error(`Security Error: ${file.name} - Invalid PDF signature.`);
                         }
-                        const pdfText = await parsePdf(buffer);
+                        const { text: pdfText, metadata } = await parsePdfWithMetadata(buffer);
+
+                        // Enforce Page Limits based on User Plan
+                        const limit = APP_CONFIG.UPLOAD.PDF_PAGE_LIMITS[userConfig.plan] || APP_CONFIG.UPLOAD.PDF_PAGE_LIMITS.free;
+                        if (metadata.pages > limit) {
+                            throw new Error(`Plan Error: ${file.name} tiene ${metadata.pages} páginas. Tu plan ${userConfig.plan} permite máximo ${limit} páginas por documento.`);
+                        }
+
                         combinedExtractedText += `\n\n--- Page from ${file.name} ---\n\n${pdfText}`;
 
                     } else if (fileExtension === 'docx') {

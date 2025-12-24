@@ -17,6 +17,12 @@ export const APP_CONFIG = {
             'application/msword': ['.doc'],
         },
         ALLOWED_EXTENSIONS: ['pdf', 'docx', 'doc'],
+        // Page limits to prevent "merging abuse" by free users
+        PDF_PAGE_LIMITS: {
+            free: 20,       // Prevents merging many docs into one
+            pro: 100,
+            enterprise: 1000,
+        },
     },
     AI: {
         // High intelligence model for smaller files (better quality)
