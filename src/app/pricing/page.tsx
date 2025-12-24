@@ -162,8 +162,8 @@ export default function PricingPage() {
         {
             q: isSpanish ? '¿Qué modelo de IA usa Helios?' : 'What AI model does Helios use?',
             a: isSpanish
-                ? 'Utilizamos Gemini 3 Flash de Google como modelo principal, uno de los más avanzados del mercado. Los planes Pro y Enterprise tienen acceso a modelos premium adicionales como GPT-4o y Claude para máxima precisión en análisis complejos.'
-                : 'We use Google\'s Gemini 3 Flash as our primary model, one of the most advanced on the market. Pro and Enterprise plans have access to additional premium models like GPT-4o and Claude for maximum precision in complex analyses.',
+                ? 'Utilizamos modelos de última generación según tu plan: Gemini 2.5 Flash (gratis), Gemini 3 Flash (Pro), y acceso a GPT-5, Claude Sonnet 4.5 y Gemini 3 Pro para Enterprise.'
+                : 'We use cutting-edge models based on your plan: Gemini 2.5 Flash (free), Gemini 3 Flash (Pro), and access to GPT-5, Claude Sonnet 4.5 and Gemini 3 Pro for Enterprise.',
         },
         {
             q: isSpanish ? '¿Mi información se usa para entrenar la IA?' : 'Is my data used to train the AI?',
@@ -174,8 +174,8 @@ export default function PricingPage() {
         {
             q: isSpanish ? '¿Qué diferencia hay entre los planes en cuanto a la IA?' : 'What\'s the difference between plans regarding AI?',
             a: isSpanish
-                ? 'Free: Gemini Flash Lite (rápido, económico). Pro: Gemini 3 Flash (mejor calidad) + fallback a GPT/Claude. Enterprise: Modelos premium configurables según necesidad, con SLA garantizado.'
-                : 'Free: Gemini Flash Lite (fast, economical). Pro: Gemini 3 Flash (better quality) + fallback to GPT/Claude. Enterprise: Configurable premium models as needed, with guaranteed SLA.',
+                ? 'Gratuito: Gemini 2.5 Flash (5 docs/mes). Pro: Gemini 3 Flash (100 docs/mes). Enterprise: GPT-5, Claude Sonnet 4.5, Gemini 3 Pro (500+ docs/mes, configurable).'
+                : 'Free: Gemini 2.5 Flash (5 docs/month). Pro: Gemini 3 Flash (100 docs/month). Enterprise: GPT-5, Claude Sonnet 4.5, Gemini 3 Pro (500+ docs/month, configurable).',
         },
         {
             q: isSpanish ? '¿Dónde se alojan mis datos?' : 'Where is my data hosted?',

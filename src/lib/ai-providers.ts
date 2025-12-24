@@ -29,41 +29,63 @@ export interface AIProviderConfig {
     apiKey: string;
 }
 
+// ============ USAGE LIMITS BY PLAN ============
+
+export const PLAN_USAGE_LIMITS = {
+    free: {
+        documentsPerMonth: 5,
+        softWarningAt: 4, // Show warning at 4 docs
+        hardLimitAction: 'block', // Block at limit
+    },
+    pro: {
+        documentsPerMonth: 100,
+        softWarningAt: 80, // Show warning at 80 docs
+        elevatedUsageAt: 150, // "Elevated usage" notice
+        hardLimitAt: 200, // Suggest upgrade at 200
+        hardLimitAction: 'suggest_upgrade', // Don't block, just suggest
+    },
+    enterprise: {
+        documentsPerMonth: 500, // Base tier
+        softWarningAt: 400,
+        hardLimitAt: Infinity, // No hard limit, but monitor
+        hardLimitAction: 'notify_admin',
+    },
+} as const;
+
 // ============ PROVIDER CONFIGS BY PLAN ============
 
 export const PLAN_AI_CONFIG: Record<UserPlan, { primary: AIProviderConfig; fallbacks: AIProviderConfig[] }> = {
     free: {
         primary: {
             provider: 'gemini',
-            model: 'gemini-2.5-flash-lite', // Free tier, most economical
+            model: 'gemini-2.5-flash', // Free tier (gratis)
             apiKey: process.env.GEMINI_API_KEY || '',
         },
         fallbacks: [
-            { provider: 'gemini', model: 'gemini-2.0-flash-lite', apiKey: process.env.GEMINI_API_KEY || '' },
+            { provider: 'gemini', model: 'gemini-2.5-flash-lite', apiKey: process.env.GEMINI_API_KEY || '' },
         ],
     },
     pro: {
         primary: {
             provider: 'gemini',
-            model: 'gemini-3-flash', // Best balance of speed/quality
+            model: 'gemini-3-flash', // Best balance speed/quality
             apiKey: process.env.GEMINI_API_KEY || '',
         },
         fallbacks: [
             { provider: 'gemini', model: 'gemini-2.5-flash', apiKey: process.env.GEMINI_API_KEY || '' },
-            { provider: 'openai', model: 'gpt-4o-mini', apiKey: process.env.OPENAI_API_KEY || '' },
-            { provider: 'claude', model: 'claude-3-haiku-20240307', apiKey: process.env.ANTHROPIC_API_KEY || '' },
+            { provider: 'gemini', model: 'gemini-2.5-pro', apiKey: process.env.GEMINI_API_KEY || '' },
         ],
     },
     enterprise: {
         primary: {
             provider: 'gemini',
-            model: 'gemini-3-flash', // Premium model
+            model: 'gemini-3-flash', // Default premium
             apiKey: process.env.GEMINI_API_KEY || '',
         },
         fallbacks: [
-            { provider: 'openai', model: 'gpt-4o', apiKey: process.env.OPENAI_API_KEY || '' },
-            { provider: 'claude', model: 'claude-sonnet-4-20250514', apiKey: process.env.ANTHROPIC_API_KEY || '' },
-            { provider: 'gemini', model: 'gemini-2.5-pro', apiKey: process.env.GEMINI_API_KEY || '' },
+            { provider: 'openai', model: 'gpt-5-mini', apiKey: process.env.OPENAI_API_KEY || '' },
+            { provider: 'claude', model: 'claude-sonnet-4-5', apiKey: process.env.ANTHROPIC_API_KEY || '' },
+            { provider: 'gemini', model: 'gemini-3-pro-preview', apiKey: process.env.GEMINI_API_KEY || '' },
         ],
     },
 };
