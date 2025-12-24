@@ -103,7 +103,7 @@ Por favor, busca la respuesta a esta pregunta específica en el contrato y coló
  * Supports custom queries for specific data extraction
  * 
  * Implements automatic model fallback when primary model is overloaded:
- * Chain: gemini-2.5-flash -> gemini-1.5-flash-8b -> gemini-1.5-pro
+ * Chain: gemini-2.5-flash -> gemini-2.5-flash-lite -> gemini-3-flash
  * 
  * @param text - The contract text to analyze
  * @param customQuery - Optional custom query to answer
@@ -126,10 +126,9 @@ export async function analyzeContractText(
     // Fallback model chain for resilience
     // Prioritized by: availability in free tier, speed, reliability
     const MODEL_CHAIN = [
-        'gemini-3-flash',                      // Primary: Latest, best performance
-        modelName || 'gemini-2.5-flash',       // Fallback 1: Fast and reliable
-        'gemini-2.5-flash-lite',               // Fallback 2: Same speed, separate quota!
-        'gemini-2.5-pro',                      // Fallback 3: High intelligence, slower
+        modelName || 'gemini-2.5-flash',       // Primary: User preferred or current standard
+        'gemini-2.5-flash-lite',               // Fallback 1: High quota
+        'gemini-3-flash',                      // Fallback 2: Latest (but check if failing)
     ];
 
     const systemPrompt = buildSystemPrompt(customQuery, dataPoints);
@@ -294,8 +293,8 @@ export async function extractTextFromImage(
 
     console.log(`📸 Gemini Vision OCR: Processing ${fileName} (${(imageBuffer.length / 1024).toFixed(0)}KB)`);
 
-    // Use gemini-3-flash (FREE tier, best quality for Vision/OCR)
-    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash' });
+    // Use gemini-2.5-flash (Available tier, good quality for Vision/OCR)
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const imagePart = {
         inlineData: {

@@ -72,20 +72,20 @@ export const PLAN_AI_CONFIG: Record<UserPlan, { primary: AIProviderConfig; fallb
             apiKey: process.env.GEMINI_API_KEY || '',
         },
         fallbacks: [
-            { provider: 'gemini', model: 'gemini-2.5-flash', apiKey: process.env.GEMINI_API_KEY || '' },
-            { provider: 'gemini', model: 'gemini-2.5-pro', apiKey: process.env.GEMINI_API_KEY || '' },
+            { provider: 'gemini', model: 'gemini-2.5-flash-lite', apiKey: process.env.GEMINI_API_KEY || '' },
+            { provider: 'gemini', model: 'gemini-3-flash', apiKey: process.env.GEMINI_API_KEY || '' },
         ],
     },
     enterprise: {
         primary: {
             provider: 'gemini',
-            model: 'gemini-3-flash', // Default premium
+            model: 'gemini-2.5-flash', // Most reliable from usage list
             apiKey: process.env.GEMINI_API_KEY || '',
         },
         fallbacks: [
-            { provider: 'openai', model: 'gpt-5-mini', apiKey: process.env.OPENAI_API_KEY || '' },
-            { provider: 'claude', model: 'claude-sonnet-4-5', apiKey: process.env.ANTHROPIC_API_KEY || '' },
-            { provider: 'gemini', model: 'gemini-3-pro-preview', apiKey: process.env.GEMINI_API_KEY || '' },
+            { provider: 'gemini', model: 'gemini-3-flash', apiKey: process.env.GEMINI_API_KEY || '' },
+            { provider: 'openai', model: 'gpt-4o', apiKey: process.env.OPENAI_API_KEY || '' },
+            { provider: 'claude', model: 'claude-3-5-sonnet-latest', apiKey: process.env.ANTHROPIC_API_KEY || '' },
         ],
     },
 };
@@ -97,10 +97,10 @@ export const ENTERPRISE_AVAILABLE_MODELS: Array<{
     name: string;
     description: string;
 }> = [
-        { provider: 'gemini', model: 'gemini-3-flash', name: 'Gemini 3 Flash', description: 'Rápido y potente (Recomendado)' },
-        { provider: 'gemini', model: 'gemini-3-pro-preview', name: 'Gemini 3 Pro', description: 'Máxima inteligencia' },
-        { provider: 'openai', model: 'gpt-5-mini', name: 'GPT-5 Mini', description: 'OpenAI última generación' },
-        { provider: 'claude', model: 'claude-sonnet-4-5', name: 'Claude Sonnet 4.5', description: 'Anthropic, excelente razonamiento' },
+        { provider: 'gemini', model: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', description: 'Más confiable y rápido' },
+        { provider: 'gemini', model: 'gemini-3-flash', name: 'Gemini 3 Flash', description: 'Última generación (Beta)' },
+        { provider: 'openai', model: 'gpt-4o', name: 'GPT-4o', description: 'OpenAI líder en razonamiento' },
+        { provider: 'claude', model: 'claude-3-5-sonnet-latest', name: 'Claude 3.5 Sonnet', description: 'Anthropic, excelente para código y leyes' },
     ];
 
 // ============ GEMINI PROVIDER ============
@@ -267,10 +267,9 @@ export function getModelDisplayName(plan: UserPlan): string {
         'gemini-3-flash': 'Gemini 3 Flash',
         'gemini-2.5-flash': 'Gemini 2.5 Flash',
         'gemini-2.5-flash-lite': 'Gemini 2.5 Flash Lite',
-        'gemini-2.5-pro': 'Gemini 2.5 Pro',
         'gpt-4o': 'GPT-4o',
         'gpt-4o-mini': 'GPT-4o Mini',
-        'claude-sonnet-4-20250514': 'Claude Sonnet 4',
+        'claude-3-5-sonnet-latest': 'Claude 3.5 Sonnet',
         'claude-3-haiku-20240307': 'Claude 3 Haiku',
     };
     return modelNames[config.primary.model] || config.primary.model;
