@@ -1,7 +1,7 @@
 'use client';
 
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Shield, Lock, Database, Server, FileText, CheckCircle, ExternalLink, Mail, Trash2 } from 'lucide-react';
+import { Shield, Lock, Database, Server, FileText, CheckCircle, ExternalLink, Mail, Trash2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SecurityPage() {
@@ -30,6 +30,15 @@ export default function SecurityPage() {
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#09090b]" />
 
                 <div className="relative max-w-5xl mx-auto px-6 py-24 mb-10">
+                    {/* Back Button */}
+                    <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors mb-8"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                        {language === 'es' ? 'Volver al inicio' : 'Back to home'}
+                    </Link>
+
                     <div className="flex items-center gap-3 mb-6">
                         <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                             <Shield className="w-6 h-6" />
