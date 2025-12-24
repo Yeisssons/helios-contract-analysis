@@ -24,6 +24,23 @@ export const APP_CONFIG = {
             enterprise: 1000,
         },
     },
+    PLANS: {
+        free: {
+            label: 'Free',
+            documents: 5, // Monthly limit
+            price: 0
+        },
+        pro: {
+            label: 'Pro',
+            documents: 100, // Monthly limit
+            price: 29
+        },
+        enterprise: {
+            label: 'Enterprise',
+            documents: 1000, // Monthly limit
+            price: 299
+        }
+    },
     AI: {
         // High intelligence model for smaller files (better quality)
         MODEL_STANDARD: process.env.GEMINI_MODEL_STANDARD || 'gemini-2.5-flash',

@@ -302,10 +302,17 @@ import type { UserAIConfig } from './user-plan';
 /**
  * Build the system prompt for contract analysis
  */
-function buildContractSystemPrompt(customQuery?: string, dataPoints: string[] = []): string {
+/**
+ * Build the system prompt for contract analysis
+ */
+function buildContractSystemPrompt(customQuery?: string, dataPoints: string[] = [], targetLanguage: string = 'en'): string {
+    const langInstruction = targetLanguage === 'es'
+        ? 'LANGUAGE: Output MUST be in SPANISH (Español).'
+        : 'LANGUAGE: Output MUST be in ENGLISH.';
+
     let prompt = `You are an expert legal contract analyst. Analyze the provided contract text and extract information in STRICT JSON format.
 
-LANGUAGE: Output in the SAME language as the document.
+${langInstruction}
 
 Required JSON structure:
 {
@@ -350,13 +357,14 @@ export async function analyzeContractWithPlan(
     text: string,
     userConfig: UserAIConfig,
     customQuery?: string,
-    dataPoints: string[] = []
+    dataPoints: string[] = [],
+    targetLanguage: string = 'en'
 ): Promise<{
     result: Record<string, unknown>;
     provider: AIProvider;
     model: string;
 }> {
-    const systemPrompt = buildContractSystemPrompt(customQuery, dataPoints);
+    const systemPrompt = buildContractSystemPrompt(customQuery, dataPoints, targetLanguage);
     const prompt = `CONTRACT TEXT:\n---\n${text}\n---\n\nExtract the information and return ONLY the JSON object.`;
 
     // Determine if we should use a preferred provider (Enterprise only)

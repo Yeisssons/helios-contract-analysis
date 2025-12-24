@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
 import Link from 'next/link';
+import { useDocumentUsage } from '@/hooks/useDocumentUsage';
 
 type Tab = 'profile' | 'notifications' | 'security' | 'subscription';
 
@@ -43,13 +44,22 @@ function ProfileContent() {
         emailSecurityAlerts: true,
     });
 
-    // Subscription info (mock for now)
-    const [subscription] = useState({
-        plan: 'free',
-        documentsUsed: 3,
-        documentsLimit: 5,
-        nextRenewal: null as string | null,
-    });
+    // Fetch real subscription usage
+    const { used, limit, plan, loading: usageLoading } = useDocumentUsage();
+
+    const [nextRenewal, setNextRenewal] = useState<string | null>(null);
+
+    useEffect(() => {
+        const now = new Date();
+        setNextRenewal(new Date(now.getFullYear(), now.getMonth() + 1, 1).toLocaleDateString());
+    }, []);
+
+    const subscription = {
+        plan,
+        documentsUsed: used,
+        documentsLimit: limit,
+        nextRenewal
+    };
 
     // AI Preferences (Enterprise only)
     const [aiPreferences, setAiPreferences] = useState<{
@@ -860,8 +870,8 @@ function ProfileContent() {
                                                         onClick={() => handleSaveAIModel(m.provider, m.model)}
                                                         disabled={savingAIPrefs}
                                                         className={`p-4 rounded-xl border text-left transition-all ${aiPreferences.model === m.model
-                                                                ? 'border-purple-500 bg-purple-500/20'
-                                                                : 'border-slate-700 hover:border-slate-600 bg-slate-900/50'
+                                                            ? 'border-purple-500 bg-purple-500/20'
+                                                            : 'border-slate-700 hover:border-slate-600 bg-slate-900/50'
                                                             }`}
                                                     >
                                                         <div className="flex items-center justify-between mb-2">
@@ -872,8 +882,8 @@ function ProfileContent() {
                                                         </div>
                                                         <p className="text-sm text-slate-400">{m.description}</p>
                                                         <span className={`inline-block mt-2 px-2 py-0.5 rounded text-xs ${m.provider === 'gemini' ? 'bg-blue-500/20 text-blue-400' :
-                                                                m.provider === 'openai' ? 'bg-emerald-500/20 text-emerald-400' :
-                                                                    'bg-orange-500/20 text-orange-400'
+                                                            m.provider === 'openai' ? 'bg-emerald-500/20 text-emerald-400' :
+                                                                'bg-orange-500/20 text-orange-400'
                                                             }`}>
                                                             {m.provider === 'gemini' ? 'Google' :
                                                                 m.provider === 'openai' ? 'OpenAI' : 'Anthropic'}

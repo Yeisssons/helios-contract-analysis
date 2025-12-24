@@ -8,6 +8,7 @@ import { useAdmin } from '@/hooks/useAdmin';
 import LanguageToggle from './LanguageToggle';
 import ConnectionStatus from './ConnectionStatus';
 import { Home, Calendar, FileText, BarChart3, LogOut, User, Shield, Sparkles, Users } from 'lucide-react';
+import UsageIndicator from './UsageIndicator';
 
 export default function Header() {
     const { t, language } = useLanguage();
@@ -77,6 +78,9 @@ export default function Header() {
                     <div className="flex items-center gap-3">
                         {/* Connection Status - only show when authenticated */}
                         {user && <ConnectionStatus />}
+
+                        {/* Usage Indicator - new visibility feature */}
+                        {user && <UsageIndicator />}
 
                         <LanguageToggle />
 

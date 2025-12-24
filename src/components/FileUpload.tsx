@@ -2,17 +2,18 @@
 
 import { useCallback, useState, useEffect, useMemo } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, Check, AlertCircle, X, Shield, Settings, ChevronDown, Building2, Star, User, Plus, Save, Edit2, Trash2, Loader2, Lock, Image, FileText as FileIcon, Zap } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Upload, Check, AlertCircle, X, ChevronDown, Building2, User, Plus, Save, Trash2, Loader2, Lock, FileText as FileIcon, Zap, Shield } from 'lucide-react';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ContractData, ProcessContractResponse } from '@/types/contract';
 import ProcessingState from './ProcessingState';
-import { SectorId, getSectorTemplate, SECTOR_TEMPLATES, DEFAULT_SECTOR } from '@/constants/sectorTemplates';
-import { getDataPointTranslation, getDataPointDescription } from '@/constants/dataPointTranslations';
-import { useSectors, UnifiedSector } from '@/hooks/useSectors';
+import { SectorId, getSectorTemplate, DEFAULT_SECTOR } from '@/constants/sectorTemplates';
+import { getDataPointTranslation } from '@/constants/dataPointTranslations';
+import { useSectors } from '@/hooks/useSectors';
 import { APP_CONFIG } from '@/config/constants';
+import { useDocumentUsage } from '@/hooks/useDocumentUsage';
 
 // Page limits by plan (for cost control)
 // Free: 1 page only (single file), Pro/Enterprise: multi-page
@@ -41,6 +42,9 @@ export default function FileUpload({ onUploadSuccess, customQuery, userPlan = 'f
     // ============ DOCUMENT PREPARATION AREA STATE ============
     const [preparedPages, setPreparedPages] = useState<File[]>([]);
     const maxPages = PAGE_LIMITS[userPlan] || PAGE_LIMITS.free;
+
+    // Soft Usage Limit Check
+    const { isNearLimit, limit, used } = useDocumentUsage();
 
     // Template creation state
     const [showSaveTemplate, setShowSaveTemplate] = useState(false);
@@ -239,6 +243,7 @@ export default function FileUpload({ onUploadSuccess, customQuery, userPlan = 'f
 
             formData.append('dataPoints', JSON.stringify(selectedPoints));
             formData.append('sector', selectedSector);
+            formData.append('language', language); // Send current UI language ('es' or 'en')
 
             if (customQuery?.trim()) {
                 formData.append('customQuery', customQuery.trim());
@@ -713,7 +718,7 @@ export default function FileUpload({ onUploadSuccess, customQuery, userPlan = 'f
                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
                                 </span>
                                 <span className="text-xs font-medium text-purple-200">
-                                    {language === 'es' ? 'Pregunta activa:' : 'Active question:'} <span className="text-white italic">"{customQuery}"</span>
+                                    {language === 'es' ? 'Pregunta activa:' : 'Active question:'} <span className="text-white italic">&quot;{customQuery}&quot;</span>
                                 </span>
                             </div>
                         </motion.div>
@@ -728,6 +733,25 @@ export default function FileUpload({ onUploadSuccess, customQuery, userPlan = 'f
                     animate={{ opacity: 1, y: 0 }}
                     className="p-4 rounded-2xl bg-slate-800/50 border border-slate-700/50 space-y-4"
                 >
+                    {/* SOFT LIMIT WARNING */}
+                    {isNearLimit && userPlan === 'free' && (
+                        <div className="flex items-start gap-3 p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                            <AlertCircle className="w-5 h-5 text-indigo-400 mt-0.5" />
+                            <div>
+                                <p className="text-sm font-medium text-indigo-300">
+                                    {language === 'es' ? 'Límite Mensual Cercano' : 'Monthly Limit Approaching'}
+                                </p>
+                                <p className="text-xs text-indigo-400/80 mt-1">
+                                    {language === 'es'
+                                        ? `Has usado ${used} de ${limit} documentos. El análisis se bloqueará al llegar al límite.`
+                                        : `You have used ${used} of ${limit} documents. Analysis will pause when limit is reached.`}
+                                </p>
+                                <Link href="/pricing" className="text-xs text-white underline mt-2 block">
+                                    {language === 'es' ? 'Actualizar a Pro →' : 'Upgrade to Pro →'}
+                                </Link>
+                            </div>
+                        </div>
+                    )}
                     {/* Header with page count */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -748,48 +772,63 @@ export default function FileUpload({ onUploadSuccess, customQuery, userPlan = 'f
                         </button>
                     </div>
 
-                    {/* Thumbnail Strip */}
-                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-600">
-                        {preparedPages.map((file, index) => {
-                            const isImage = file.type.startsWith('image/');
-                            const isPdf = file.type === 'application/pdf';
-                            return (
-                                <div
-                                    key={`${file.name}-${index}`}
-                                    className="relative flex-shrink-0 w-24 h-32 rounded-lg border border-slate-600 bg-slate-700/50 overflow-hidden group"
-                                >
-                                    {isImage ? (
-                                        <img
-                                            src={URL.createObjectURL(file)}
-                                            alt={file.name}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex flex-col items-center justify-center p-2">
-                                            <FileIcon className={`w-8 h-8 ${isPdf ? 'text-red-400' : 'text-blue-400'}`} />
-                                            <span className="text-xs text-slate-400 mt-2 truncate w-full text-center">
-                                                {file.name.slice(0, 10)}...
-                                            </span>
-                                        </div>
-                                    )}
-                                    {/* Page number */}
-                                    <div className="absolute bottom-1 left-1 px-1.5 py-0.5 text-xs bg-black/70 text-white rounded">
-                                        {index + 1}
-                                    </div>
-                                    {/* Delete button */}
-                                    <button
-                                        onClick={() => removePageFromPreparation(index)}
-                                        className="absolute top-1 right-1 p-1 bg-red-500/80 hover:bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    {/* Reorderable Thumbnail Strip */}
+                    <div className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-600">
+                        <Reorder.Group
+                            axis="x"
+                            values={preparedPages}
+                            onReorder={setPreparedPages}
+                            className="flex gap-3"
+                        >
+                            {preparedPages.map((file) => {
+                                const isImage = file.type.startsWith('image/');
+                                const isPdf = file.type === 'application/pdf';
+                                const uniqueKey = `${file.name}-${file.size}-${file.lastModified}`;
+
+                                return (
+                                    <Reorder.Item
+                                        key={uniqueKey}
+                                        value={file}
+                                        whileDrag={{ scale: 1.05 }}
+                                        className="relative flex-shrink-0 w-24 h-32 rounded-lg border border-slate-600 bg-slate-700/50 overflow-hidden group cursor-grab active:cursor-grabbing"
                                     >
-                                        <X className="w-3 h-3 text-white" />
-                                    </button>
-                                    {/* File size */}
-                                    <div className="absolute bottom-1 right-1 px-1 py-0.5 text-[10px] bg-black/70 text-slate-300 rounded">
-                                        {(file.size / 1024).toFixed(0)}KB
-                                    </div>
-                                </div>
-                            );
-                        })}
+                                        {isImage ? (
+                                            <img
+                                                src={URL.createObjectURL(file)}
+                                                alt={file.name}
+                                                className="w-full h-full object-cover pointer-events-none"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex flex-col items-center justify-center p-2">
+                                                <FileIcon className={`w-8 h-8 ${isPdf ? 'text-red-400' : 'text-blue-400'}`} />
+                                                <span className="text-xs text-slate-400 mt-2 truncate w-full text-center">
+                                                    {file.name.slice(0, 10)}...
+                                                </span>
+                                            </div>
+                                        )}
+                                        {/* Page number badge (auto-updates on reorder) */}
+                                        <div className="absolute bottom-1 left-1 px-1.5 py-0.5 text-xs bg-black/70 text-white rounded font-mono">
+                                            {preparedPages.indexOf(file) + 1}
+                                        </div>
+                                        {/* Delete button */}
+                                        <button
+                                            onPointerDown={(e) => {
+                                                e.stopPropagation(); // Stop drag start
+                                                const idx = preparedPages.indexOf(file);
+                                                removePageFromPreparation(idx);
+                                            }}
+                                            className="absolute top-1 right-1 p-1 bg-red-500/80 hover:bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                        >
+                                            <X className="w-3 h-3 text-white" />
+                                        </button>
+                                        {/* File size */}
+                                        <div className="absolute bottom-1 right-1 px-1 py-0.5 text-[10px] bg-black/70 text-slate-300 rounded">
+                                            {(file.size / 1024).toFixed(0)}KB
+                                        </div>
+                                    </Reorder.Item>
+                                );
+                            })}
+                        </Reorder.Group>
                     </div>
 
 

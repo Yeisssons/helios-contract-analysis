@@ -2,10 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { Copy, Check, ArrowLeft, Download, AlertCircle, Search, X, Save, Edit3, FileText, LayoutTemplate, Calendar } from 'lucide-react';
+import {
+    Copy, Check, ArrowLeft, Download, AlertCircle, Search, X, Save, Edit3,
+    FileText, LayoutTemplate, Calendar, CalendarPlus, Mail,
+    Gauge, ShieldAlert, Sparkles, AlertTriangle, Lock
+} from 'lucide-react';
 import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
 import ContractChat from '@/components/ContractChat';
 import { toast } from 'sonner';
+import {
+    downloadCalendarEvent,
+    generateCancellationDraft,
+    copyToClipboard as clipboardCopy
+} from '@/utils/businessTools';
+import SuggestedTaskCard, { generateSuggestedTasks } from '@/components/SuggestedTaskCard';
 
 interface ContractDetail {
     id: string;
@@ -17,11 +27,15 @@ interface ContractDetail {
     noticePeriodDays?: number;
     terminationClauseReference?: string;
     sector?: string;
-    extractedData?: Record<string, any>;
+    extractedData?: Record<string, unknown>;
     dataSources?: Record<string, string>;
     abusiveClauses?: Array<{ clause: string; severity: string; recommendation: string }>;
     alerts?: Array<{ message: string; severity: string }>;
     riskLevel?: string;
+    riskScore?: number;
+    summary?: string;
+    parties?: string[];
+    requestedDataPoints?: string[];
 }
 
 function ContractDetailContent() {
@@ -459,6 +473,206 @@ function ContractDetailContent() {
                                     ) : (
                                         <p className="text-lg font-mono text-amber-400">{contract.renewalDate || '-'}</p>
                                     )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ============ PREMIUM ANALYSIS PANEL (Pro/Enterprise) ============ */}
+                        {userPlan !== 'free' && (
+                            <>
+                                {/* Risk Score Visualization */}
+                                {contract.riskScore !== undefined && (
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-widest">
+                                            <Gauge className="w-4 h-4" />
+                                            {language === 'es' ? 'Puntuación de Riesgo' : 'Risk Score'}
+                                        </div>
+                                        <div className={`flex items-center gap-6 p-5 rounded-2xl ${contract.riskScore < 4 ? 'bg-emerald-500/10' : contract.riskScore < 7.5 ? 'bg-amber-500/10' : 'bg-red-500/10'} border border-white/5 relative overflow-hidden`}>
+                                            <div className="relative w-20 h-20 flex-shrink-0">
+                                                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                                    <path
+                                                        className="text-black/20"
+                                                        strokeDasharray="100, 100"
+                                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        strokeWidth="3"
+                                                    />
+                                                    <path
+                                                        className={contract.riskScore < 4 ? 'text-emerald-400' : contract.riskScore < 7.5 ? 'text-amber-400' : 'text-red-400'}
+                                                        strokeDasharray={`${(contract.riskScore / 10) * 100}, 100`}
+                                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        strokeWidth="3"
+                                                        strokeLinecap="round"
+                                                    />
+                                                </svg>
+                                                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                    <span className={`text-2xl font-bold ${contract.riskScore < 4 ? 'text-emerald-400' : contract.riskScore < 7.5 ? 'text-amber-400' : 'text-red-400'}`}>
+                                                        {contract.riskScore.toFixed(1)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="relative z-10">
+                                                <p className={`text-lg font-bold mb-1 ${contract.riskScore < 4 ? 'text-emerald-400' : contract.riskScore < 7.5 ? 'text-amber-400' : 'text-red-400'}`}>
+                                                    {contract.riskScore < 4 ? (language === 'es' ? 'Riesgo Bajo' : 'Low Risk') : contract.riskScore < 7.5 ? (language === 'es' ? 'Riesgo Medio' : 'Medium Risk') : (language === 'es' ? 'Riesgo Alto' : 'High Risk')}
+                                                </p>
+                                                <p className="text-xs text-zinc-400 font-medium">
+                                                    {language === 'es' ? 'Puntuación de riesgo AI' : 'AI Risk Score'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Abusive Clauses Warning */}
+                                {contract.abusiveClauses && contract.abusiveClauses.length > 0 && (
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-red-400 uppercase tracking-widest">
+                                            <ShieldAlert className="w-4 h-4" />
+                                            {language === 'es' ? 'Cláusulas Abusivas Detectadas' : 'Abusive Clauses Detected'}
+                                        </div>
+                                        <div className="space-y-3">
+                                            {contract.abusiveClauses.map((clause, index) => (
+                                                <div key={index} className="p-4 rounded-xl bg-red-500/5 border border-red-500/20">
+                                                    <p className="text-sm text-red-200/90 leading-relaxed font-medium">{clause.clause}</p>
+                                                    {clause.recommendation && (
+                                                        <p className="text-xs text-red-400/60 mt-2">{clause.recommendation}</p>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Alerts Section */}
+                                {contract.alerts && contract.alerts.length > 0 && (
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-widest">
+                                            <AlertTriangle className="w-4 h-4" />
+                                            {language === 'es' ? 'Alertas' : 'Alerts'}
+                                        </div>
+                                        <div className="space-y-3">
+                                            {contract.alerts.map((alert, index) => (
+                                                <div key={index} className="flex gap-4 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                                                    <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                                                    <p className="text-sm text-zinc-300">{alert.message}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Action Buttons */}
+                                <div className="flex flex-wrap items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                                    <button
+                                        onClick={() => {
+                                            downloadCalendarEvent({
+                                                fileName: contract.fileName,
+                                                contractType: contract.contractType || '',
+                                                effectiveDate: contract.effectiveDate || '',
+                                                renewalDate: contract.renewalDate || '',
+                                                noticePeriodDays: contract.noticePeriodDays || 30,
+                                                terminationClauseReference: contract.terminationClauseReference || ''
+                                            });
+                                            toast.success(language === 'es' ? 'Evento añadido al calendario' : 'Event added to calendar');
+                                        }}
+                                        className="group flex items-center gap-2.5 px-5 py-3 bg-zinc-900 rounded-xl border border-white/10 hover:border-indigo-500/50 transition-all hover:shadow-[0_0_15px_rgba(99,102,241,0.2)]"
+                                    >
+                                        <CalendarPlus className="w-5 h-5 text-indigo-400 group-hover:text-indigo-300" />
+                                        <span className="font-semibold text-zinc-300 group-hover:text-white text-sm">
+                                            {language === 'es' ? 'Agendar Recordatorio' : 'Schedule Reminder'}
+                                        </span>
+                                    </button>
+
+                                    <div className="relative">
+                                        <button
+                                            onClick={() => {
+                                                const draft = generateCancellationDraft({
+                                                    fileName: contract.fileName,
+                                                    contractType: contract.contractType || '',
+                                                    effectiveDate: contract.effectiveDate || '',
+                                                    renewalDate: contract.renewalDate || '',
+                                                    noticePeriodDays: contract.noticePeriodDays || 30,
+                                                    terminationClauseReference: contract.terminationClauseReference || '',
+                                                    parties: contract.parties || []
+                                                });
+                                                clipboardCopy(draft);
+                                                toast.success(language === 'es' ? 'Borrador copiado al portapapeles' : 'Draft copied to clipboard');
+                                            }}
+                                            className="group flex items-center gap-2.5 px-5 py-3 bg-zinc-900 rounded-xl border border-white/10 hover:border-emerald-500/50 transition-all hover:shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                                        >
+                                            <Mail className="w-5 h-5 text-emerald-400 group-hover:text-emerald-300" />
+                                            <span className="font-semibold text-zinc-300 group-hover:text-white text-sm">
+                                                {language === 'es' ? 'Redactar Email' : 'Draft Email'}
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Suggested Tasks */}
+                                {(() => {
+                                    const suggestedTasks = generateSuggestedTasks({
+                                        riskScore: contract.riskScore,
+                                        abusiveClauses: contract.abusiveClauses?.map(c => c.clause),
+                                        alerts: contract.alerts?.map(a => a.message),
+                                        renewalDate: contract.renewalDate,
+                                        terminationClauseReference: contract.terminationClauseReference
+                                    }, language as 'es' | 'en');
+
+                                    if (suggestedTasks.length === 0) return null;
+
+                                    return (
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-2 text-xs font-bold text-purple-400 uppercase tracking-widest">
+                                                <Sparkles className="w-4 h-4" />
+                                                {language === 'es' ? 'Tareas Sugeridas' : 'Suggested Tasks'}
+                                                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-purple-500/20 text-purple-300">
+                                                    {suggestedTasks.length}
+                                                </span>
+                                            </div>
+                                            <div className="space-y-3">
+                                                {suggestedTasks.map(task => (
+                                                    <SuggestedTaskCard
+                                                        key={task.id}
+                                                        task={task}
+                                                        teamMembers={[]}
+                                                        language={language as 'es' | 'en'}
+                                                        contractName={contract.fileName}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+                            </>
+                        )}
+
+                        {/* FREE PLAN UPGRADE PROMPT */}
+                        {userPlan === 'free' && (
+                            <div className="p-5 rounded-2xl bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20">
+                                <div className="flex items-start gap-4">
+                                    <div className="p-2 rounded-xl bg-purple-500/20 text-purple-400">
+                                        <Lock className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-white font-semibold mb-1">
+                                            {language === 'es' ? 'Análisis Avanzado' : 'Advanced Analysis'}
+                                        </h3>
+                                        <p className="text-sm text-zinc-400 mb-3">
+                                            {language === 'es'
+                                                ? 'Actualiza a Pro para acceder a: Puntuación de riesgo, Cláusulas abusivas, Alertas automáticas, Tareas sugeridas, y más.'
+                                                : 'Upgrade to Pro to unlock: Risk scoring, Abusive clauses detection, Automatic alerts, Suggested tasks, and more.'}
+                                        </p>
+                                        <a
+                                            href="/pricing"
+                                            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white text-sm font-medium rounded-lg transition-all"
+                                        >
+                                            <Sparkles className="w-4 h-4" />
+                                            {language === 'es' ? 'Actualizar a Pro' : 'Upgrade to Pro'}
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         )}

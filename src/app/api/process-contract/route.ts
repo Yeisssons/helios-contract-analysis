@@ -4,6 +4,7 @@ import { detectFileType } from '@/lib/fileValidation';
 import { extractTextFromImage, extractTextFromPdf } from '@/lib/gemini';
 import { analyzeContractWithPlan } from '@/lib/ai-providers';
 import { getUserAIConfig, getUserIdFromToken } from '@/lib/user-plan';
+import { supabase } from '@/lib/supabase';
 import { extractContractDataWithAI } from '@/lib/ai-mock';
 import { ProcessContractResponse } from '@/types/contract';
 import { APP_CONFIG } from '@/config/constants';
@@ -44,10 +45,12 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
         const rawMetadata = {
             customQuery: formData.get('customQuery') as string || undefined,
             dataPoints: formData.get('dataPoints') ? JSON.parse(formData.get('dataPoints') as string) : [],
-            sector: formData.get('sector') as string || undefined
+            sector: formData.get('sector') as string || undefined,
+            language: formData.get('language') as string || 'en'
         };
 
         const validation = ContractMetadataSchema.safeParse(rawMetadata);
+        const targetLanguage = rawMetadata.language;
 
         if (!validation.success) {
             return NextResponse.json(
@@ -110,6 +113,35 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
 
         console.log(`📊 User plan: ${userConfig.plan}, Preferred model: ${userConfig.preferredModel || 'default'}`);
 
+
+
+        // 2. Enforce Monthly Document Limits (API Security)
+        if (userId) {
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+            const { count, error: countError } = await supabase
+                .from('contracts')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId)
+                .gte('created_at', startOfMonth);
+
+            if (!countError && count !== null) {
+                const planLimit = APP_CONFIG.PLANS[userConfig.plan]?.documents || 5;
+                // Check if adding these new files would exceed quota
+                if (count + allFiles.length > planLimit) {
+                    return NextResponse.json(
+                        {
+                            success: false,
+                            error: `Has alcanzado tu límite mensual de ${planLimit} documentos. Has usado ${count}/${planLimit}. Actualiza a Pro para más.`,
+                            code: 'LIMIT_EXCEEDED'
+                        },
+                        { status: 403 }
+                    );
+                }
+            }
+        }
+
         // 3. Processing Logic
         if (USE_REAL_AI) {
             try {
@@ -128,16 +160,21 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
                         const { text: pdfText, metadata } = await parsePdfWithMetadata(buffer);
                         let finalText = pdfText;
 
-                        // FALLBACK for Scanned PDFs
-                        if (!finalText || finalText.trim().length === 0) {
-                            console.log(`⚠️ PDF ${file.name} has no text. Using Gemini Vision (Scanned PDF Mode).`);
-                            finalText = await extractTextFromPdf(buffer, file.name);
-                        }
-
                         // Enforce Page Limits based on User Plan (metadata.pages is still valid for scanned PDFs)
                         const limit = APP_CONFIG.UPLOAD.PDF_PAGE_LIMITS[userConfig.plan] || APP_CONFIG.UPLOAD.PDF_PAGE_LIMITS.free;
                         if (metadata.pages > limit) {
                             throw new Error(`Plan Error: ${file.name} tiene ${metadata.pages} páginas. Tu plan ${userConfig.plan} permite máximo ${limit} páginas por documento.`);
+                        }
+
+                        // FALLBACK for Scanned PDFs & HEURISTIC for "Crooked" Scans (Low Text Density)
+                        const cleanedText = finalText.trim();
+                        const pageCount = metadata.pages || 1;
+                        const avgCharsPerPage = cleanedText.length / pageCount;
+                        const isSuspiciousScan = avgCharsPerPage < 100; // < 100 chars/page suggests garbage/noise
+
+                        if (!cleanedText || cleanedText.length === 0 || isSuspiciousScan) {
+                            console.log(`⚠️ PDF ${file.name} issue detected (Empty: ${!cleanedText}, Density: ${avgCharsPerPage.toFixed(0)} chars/page). Forcing Gemini Vision.`);
+                            finalText = await extractTextFromPdf(buffer, file.name);
                         }
 
                         combinedExtractedText += `\n\n--- Page from ${file.name} ---\n\n${finalText}`;
@@ -161,11 +198,13 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
                 }
 
                 // Analyze with AI based on user's plan
+                // Analyze with AI based on user's plan
                 const analysisResult = await analyzeContractWithPlan(
                     combinedExtractedText,
                     userConfig,
                     customQuery || undefined,
-                    dataPoints
+                    dataPoints,
+                    targetLanguage
                 );
 
                 extractedData = analysisResult.result;
