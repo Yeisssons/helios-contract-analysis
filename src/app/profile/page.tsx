@@ -601,6 +601,40 @@ function ProfileContent() {
                                         </div>
 
                                         <div className="pt-4 space-y-3">
+                                            {/* GDPR Data Export Button */}
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        setLoading(true);
+                                                        const { data: { session } } = await supabase.auth.getSession();
+                                                        const response = await fetch('/api/user/export-data', {
+                                                            headers: { 'Authorization': `Bearer ${session?.access_token}` }
+                                                        });
+                                                        const blob = await response.blob();
+                                                        const url = window.URL.createObjectURL(blob);
+                                                        const a = document.createElement('a');
+                                                        a.href = url;
+                                                        a.download = `helios-data-export-${new Date().toISOString().split('T')[0]}.json`;
+                                                        a.click();
+                                                        setSuccessMsg(language === 'es' ? 'Datos exportados' : 'Data exported');
+                                                    } catch (e) {
+                                                        console.error(e);
+                                                        setErrorMsg(language === 'es' ? 'Error al exportar' : 'Export failed');
+                                                    } finally {
+                                                        setLoading(false);
+                                                    }
+                                                }}
+                                                className="flex items-center justify-between w-full p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition-colors group"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <Download className="w-4 h-4 text-blue-400" />
+                                                    <span className="text-slate-300 group-hover:text-white transition-colors">
+                                                        {language === 'es' ? 'Descargar todos mis datos (RGPD Art. 20)' : 'Download all my data (GDPR Art. 20)'}
+                                                    </span>
+                                                </div>
+                                                <ChevronRight className="w-4 h-4 text-blue-400" />
+                                            </button>
+
                                             <Link
                                                 href="/security"
                                                 className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700/50 hover:border-emerald-500/30 transition-colors group"
@@ -613,6 +647,7 @@ function ProfileContent() {
                                                 </div>
                                                 <ExternalLink className="w-4 h-4 text-slate-500" />
                                             </Link>
+
                                             <button className="flex items-center justify-between w-full p-3 rounded-lg bg-slate-900/50 border border-slate-700/50 hover:border-red-500/30 transition-colors group">
                                                 <div className="flex items-center gap-3">
                                                     <Trash2 className="w-4 h-4 text-red-400" />
