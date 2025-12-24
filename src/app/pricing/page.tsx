@@ -160,16 +160,28 @@ export default function PricingPage() {
     // FAQs
     const faqs = [
         {
-            q: isSpanish ? '¿Dónde se alojan mis datos?' : 'Where is my data hosted?',
+            q: isSpanish ? '¿Qué modelo de IA usa Helios?' : 'What AI model does Helios use?',
             a: isSpanish
-                ? 'Tus datos se procesan exclusivamente en servidores situados en la Unión Europea (Frankfurt/Dublín) bajo estrictas normativas GDPR. No hay transferencia de datos a terceros países sin garantías adecuadas.'
-                : 'Your data is processed exclusively on servers located in the European Union (Frankfurt/Dublin) under strict GDPR regulations. There is no data transfer to third countries without adequate guarantees.',
+                ? 'Utilizamos Gemini 3 Flash de Google como modelo principal, uno de los más avanzados del mercado. Los planes Pro y Enterprise tienen acceso a modelos premium adicionales como GPT-4o y Claude para máxima precisión en análisis complejos.'
+                : 'We use Google\'s Gemini 3 Flash as our primary model, one of the most advanced on the market. Pro and Enterprise plans have access to additional premium models like GPT-4o and Claude for maximum precision in complex analyses.',
         },
         {
-            q: isSpanish ? '¿Helios lee o aprende de mis documentos?' : 'Does Helios read or learn from my documents?',
+            q: isSpanish ? '¿Mi información se usa para entrenar la IA?' : 'Is my data used to train the AI?',
             a: isSpanish
-                ? 'Absolutamente no. Tu información se procesa en tiempo real y NO se utiliza para entrenar ningún modelo de IA. Cada análisis es aislado y privado.'
-                : 'Absolutely not. Your information is processed in real-time and is NOT used to train any AI model. Each analysis is isolated and private.',
+                ? 'Absolutamente no. Utilizamos APIs empresariales con garantías DPA (Data Processing Agreement). Tus documentos se procesan en tiempo real y se eliminan según tu configuración de retención. Nunca se utilizan para entrenamiento.'
+                : 'Absolutely not. We use enterprise APIs with DPA (Data Processing Agreement) guarantees. Your documents are processed in real-time and deleted according to your retention settings. They are never used for training.',
+        },
+        {
+            q: isSpanish ? '¿Qué diferencia hay entre los planes en cuanto a la IA?' : 'What\'s the difference between plans regarding AI?',
+            a: isSpanish
+                ? 'Free: Gemini Flash Lite (rápido, económico). Pro: Gemini 3 Flash (mejor calidad) + fallback a GPT/Claude. Enterprise: Modelos premium configurables según necesidad, con SLA garantizado.'
+                : 'Free: Gemini Flash Lite (fast, economical). Pro: Gemini 3 Flash (better quality) + fallback to GPT/Claude. Enterprise: Configurable premium models as needed, with guaranteed SLA.',
+        },
+        {
+            q: isSpanish ? '¿Dónde se alojan mis datos?' : 'Where is my data hosted?',
+            a: isSpanish
+                ? 'Tus datos se procesan exclusivamente en servidores situados en la Unión Europea (Frankfurt) bajo estrictas normativas GDPR. Utilizamos cifrado AES-256 en reposo y TLS 1.3 en tránsito.'
+                : 'Your data is processed exclusively on servers located in the European Union (Frankfurt) under strict GDPR regulations. We use AES-256 encryption at rest and TLS 1.3 in transit.',
         },
         {
             q: isSpanish ? '¿Qué pasa si cancelo mi suscripción?' : 'What happens if I cancel my subscription?',
@@ -188,6 +200,12 @@ export default function PricingPage() {
             a: isSpanish
                 ? 'El plan Gratuito te permite analizar hasta 5 documentos al mes sin compromiso. No se requiere tarjeta de crédito para empezar.'
                 : 'The Free plan allows you to analyze up to 5 documents per month with no commitment. No credit card required to start.',
+        },
+        {
+            q: isSpanish ? '¿Puedo elegir qué modelo de IA usar?' : 'Can I choose which AI model to use?',
+            a: isSpanish
+                ? 'En el plan Enterprise, puedes configurar tu modelo preferido (Gemini, GPT, Claude) según tus necesidades específicas. Contacta con ventas para personalizar tu configuración.'
+                : 'In the Enterprise plan, you can configure your preferred model (Gemini, GPT, Claude) according to your specific needs. Contact sales to customize your setup.',
         },
     ];
 
@@ -362,8 +380,8 @@ export default function PricingPage() {
                                         </td>
                                         <td className="py-4 px-4 text-center">
                                             <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm ${row.helios.positive
-                                                    ? 'bg-emerald-500/10 text-emerald-400'
-                                                    : 'bg-zinc-800 text-zinc-400'
+                                                ? 'bg-emerald-500/10 text-emerald-400'
+                                                : 'bg-zinc-800 text-zinc-400'
                                                 }`}>
                                                 {row.helios.positive && <Check className="w-3 h-3" />}
                                                 {row.helios.value}
@@ -371,8 +389,8 @@ export default function PricingPage() {
                                         </td>
                                         <td className="py-4 px-4 text-center">
                                             <span className={`inline-flex items-center gap-1 text-sm ${row.publicAI.positive === false
-                                                    ? 'text-red-400'
-                                                    : 'text-zinc-500'
+                                                ? 'text-red-400'
+                                                : 'text-zinc-500'
                                                 }`}>
                                                 {row.publicAI.positive === false && <X className="w-3 h-3" />}
                                                 {row.publicAI.value}
