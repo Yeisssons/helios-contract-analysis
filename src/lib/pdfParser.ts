@@ -13,7 +13,8 @@ export async function parsePdf(buffer: Buffer): Promise<string> {
         const text = data.text;
 
         if (!text || text.trim().length === 0) {
-            throw new Error('No text content found in PDF');
+            console.warn('PDF has no extractable text (likely scanned or image-based).');
+            return ''; // Return empty to signal caller to use OCR/Vision
         }
 
         // Clean up the text (remove excessive whitespace, etc.)

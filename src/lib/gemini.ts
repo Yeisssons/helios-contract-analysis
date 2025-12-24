@@ -344,4 +344,56 @@ If no text is found, return: [NO TEXT DETECTED]`;
     }
 }
 
+/**
+ * Extracts text from a PDF buffer using Gemini Multimodal (Vision)
+ * Optimized for scanned PDFs where standard parsing fails
+ * 
+ * @param pdfBuffer - The PDF file buffer
+ * @param fileName - Original file name for logging
+ * @returns Extracted text from the PDF
+ */
+export async function extractTextFromPdf(
+    pdfBuffer: Buffer,
+    fileName: string
+): Promise<string> {
+    if (!process.env.GEMINI_API_KEY) {
+        throw new Error('GEMINI_API_KEY environment variable is not set');
+    }
+
+    console.log(`📄 Gemini PDF Vision: Processing ${fileName} (${(pdfBuffer.length / 1024).toFixed(0)}KB)`);
+
+    // Use gemini-2.5-flash (Available tier, Native PDF support)
+    // IMPORTANT: Do NOT use gemini-1.5-flash per user restriction
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+    const pdfPart = {
+        inlineData: {
+            mimeType: 'application/pdf',
+            data: pdfBuffer.toString('base64'),
+        },
+    };
+
+    const prompt = `You are a document digitization expert. Extract ALL text from this PDF document.
+    
+INSTRUCTIONS:
+1. Extract all visible text, preserving layout as much as possible.
+2. If this is a scanned contract, ensure all clauses and legal text are captured accurately.
+3. Ignore visual noise or artifacts from scanning.
+4. If pages are rotated, correct them in your transcription.
+5. Return ONLY the raw text content.`;
+
+    try {
+        const result = await model.generateContent([prompt, pdfPart]);
+        const response = await result.response;
+        const extractedText = response.text();
+
+        console.log(`✅ Gemini PDF Vision: Extracted ${extractedText.length} characters from ${fileName}`);
+
+        return extractedText || '[NO TEXT DETECTED IN PDF]';
+    } catch (error) {
+        console.error(`❌ Gemini PDF Vision Error for ${fileName}:`, error);
+        throw new Error(`Failed to process scanned PDF: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
 export default analyzeContractText;

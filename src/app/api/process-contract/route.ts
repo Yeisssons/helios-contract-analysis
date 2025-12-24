@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parsePdf, parsePdfWithMetadata } from '@/lib/pdfParser';
 import { detectFileType } from '@/lib/fileValidation';
-import { extractTextFromImage } from '@/lib/gemini';
+import { extractTextFromImage, extractTextFromPdf } from '@/lib/gemini';
 import { analyzeContractWithPlan } from '@/lib/ai-providers';
 import { getUserAIConfig, getUserIdFromToken } from '@/lib/user-plan';
 import { extractContractDataWithAI } from '@/lib/ai-mock';
@@ -126,14 +126,21 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
                             throw new Error(`Security Error: ${file.name} - Invalid PDF signature.`);
                         }
                         const { text: pdfText, metadata } = await parsePdfWithMetadata(buffer);
+                        let finalText = pdfText;
 
-                        // Enforce Page Limits based on User Plan
+                        // FALLBACK for Scanned PDFs
+                        if (!finalText || finalText.trim().length === 0) {
+                            console.log(`⚠️ PDF ${file.name} has no text. Using Gemini Vision (Scanned PDF Mode).`);
+                            finalText = await extractTextFromPdf(buffer, file.name);
+                        }
+
+                        // Enforce Page Limits based on User Plan (metadata.pages is still valid for scanned PDFs)
                         const limit = APP_CONFIG.UPLOAD.PDF_PAGE_LIMITS[userConfig.plan] || APP_CONFIG.UPLOAD.PDF_PAGE_LIMITS.free;
                         if (metadata.pages > limit) {
                             throw new Error(`Plan Error: ${file.name} tiene ${metadata.pages} páginas. Tu plan ${userConfig.plan} permite máximo ${limit} páginas por documento.`);
                         }
 
-                        combinedExtractedText += `\n\n--- Page from ${file.name} ---\n\n${pdfText}`;
+                        combinedExtractedText += `\n\n--- Page from ${file.name} ---\n\n${finalText}`;
 
                     } else if (fileExtension === 'docx') {
                         if (detectedType !== 'docx') {
