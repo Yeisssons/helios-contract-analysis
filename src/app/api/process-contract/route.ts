@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parsePdf } from '@/lib/pdfParser';
 import { detectFileType } from '@/lib/fileValidation';
-import { analyzeContractText, extractTextFromImage } from '@/lib/gemini';
+import { extractTextFromImage } from '@/lib/gemini';
+import { analyzeContractWithPlan } from '@/lib/ai-providers';
+import { getUserAIConfig, getUserIdFromToken } from '@/lib/user-plan';
 import { extractContractDataWithAI } from '@/lib/ai-mock';
 import { ProcessContractResponse } from '@/types/contract';
-import { APP_CONFIG, getAdaptiveModel } from '@/config/constants';
+import { APP_CONFIG } from '@/config/constants';
 import { ContractMetadataSchema } from '@/lib/schemas';
 import mammoth from 'mammoth';
 
@@ -98,10 +100,15 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
 
         let combinedExtractedText = '';
         let extractedData;
+        let usedProvider = 'gemini';
+        let usedModel = 'gemini-2.5-flash';
 
-        // Get adaptive model name for Gemini
-        const totalSize = allFiles.reduce((sum, f) => sum + f.size, 0);
-        const adaptiveModelName = getAdaptiveModel(totalSize);
+        // Get user's plan and AI preferences
+        const authHeader = request.headers.get('authorization');
+        const userId = await getUserIdFromToken(authHeader);
+        const userConfig = userId ? await getUserAIConfig(userId) : { plan: 'free' as const };
+
+        console.log(`📊 User plan: ${userConfig.plan}, Preferred model: ${userConfig.preferredModel || 'default'}`);
 
         // 3. Processing Logic
         if (USE_REAL_AI) {
@@ -139,13 +146,19 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
                     throw new Error('No se pudo extraer texto suficiente de los documentos');
                 }
 
-                // Analyze with Gemini AI
-                extractedData = await analyzeContractText(
+                // Analyze with AI based on user's plan
+                const analysisResult = await analyzeContractWithPlan(
                     combinedExtractedText,
+                    userConfig,
                     customQuery || undefined,
-                    dataPoints,
-                    adaptiveModelName
+                    dataPoints
                 );
+
+                extractedData = analysisResult.result;
+                usedProvider = analysisResult.provider;
+                usedModel = analysisResult.model;
+
+                console.log(`✅ Analysis complete with ${usedProvider}/${usedModel}`);
 
             } catch (aiError) {
                 console.error('AI Processing Error:', aiError);
@@ -163,15 +176,34 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
             ? `${allFiles.length}_pages_combined`
             : allFiles[0]?.name || 'unknown';
 
+        // Ensure all required ContractData fields are present with defaults
         const fullResponse = {
             id: crypto.randomUUID(),
             fileName: combinedFileName,
-            ...extractedData,
+            // Required ContractData fields with defaults if missing
+            contractType: String(extractedData?.contractType || 'Unknown'),
+            effectiveDate: String(extractedData?.effectiveDate || new Date().toISOString().split('T')[0]),
+            renewalDate: String(extractedData?.renewalDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]),
+            noticePeriodDays: Number(extractedData?.noticePeriodDays) || 30,
+            terminationClauseReference: String(extractedData?.terminationClauseReference || 'Not found'),
+            // Optional fields
+            summary: extractedData?.summary ? String(extractedData.summary) : undefined,
+            parties: Array.isArray(extractedData?.parties) ? extractedData.parties as string[] : [],
+            alerts: Array.isArray(extractedData?.alerts) ? extractedData.alerts as string[] : [],
+            riskScore: Number(extractedData?.riskScore) || 5,
+            abusiveClauses: Array.isArray(extractedData?.abusiveClauses) ? extractedData.abusiveClauses as string[] : [],
+            customAnswer: extractedData?.customAnswer ? String(extractedData.customAnswer) : undefined,
+            extractedData: extractedData?.extractedData as Record<string, string> | undefined,
+            // Metadata
             extractedText: combinedExtractedText,
             requestedDataPoints: dataPoints || [],
             sector: currentSector,
             createdAt: new Date().toISOString(),
             pageCount: allFiles.length,
+            // AI info for transparency
+            aiProvider: usedProvider,
+            aiModel: usedModel,
+            userPlan: userConfig.plan,
         };
 
         // Audit Log

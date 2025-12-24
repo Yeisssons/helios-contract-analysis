@@ -90,6 +90,19 @@ export const PLAN_AI_CONFIG: Record<UserPlan, { primary: AIProviderConfig; fallb
     },
 };
 
+// Available models for Enterprise user selection
+export const ENTERPRISE_AVAILABLE_MODELS: Array<{
+    provider: AIProvider;
+    model: string;
+    name: string;
+    description: string;
+}> = [
+        { provider: 'gemini', model: 'gemini-3-flash', name: 'Gemini 3 Flash', description: 'Rápido y potente (Recomendado)' },
+        { provider: 'gemini', model: 'gemini-3-pro-preview', name: 'Gemini 3 Pro', description: 'Máxima inteligencia' },
+        { provider: 'openai', model: 'gpt-5-mini', name: 'GPT-5 Mini', description: 'OpenAI última generación' },
+        { provider: 'claude', model: 'claude-sonnet-4-5', name: 'Claude Sonnet 4.5', description: 'Anthropic, excelente razonamiento' },
+    ];
+
 // ============ GEMINI PROVIDER ============
 
 async function callGemini(config: AIProviderConfig, prompt: string, systemPrompt?: string): Promise<AIResponse> {
@@ -281,4 +294,107 @@ export function estimateCost(model: string, inputTokens: number, outputTokens: n
     if (!costs) return 0;
 
     return (inputTokens / 1_000_000 * costs.input) + (outputTokens / 1_000_000 * costs.output);
+}
+
+// ============ CONTRACT ANALYSIS WITH PLAN ============
+
+import type { UserAIConfig } from './user-plan';
+
+/**
+ * Build the system prompt for contract analysis
+ */
+function buildContractSystemPrompt(customQuery?: string, dataPoints: string[] = []): string {
+    let prompt = `You are an expert legal contract analyst. Analyze the provided contract text and extract information in STRICT JSON format.
+
+LANGUAGE: Output in the SAME language as the document.
+
+Required JSON structure:
+{
+  "contractType": "Type of contract",
+  "effectiveDate": "YYYY-MM-DD format",
+  "renewalDate": "YYYY-MM-DD format",
+  "noticePeriodDays": number,
+  "terminationClauseReference": "Reference to termination clause",
+  "summary": "Brief 1-2 sentence summary",
+  "parties": ["Array of party names"],
+  "alerts": ["Important alerts about deadlines or unusual clauses"],
+  "riskScore": number (1-10),
+  "abusiveClauses": ["Potentially abusive clauses detected"]`;
+
+    if (dataPoints.length > 0) {
+        prompt += `,
+  "extractedData": {
+    ${dataPoints.map(dp => `"${dp}": "extracted value"`).join(',\n    ')}
+  }`;
+    }
+
+    if (customQuery) {
+        prompt += `,
+  "customAnswer": "Answer to: ${customQuery}"`;
+    }
+
+    prompt += `
+}
+
+RULES:
+- Output ONLY valid JSON, no explanations
+- Use null for missing values
+- riskScore: 1=low risk, 10=high risk`;
+
+    return prompt;
+}
+
+/**
+ * Analyze contract text using the user's plan-appropriate AI model
+ */
+export async function analyzeContractWithPlan(
+    text: string,
+    userConfig: UserAIConfig,
+    customQuery?: string,
+    dataPoints: string[] = []
+): Promise<{
+    result: Record<string, unknown>;
+    provider: AIProvider;
+    model: string;
+}> {
+    const systemPrompt = buildContractSystemPrompt(customQuery, dataPoints);
+    const prompt = `CONTRACT TEXT:\n---\n${text}\n---\n\nExtract the information and return ONLY the JSON object.`;
+
+    // Determine if we should use a preferred provider (Enterprise only)
+    const preferredProvider = userConfig.plan === 'enterprise' ? userConfig.preferredProvider : undefined;
+
+    const response = await callAI(userConfig.plan, prompt, systemPrompt, preferredProvider);
+
+    // Parse the JSON response
+    let parsedResult: Record<string, unknown>;
+    try {
+        // Extract JSON from response (handle markdown code blocks)
+        let jsonStr = response.content;
+        const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (jsonMatch) {
+            jsonStr = jsonMatch[1];
+        }
+        parsedResult = JSON.parse(jsonStr.trim());
+    } catch (parseError) {
+        console.error('Failed to parse AI response as JSON:', parseError);
+        parsedResult = {
+            contractType: 'Unknown',
+            effectiveDate: new Date().toISOString().split('T')[0],
+            renewalDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            noticePeriodDays: 30,
+            terminationClauseReference: 'Not found',
+            summary: 'Could not parse contract',
+            parties: [],
+            alerts: ['Error parsing contract'],
+            riskScore: 5,
+            abusiveClauses: [],
+            rawResponse: response.content,
+        };
+    }
+
+    return {
+        result: parsedResult,
+        provider: response.provider,
+        model: response.model,
+    };
 }

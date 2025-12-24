@@ -294,8 +294,8 @@ export async function extractTextFromImage(
 
     console.log(`📸 Gemini Vision OCR: Processing ${fileName} (${(imageBuffer.length / 1024).toFixed(0)}KB)`);
 
-    // Use gemini-2.5-flash which has good vision capabilities
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    // Use gemini-3-flash (FREE tier, best quality for Vision/OCR)
+    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash' });
 
     const imagePart = {
         inlineData: {
@@ -331,10 +331,10 @@ If no text is found, return: [NO TEXT DETECTED]`;
     } catch (error) {
         console.error(`❌ Gemini Vision OCR Error for ${fileName}:`, error);
 
-        // Try fallback to gemini-1.5-flash if 2.5 fails
+        // Try fallback to gemini-2.5-flash if 3-flash fails
         try {
-            console.log(`🔄 Retrying with gemini-1.5-flash...`);
-            const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+            console.log(`🔄 Retrying with gemini-2.5-flash...`);
+            const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
             const result = await fallbackModel.generateContent([prompt, imagePart]);
             const response = await result.response;
             return response.text() || '[NO TEXT DETECTED]';
