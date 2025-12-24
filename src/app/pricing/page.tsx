@@ -1,23 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Zap, Building2, ArrowLeft, Sparkles, Loader2 } from 'lucide-react';
+import {
+    Check, X, Zap, Building2, ArrowLeft, Sparkles, Loader2,
+    Shield, Lock, Database, FileText, MessageCircle, Clock,
+    HelpCircle, ChevronDown, ChevronUp
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
-// Replace with your actual Stripe Price ID from your Dashboard
-// const STRIPE_PRICE_ID_PRO = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO || 'price_1Q3...';
-// For now, we'll use a placeholder that the user needs to update
-const STRIPE_PRICE_ID_PRO = 'price_1Qvn5P2eZvKYlo2CLpM'; // Example placeholder
+const STRIPE_PRICE_ID_PRO = 'price_1Qvn5P2eZvKYlo2CLpM';
 
 export default function PricingPage() {
     const { language } = useLanguage();
     const { user, session } = useAuth();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+    const [openFaq, setOpenFaq] = useState<number | null>(null);
 
     const handleCheckout = async (priceId: string) => {
         if (!user) {
@@ -49,7 +51,6 @@ export default function PricingPage() {
                 return;
             }
 
-            // Redirect to Stripe Checkout
             window.location.href = data.url;
 
         } catch (error) {
@@ -59,29 +60,27 @@ export default function PricingPage() {
         }
     };
 
+    const isSpanish = language === 'es';
+
     const t = {
-        back: language === 'es' ? 'Volver al Inicio' : 'Back to Home',
-        title: language === 'es' ? 'Planes y Precios' : 'Plans & Pricing',
-        subtitle: language === 'es'
+        back: isSpanish ? 'Volver al Inicio' : 'Back to Home',
+        title: isSpanish ? 'Planes y Precios' : 'Plans & Pricing',
+        subtitle: isSpanish
             ? 'Elige el plan que mejor se adapte a tus necesidades. Sin sorpresas, sin costes ocultos.'
             : 'Choose the plan that best fits your needs. No surprises, no hidden costs.',
-        monthly: language === 'es' ? '/mes' : '/month',
-        getStarted: language === 'es' ? 'Comenzar Gratis' : 'Get Started Free',
-        upgrade: language === 'es' ? 'Obtener Pro' : 'Get Pro',
-        upgradeProcessing: language === 'es' ? 'Procesando...' : 'Processing...',
-        contactSales: language === 'es' ? 'Contactar Ventas' : 'Contact Sales',
-        popular: language === 'es' ? 'Más Popular' : 'Most Popular',
-
-        // Plans
-        freePlan: language === 'es' ? 'Gratuito' : 'Free',
-        freeDesc: language === 'es' ? 'Perfecto para empezar' : 'Perfect to get started',
+        monthly: isSpanish ? '/mes' : '/month',
+        getStarted: isSpanish ? 'Comenzar Gratis' : 'Get Started Free',
+        upgrade: isSpanish ? 'Obtener Pro' : 'Get Pro',
+        upgradeProcessing: isSpanish ? 'Procesando...' : 'Processing...',
+        contactSales: isSpanish ? 'Contactar Ventas' : 'Contact Sales',
+        popular: isSpanish ? 'Más Popular' : 'Most Popular',
+        freePlan: isSpanish ? 'Gratuito' : 'Free',
+        freeDesc: isSpanish ? 'Perfecto para empezar' : 'Perfect to get started',
         proPlan: 'Pro',
-        proDesc: language === 'es' ? 'Para profesionales y equipos pequeños' : 'For professionals and small teams',
+        proDesc: isSpanish ? 'Para profesionales y equipos pequeños' : 'For professionals and small teams',
         enterprisePlan: 'Enterprise',
-        enterpriseDesc: language === 'es' ? 'Solución completa para grandes organizaciones' : 'Complete solution for large organizations',
-
-        // Features
-        freeFeatures: language === 'es' ? [
+        enterpriseDesc: isSpanish ? 'Solución completa para grandes organizaciones' : 'Complete solution for large organizations',
+        freeFeatures: isSpanish ? [
             '5 documentos al mes',
             'Análisis con IA básico',
             'Exportación a Excel',
@@ -92,44 +91,105 @@ export default function PricingPage() {
             'Excel export',
             'Email support',
         ],
-        proFeatures: language === 'es' ? [
+        proFeatures: isSpanish ? [
             'Documentos ilimitados',
             'Análisis con IA avanzado',
             'Alertas de renovación',
             'Chat con documentos',
-            'Plantillas personalizadas',
+            'Equipos (5 miembros)',
             'Soporte prioritario',
         ] : [
             'Unlimited documents',
             'Advanced AI analysis',
             'Renewal alerts',
             'Chat with documents',
-            'Custom templates',
+            'Teams (5 members)',
             'Priority support',
         ],
-        enterpriseFeatures: language === 'es' ? [
+        enterpriseFeatures: isSpanish ? [
             'Todo en Pro',
             'SSO (SAML/OIDC)',
-            'Workspaces multi-equipo',
+            'Miembros ilimitados',
             'API dedicada',
             'SLA garantizado',
             'Onboarding personalizado',
-            'Facturación anual',
         ] : [
             'Everything in Pro',
             'SSO (SAML/OIDC)',
-            'Multi-team workspaces',
+            'Unlimited members',
             'Dedicated API',
             'Guaranteed SLA',
             'Personalized onboarding',
-            'Annual billing',
         ],
-
-        faq: language === 'es' ? '¿Tienes preguntas?' : 'Have questions?',
-        faqText: language === 'es'
-            ? 'Contáctanos en solutionsysn@gmail.com y te responderemos en menos de 24 horas.'
-            : 'Contact us at solutionsysn@gmail.com and we\'ll respond within 24 hours.',
     };
+
+    // Comparison table data
+    const comparisonRows = [
+        {
+            feature: isSpanish ? 'Entrenamiento con tus datos' : 'Training with your data',
+            helios: { value: isSpanish ? 'NUNCA' : 'NEVER', positive: true },
+            publicAI: { value: isSpanish ? 'Probable' : 'Likely', positive: false },
+            manual: { value: 'N/A', positive: null },
+        },
+        {
+            feature: isSpanish ? 'GDPR Nativo & DPA' : 'Native GDPR & DPA',
+            helios: { value: isSpanish ? 'Sí (Firmado)' : 'Yes (Signed)', positive: true },
+            publicAI: { value: isSpanish ? 'Gris / No claro' : 'Gray / Unclear', positive: false },
+            manual: { value: isSpanish ? 'Depende del humano' : 'Depends on human', positive: null },
+        },
+        {
+            feature: isSpanish ? 'Aislamiento de Datos (RLS)' : 'Data Isolation (RLS)',
+            helios: { value: 'Row-Level Security', positive: true },
+            publicAI: { value: isSpanish ? 'Base compartida' : 'Shared database', positive: false },
+            manual: { value: isSpanish ? 'Archivos locales' : 'Local files', positive: null },
+        },
+        {
+            feature: isSpanish ? 'Retención automática (30 días)' : 'Automatic retention (30 days)',
+            helios: { value: isSpanish ? 'Sí' : 'Yes', positive: true },
+            publicAI: { value: isSpanish ? 'Indefinido' : 'Indefinite', positive: false },
+            manual: { value: 'N/A', positive: null },
+        },
+        {
+            feature: isSpanish ? 'Análisis de riesgos con IA' : 'AI risk analysis',
+            helios: { value: isSpanish ? 'Avanzado' : 'Advanced', positive: true },
+            publicAI: { value: isSpanish ? 'Genérico' : 'Generic', positive: null },
+            manual: { value: isSpanish ? 'Lento y costoso' : 'Slow & expensive', positive: false },
+        },
+    ];
+
+    // FAQs
+    const faqs = [
+        {
+            q: isSpanish ? '¿Dónde se alojan mis datos?' : 'Where is my data hosted?',
+            a: isSpanish
+                ? 'Tus datos se procesan exclusivamente en servidores situados en la Unión Europea (Frankfurt/Dublín) bajo estrictas normativas GDPR. No hay transferencia de datos a terceros países sin garantías adecuadas.'
+                : 'Your data is processed exclusively on servers located in the European Union (Frankfurt/Dublin) under strict GDPR regulations. There is no data transfer to third countries without adequate guarantees.',
+        },
+        {
+            q: isSpanish ? '¿Helios lee o aprende de mis documentos?' : 'Does Helios read or learn from my documents?',
+            a: isSpanish
+                ? 'Absolutamente no. Tu información se procesa en tiempo real y NO se utiliza para entrenar ningún modelo de IA. Cada análisis es aislado y privado.'
+                : 'Absolutely not. Your information is processed in real-time and is NOT used to train any AI model. Each analysis is isolated and private.',
+        },
+        {
+            q: isSpanish ? '¿Qué pasa si cancelo mi suscripción?' : 'What happens if I cancel my subscription?',
+            a: isSpanish
+                ? 'Tus datos se eliminan permanentemente de nuestros servidores activos inmediatamente. Mantenemos logs de facturación por obligación legal, pero tu propiedad intelectual desaparece.'
+                : 'Your data is permanently deleted from our active servers immediately. We maintain billing logs for legal obligation, but your intellectual property disappears.',
+        },
+        {
+            q: isSpanish ? '¿Puedo exportar mis análisis?' : 'Can I export my analyses?',
+            a: isSpanish
+                ? 'Sí, todos los planes permiten exportar tus análisis a Excel. Eres dueño de tu información en todo momento.'
+                : 'Yes, all plans allow you to export your analyses to Excel. You own your information at all times.',
+        },
+        {
+            q: isSpanish ? '¿Cómo funciona la prueba gratuita?' : 'How does the free trial work?',
+            a: isSpanish
+                ? 'El plan Gratuito te permite analizar hasta 5 documentos al mes sin compromiso. No se requiere tarjeta de crédito para empezar.'
+                : 'The Free plan allows you to analyze up to 5 documents per month with no commitment. No credit card required to start.',
+        },
+    ];
 
     return (
         <div className="min-h-screen bg-[#09090b] text-white pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -155,7 +215,7 @@ export default function PricingPage() {
                 </div>
 
                 {/* Pricing Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-24">
 
                     {/* Free Plan */}
                     <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-8 flex flex-col hover:border-white/20 transition-all">
@@ -180,7 +240,7 @@ export default function PricingPage() {
                         </ul>
                         <Link
                             href="/signup"
-                            className="w-full py-3 rounded-xl bg-zinc-800 text-white font-semibold text-center hover:bg-zinc-700 transition-colors"
+                            className="w-full py-3 rounded-xl bg-zinc-800 text-white font-semibold text-center hover:bg-zinc-700 transition-colors block"
                         >
                             {t.getStarted}
                         </Link>
@@ -239,7 +299,7 @@ export default function PricingPage() {
                             <p className="text-zinc-500 text-sm">{t.enterpriseDesc}</p>
                         </div>
                         <div className="mb-6">
-                            <span className="text-4xl font-bold">{language === 'es' ? 'A medida' : 'Custom'}</span>
+                            <span className="text-4xl font-bold">{isSpanish ? 'A medida' : 'Custom'}</span>
                         </div>
                         <ul className="space-y-3 mb-8 flex-grow">
                             {t.enterpriseFeatures.map((feature, i) => (
@@ -251,19 +311,140 @@ export default function PricingPage() {
                         </ul>
                         <a
                             href="mailto:solutionsysn@gmail.com?subject=Enterprise%20Inquiry"
-                            className="w-full py-3 rounded-xl bg-purple-500/20 text-purple-400 font-semibold text-center hover:bg-purple-500/30 transition-colors"
+                            className="w-full py-3 rounded-xl bg-purple-500/20 text-purple-400 font-semibold text-center hover:bg-purple-500/30 transition-colors block"
                         >
                             {t.contactSales}
                         </a>
                     </div>
                 </div>
 
-                {/* FAQ CTA */}
-                <div className="mt-16 text-center">
-                    <p className="text-zinc-400">
-                        {t.faq} <a href="mailto:solutionsysn@gmail.com" className="text-emerald-400 hover:underline">solutionsysn@gmail.com</a>
+                {/* ============ COMPARISON SECTION ============ */}
+                <section className="mb-24">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl font-bold text-white mb-3">
+                            {isSpanish ? 'Helios vs. El Resto' : 'Helios vs. The Rest'}
+                        </h2>
+                        <p className="text-zinc-400">
+                            {isSpanish
+                                ? '¿Por qué los profesionales del derecho nos eligen?'
+                                : 'Why do legal professionals choose us?'}
+                        </p>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full border-collapse">
+                            <thead>
+                                <tr className="border-b border-zinc-800">
+                                    <th className="text-left py-4 px-4 text-zinc-500 font-medium">
+                                        {isSpanish ? 'Característica' : 'Feature'}
+                                    </th>
+                                    <th className="py-4 px-4 text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                                                <Sparkles className="w-3 h-3 text-emerald-400" />
+                                            </div>
+                                            <span className="text-emerald-400 font-semibold">Helios</span>
+                                        </div>
+                                    </th>
+                                    <th className="py-4 px-4 text-center text-zinc-500 font-medium">
+                                        {isSpanish ? 'IAs Públicas (Gratis)' : 'Public AIs (Free)'}
+                                    </th>
+                                    <th className="py-4 px-4 text-center text-zinc-500 font-medium">
+                                        {isSpanish ? 'Revisión Manual' : 'Manual Review'}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {comparisonRows.map((row, i) => (
+                                    <tr key={i} className="border-b border-zinc-800/50 hover:bg-zinc-900/30">
+                                        <td className="py-4 px-4 text-white flex items-center gap-2">
+                                            {row.feature}
+                                        </td>
+                                        <td className="py-4 px-4 text-center">
+                                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm ${row.helios.positive
+                                                    ? 'bg-emerald-500/10 text-emerald-400'
+                                                    : 'bg-zinc-800 text-zinc-400'
+                                                }`}>
+                                                {row.helios.positive && <Check className="w-3 h-3" />}
+                                                {row.helios.value}
+                                            </span>
+                                        </td>
+                                        <td className="py-4 px-4 text-center">
+                                            <span className={`inline-flex items-center gap-1 text-sm ${row.publicAI.positive === false
+                                                    ? 'text-red-400'
+                                                    : 'text-zinc-500'
+                                                }`}>
+                                                {row.publicAI.positive === false && <X className="w-3 h-3" />}
+                                                {row.publicAI.value}
+                                            </span>
+                                        </td>
+                                        <td className="py-4 px-4 text-center text-zinc-500 text-sm">
+                                            {row.manual.value}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                {/* ============ PRIVACY FAQ SECTION ============ */}
+                <section className="mb-24">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl font-bold text-white mb-3">
+                            {isSpanish ? 'Preguntas Frecuentes sobre Privacidad' : 'Privacy FAQ'}
+                        </h2>
+                        <p className="text-zinc-400">
+                            {isSpanish
+                                ? 'Tu tranquilidad es nuestra prioridad'
+                                : 'Your peace of mind is our priority'}
+                        </p>
+                    </div>
+
+                    <div className="max-w-3xl mx-auto space-y-4">
+                        {faqs.map((faq, i) => (
+                            <div
+                                key={i}
+                                className="border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/30"
+                            >
+                                <button
+                                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                                    className="w-full flex items-center justify-between p-5 text-left hover:bg-zinc-900/50 transition-colors"
+                                >
+                                    <span className="flex items-center gap-3 text-white font-medium">
+                                        <HelpCircle className="w-5 h-5 text-emerald-400" />
+                                        {faq.q}
+                                    </span>
+                                    {openFaq === i
+                                        ? <ChevronUp className="w-5 h-5 text-zinc-400" />
+                                        : <ChevronDown className="w-5 h-5 text-zinc-400" />
+                                    }
+                                </button>
+                                {openFaq === i && (
+                                    <div className="px-5 pb-5">
+                                        <p className="text-zinc-400 pl-8">
+                                            {faq.a}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* ============ CTA SECTION ============ */}
+                <section className="text-center">
+                    <p className="text-zinc-400 mb-4">
+                        {isSpanish ? '¿Aún tienes dudas?' : 'Still have questions?'}
                     </p>
-                </div>
+                    <a
+                        href="mailto:solutionsysn@gmail.com"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold rounded-xl transition-colors"
+                    >
+                        <MessageCircle className="w-5 h-5" />
+                        {isSpanish ? 'Hablar con un Experto' : 'Talk to an Expert'}
+                    </a>
+                </section>
             </div>
         </div>
     );
