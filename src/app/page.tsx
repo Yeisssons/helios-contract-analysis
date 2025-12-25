@@ -14,6 +14,7 @@ import { exportContractsToExcel } from '@/utils/excelExport';
 import { ContractData, ContractsListResponse, ContractRecord } from '@/types/contract';
 import DashboardStats from '@/components/DashboardStats';
 import { Download, List, Calendar } from 'lucide-react';
+import Link from 'next/link';
 
 type ViewMode = 'list' | 'calendar';
 
@@ -559,17 +560,30 @@ function HomeContent() {
             </section>
           ) : null}
 
-          {/* Dashboard Stats and Contracts Table */}
+          {/* Dashboard Stats and Contracts Table - Show only last 3 on home */}
           <section>
             {viewMode === 'list' ? (
               <>
                 <DashboardStats contracts={contracts} />
                 <ContractsTable
-                  contracts={contracts}
+                  contracts={contracts.slice(0, 3)}
                   onView={handleViewContract}
                   onDelete={handleDeleteContract}
                   onDownload={handleDownloadContract}
                 />
+                {contracts.length > 3 && (
+                  <div className="mt-6 text-center">
+                    <Link
+                      href="/analysis"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold rounded-lg transition-colors"
+                    >
+                      {language === 'es' ? 'Ver Todos los Documentos' : 'View All Documents'}
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </Link>
+                  </div>
+                )}
               </>
             ) : null}
           </section>
