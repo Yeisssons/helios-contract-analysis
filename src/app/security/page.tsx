@@ -33,8 +33,8 @@ export default function SecurityPage() {
             icon: CheckCircle,
             name: 'GDPR Compliant',
             status: isSpanish ? '100% Cumplimiento' : '100% Compliant',
-            description: isSpan ish
-            ? 'Reglamento General de Protección de Datos (UE)'
+            description: isSpanish
+                ? 'Reglamento General de Protección de Datos (UE)'
                 : 'General Data Protection Regulation (EU)',
         },
         {
