@@ -85,9 +85,12 @@ export async function DELETE(
     request: NextRequest,
     { params }: { params: { id: string } }
 ) {
+    // Import devLog for development-only logging
+    const { devLog } = await import('@/lib/devLog');
+
     try {
         const { id } = params;
-        console.log('🗑️ DELETE request for contract:', id);
+        devLog.log('🗑️ DELETE request for contract:', id);
 
         // 1. Strict Authentication Check
         const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
@@ -121,32 +124,32 @@ export async function DELETE(
             .single();
 
         if (fetchError || !contract) {
-            console.error('❌ Error fetching contract for deletion:', fetchError);
+            devLog.error('❌ Error fetching contract for deletion:', fetchError);
             return NextResponse.json(
                 { success: false, error: 'Contract not found or access denied' },
                 { status: 404 }
             );
         }
 
-        console.log('📄 Contract found:', contract);
+        devLog.log('📄 Contract found for deletion');
 
         // Delete the file from storage if it exists
         if (contract?.file_path) {
-            console.log('🗂️ Deleting file from storage:', contract.file_path);
+            devLog.log('🗂️ Deleting file from storage');
             const { error: storageError } = await dbClient.storage
                 .from('documents')
                 .remove([contract.file_path]);
 
             if (storageError) {
-                console.warn('⚠️ Warning: Could not delete file from storage:', storageError);
+                devLog.warn('⚠️ Warning: Could not delete file from storage:', storageError);
                 // Continue with database deletion even if storage deletion fails
             } else {
-                console.log('✅ File deleted from storage');
+                devLog.log('✅ File deleted from storage');
             }
         }
 
         // Delete the contract from the database
-        console.log('🗃️ Deleting record from database...');
+        devLog.log('🗃️ Deleting record from database...');
         const { error: deleteError } = await dbClient
             .from('contracts')
             .delete()
@@ -154,14 +157,14 @@ export async function DELETE(
             .eq('user_id', user.id); // Double check ownership
 
         if (deleteError) {
-            console.error('❌ Error deleting contract from database:', deleteError);
+            devLog.error('❌ Error deleting contract from database:', deleteError);
             return NextResponse.json(
                 { success: false, error: 'Failed to delete contract' },
                 { status: 500 }
             );
         }
 
-        console.log('✅ Contract deleted successfully');
+        devLog.log('✅ Contract deleted successfully');
 
         // Audit Log
         const { logAudit } = await import('@/lib/audit');
@@ -182,3 +185,4 @@ export async function DELETE(
         );
     }
 }
+

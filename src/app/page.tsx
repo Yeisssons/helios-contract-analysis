@@ -1,24 +1,24 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import FileUpload from '@/components/FileUpload';
 import ContractsTable from '@/components/ContractsTable';
-import CalendarView from '@/components/CalendarView';
+
 import ContractChat from '@/components/ContractChat';
 import AnalysisResult, { ContractAnalysis } from '@/components/AnalysisResult';
 import { exportContractsToExcel } from '@/utils/excelExport';
 import { ContractData, ContractsListResponse, ContractRecord } from '@/types/contract';
 import DashboardStats from '@/components/DashboardStats';
-import { Download, List, Calendar } from 'lucide-react';
+
 import Link from 'next/link';
 
 type ViewMode = 'list' | 'calendar';
 
-const HISTORY_STORAGE_KEY = 'contratoalert_history';
+
 
 function HomeContent() {
   const { t, language } = useLanguage();
@@ -281,9 +281,20 @@ function HomeContent() {
   // Handle deleting a contract
   const handleDeleteContract = async (id: string) => {
     try {
+      // Get current session for auth
+      const { supabase } = await import('@/lib/supabase');
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error('Not authenticated');
+      }
+
       // Call API to delete from database and storage
       const response = await fetch(`/api/contracts/${id}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
       });
 
       if (!response.ok) {
