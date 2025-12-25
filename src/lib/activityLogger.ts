@@ -30,8 +30,13 @@ interface LogActivityParams {
  */
 export async function logActivity(params: LogActivityParams): Promise<void> {
     try {
-        const { createClient } = await import('@/lib/supabase');
-        const supabase = createClient();
+        const { getSupabaseAdmin } = await import('@/lib/supabase');
+        const supabase = getSupabaseAdmin();
+
+        if (!supabase) {
+            console.error('Supabase Admin not configured, cannot log activity');
+            return;
+        }
 
         // Sanitize metadata to remove sensitive data
         const sanitizedMetadata = sanitizeMetadata(params.metadata || {});
