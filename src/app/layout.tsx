@@ -7,6 +7,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import Footer from '@/components/Footer';
 import PrivacyModal from '@/components/PrivacyModal';
 import SecurityGuard from '@/components/SecurityGuard';
+import ScreenshotProtection from '@/components/ScreenshotProtection';
 
 const inter = Inter({ subsets: ["latin"], variable: '--font-inter' });
 const outfit = Outfit({ subsets: ["latin"], variable: '--font-outfit' });
@@ -36,6 +37,7 @@ export default function RootLayout({
               {children}
             </div>
             <SecurityGuard />
+            <ScreenshotProtection />
             <PrivacyModal />
             <Footer />
             <Toaster
