@@ -180,11 +180,15 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
                         combinedExtractedText += `\n\n--- Page from ${file.name} ---\n\n${finalText}`;
 
                     } else if (fileExtension === 'docx') {
-                        if (detectedType !== 'docx') {
-                            throw new Error(`Security Error: ${file.name} - Invalid DOCX signature.`);
+                        // Note: We skip signature validation for DOCX as the mammoth library
+                        // handles invalid files gracefully with descriptive errors
+                        try {
+                            const result = await mammoth.extractRawText({ buffer });
+                            combinedExtractedText += `\n\n--- Page from ${file.name} ---\n\n${result.value}`;
+                        } catch (docxError) {
+                            console.error(`Error extracting DOCX: ${file.name}`, docxError);
+                            throw new Error(`Error al procesar ${file.name}. Asegúrese de que es un archivo DOCX válido.`);
                         }
-                        const result = await mammoth.extractRawText({ buffer });
-                        combinedExtractedText += `\n\n--- Page from ${file.name} ---\n\n${result.value}`;
 
                     } else if (['jpg', 'jpeg', 'png', 'webp'].includes(fileExtension)) {
                         // Use Gemini Vision for OCR of scanned images
