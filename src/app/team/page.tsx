@@ -313,17 +313,26 @@ function TeamPageContent() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#09090b] flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+            <div className="min-h-screen bg-[#09090b] flex items-center justify-center relative overflow-hidden">
+                {/* Background gradients */}
+                <div className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[120px]" />
+                <div className="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px]" />
+                <Loader2 className="w-8 h-8 animate-spin text-emerald-500 relative z-10" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#09090b]">
+        <div className="min-h-screen bg-[#09090b] text-zinc-100 relative overflow-hidden">
+            {/* Background Gradients */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                <div className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[120px]" />
+                <div className="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px]" />
+            </div>
+
             <Header />
 
-            <div className="container mx-auto px-4 py-8">
+            <div className="container mx-auto px-4 py-8 relative z-10">
                 {/* Back button */}
                 <button
                     onClick={() => router.push('/')}
@@ -336,9 +345,11 @@ function TeamPageContent() {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                            <Users className="w-8 h-8 text-emerald-500" />
-                            {t.title}
+                        <h1 className="text-3xl md:text-4xl font-bold mb-2">
+                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-emerald-200 to-white flex items-center gap-3">
+                                <Users className="w-8 h-8 text-emerald-400" />
+                                {t.title}
+                            </span>
                         </h1>
                         <p className="text-zinc-400 mt-1">{t.subtitle}</p>
                     </div>
@@ -346,7 +357,7 @@ function TeamPageContent() {
 
                 {/* No Team State */}
                 {!team && (
-                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-12 text-center">
+                    <div className="bg-zinc-900/40 border border-white/5 rounded-2xl p-12 text-center backdrop-blur-sm">
                         <Users className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
                         <h2 className="text-xl font-semibold text-white mb-2">{t.noTeam}</h2>
                         <p className="text-zinc-400 mb-6">{t.upgradeRequired}</p>
@@ -368,8 +379,8 @@ function TeamPageContent() {
                             <button
                                 onClick={() => setActiveTab('members')}
                                 className={`pb-4 px-2 font-medium transition-colors ${activeTab === 'members'
-                                        ? 'text-emerald-500 border-b-2 border-emerald-500'
-                                        : 'text-zinc-400 hover:text-white'
+                                    ? 'text-emerald-500 border-b-2 border-emerald-500'
+                                    : 'text-zinc-400 hover:text-white'
                                     }`}
                             >
                                 <Users className="w-4 h-4 inline mr-2" />
@@ -378,8 +389,8 @@ function TeamPageContent() {
                             <button
                                 onClick={() => setActiveTab('tasks')}
                                 className={`pb-4 px-2 font-medium transition-colors ${activeTab === 'tasks'
-                                        ? 'text-emerald-500 border-b-2 border-emerald-500'
-                                        : 'text-zinc-400 hover:text-white'
+                                    ? 'text-emerald-500 border-b-2 border-emerald-500'
+                                    : 'text-zinc-400 hover:text-white'
                                     }`}
                             >
                                 <ListTodo className="w-4 h-4 inline mr-2" />
@@ -389,8 +400,8 @@ function TeamPageContent() {
 
                         {/* Members Tab */}
                         {activeTab === 'members' && (
-                            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
-                                <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
+                            <div className="bg-zinc-900/40 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-sm">
+                                <div className="p-4 border-b border-white/5 flex justify-between items-center">
                                     <h2 className="text-lg font-semibold text-white">{t.members}</h2>
                                     <button
                                         onClick={() => setShowInviteModal(true)}
@@ -458,7 +469,7 @@ function TeamPageContent() {
                                 </div>
 
                                 {tasks.length === 0 ? (
-                                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-12 text-center">
+                                    <div className="bg-zinc-900/40 border border-white/5 rounded-2xl p-12 text-center backdrop-blur-sm">
                                         <ListTodo className="w-12 h-12 text-zinc-600 mx-auto mb-4" />
                                         <p className="text-zinc-400">{t.noTasks}</p>
                                     </div>
@@ -467,7 +478,7 @@ function TeamPageContent() {
                                         {tasks.map((task) => (
                                             <div
                                                 key={task.id}
-                                                className={`bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 border-l-4 ${getPriorityColor(task.priority)}`}
+                                                className={`bg-zinc-900/40 border border-white/5 rounded-2xl p-4 border-l-4 backdrop-blur-sm hover:bg-zinc-900/60 transition-colors ${getPriorityColor(task.priority)}`}
                                             >
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex items-start gap-3">
