@@ -180,15 +180,33 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProcessCo
                         combinedExtractedText += `\n\n--- Page from ${file.name} ---\n\n${finalText}`;
 
                     } else if (fileExtension === 'docx') {
-                        // Note: We skip signature validation for DOCX as the mammoth library
-                        // handles invalid files gracefully with descriptive errors
+                        // Try mammoth first, fallback to Gemini Vision if it fails
+                        let docxText = '';
                         try {
                             const result = await mammoth.extractRawText({ buffer });
-                            combinedExtractedText += `\n\n--- Page from ${file.name} ---\n\n${result.value}`;
-                        } catch (docxError) {
-                            console.error(`Error extracting DOCX: ${file.name}`, docxError);
-                            throw new Error(`Error al procesar ${file.name}. Asegúrese de que es un archivo DOCX válido.`);
+                            docxText = result.value || '';
+                        } catch (mammothError) {
+                            console.log(`⚠️ Mammoth failed for ${file.name}, falling back to Gemini Vision:`, mammothError);
+                            // Mammoth failed - try Gemini Vision as fallback (works for many document types)
+                            try {
+                                docxText = await extractTextFromPdf(buffer, file.name);
+                            } catch (visionError) {
+                                console.error(`Gemini Vision also failed for ${file.name}:`, visionError);
+                                throw new Error(`No se pudo extraer texto de ${file.name}. Intente convertirlo a PDF primero.`);
+                            }
                         }
+
+                        if (!docxText || docxText.trim().length < 10) {
+                            console.log(`⚠️ DOCX ${file.name} returned minimal text, trying Gemini Vision`);
+                            try {
+                                docxText = await extractTextFromPdf(buffer, file.name);
+                            } catch (fallbackError) {
+                                console.error('Gemini Vision fallback failed:', fallbackError);
+                                // Keep whatever text we got from mammoth
+                            }
+                        }
+
+                        combinedExtractedText += `\n\n--- Page from ${file.name} ---\n\n${docxText}`;
 
                     } else if (['jpg', 'jpeg', 'png', 'webp'].includes(fileExtension)) {
                         // Use Gemini Vision for OCR of scanned images

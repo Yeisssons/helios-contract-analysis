@@ -26,13 +26,15 @@ export async function logAudit(entry: AuditLogEntry) {
         const ip = headers().get('x-forwarded-for') || 'unknown';
 
         const { error } = await supabaseAdmin
-            .from('audit_logs')
+            .from('activity_logs')
             .insert({
                 user_id: entry.userId,
-                action: entry.action,
-                resource: entry.resource,
-                resource_id: entry.resourceId,
-                details: entry.details || {},
+                action_type: entry.action,
+                metadata: {
+                    resource: entry.resource,
+                    resource_id: entry.resourceId,
+                    ...entry.details
+                },
                 ip_address: ip
             });
 
