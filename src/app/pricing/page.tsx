@@ -75,9 +75,9 @@ export default function PricingPage() {
         contactSales: isSpanish ? 'Contactar Ventas' : 'Contact Sales',
         popular: isSpanish ? 'Más Popular' : 'Most Popular',
         freePlan: isSpanish ? 'Gratuito' : 'Free',
-        freeDesc: isSpanish ? 'Perfecto para empezar' : 'Perfect to get started',
+        freeDesc: isSpanish ? 'Descubre el poder de Helios sin compromiso' : 'Discover the power of Helios with no commitment',
         proPlan: 'Pro',
-        proDesc: isSpanish ? 'Para profesionales y equipos pequeños' : 'For professionals and small teams',
+        proDesc: isSpanish ? 'Maximiza tu productividad legal con tecnología premium' : 'Maximize your legal productivity with premium technology',
         enterprisePlan: 'Enterprise',
         enterpriseDesc: isSpanish ? 'Solución completa para grandes organizaciones' : 'Complete solution for large organizations',
         freeFeatures: isSpanish ? [
@@ -244,12 +244,48 @@ export default function PricingPage() {
                 </Link>
 
                 <div className="text-center mb-16">
-                    <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400 mb-4">
-                        {t.title}
+                    {/* Trust badge */}
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full mb-6">
+                        <Shield className="w-4 h-4 text-emerald-400" />
+                        <span className="text-sm text-emerald-400 font-medium">
+                            {isSpanish ? '🔒 100% Privado · GDPR Compliant · Datos en EU' : '🔒 100% Private · GDPR Compliant · Data in EU'}
+                        </span>
+                    </div>
+
+                    <h1 className="text-4xl md:text-6xl font-bold mb-6">
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-emerald-200 to-white">
+                            {isSpanish ? 'Transforma ' : 'Transform '}
+                        </span>
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-400">
+                            {isSpanish ? 'Contratos en Decisiones' : 'Contracts into Decisions'}
+                        </span>
+                        <br />
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400 text-3xl md:text-5xl">
+                            {isSpanish ? 'en Segundos, no Horas' : 'in Seconds, not Hours'}
+                        </span>
                     </h1>
-                    <p className="text-zinc-400 max-w-2xl mx-auto text-lg">
-                        {t.subtitle}
+
+                    <p className="text-zinc-300 max-w-3xl mx-auto text-lg md:text-xl mb-8 leading-relaxed">
+                        {isSpanish
+                            ? 'Análisis legal potenciado por IA de última generación. Identifica riesgos, detecta cláusulas abusivas y toma decisiones informadas 10x más rápido.'
+                            : 'AI-powered legal analysis with cutting-edge technology. Identify risks, detect abusive clauses, and make informed decisions 10x faster.'}
                     </p>
+
+                    {/* Social proof numbers */}
+                    <div className="flex flex-wrap justify-center gap-8 mb-8 text-sm">
+                        <div className="flex flex-col items-center">
+                            <div className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-400">10,000+</div>
+                            <div className="text-zinc-500">{isSpanish ? 'Documentos Analizados' : 'Documents Analyzed'}</div>
+                        </div>
+                        <div className="flex flex-col items-center">
+                            <div className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">500+</div>
+                            <div className="text-zinc-500">{isSpanish ? 'Empresas Confían' : 'Companies Trust Us'}</div>
+                        </div>
+                        <div className="flex flex-col items-center">
+                            <div className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">98%</div>
+                            <div className="text-zinc-500">{isSpanish ? 'Precisión IA' : 'AI Accuracy'}</div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Pricing Cards */}
