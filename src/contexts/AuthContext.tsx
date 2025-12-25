@@ -129,8 +129,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const signOut = useCallback(async () => {
-        await supabase.auth.signOut();
-    }, []);
+        try {
+            // Try to sign out from server
+            await supabase.auth.signOut({ scope: 'local' });
+        } catch (error) {
+            console.error('Server signout failed, forcing local logout:', error);
+        }
+        // Always clear local state regardless of server response
+        setUser(null);
+        setSession(null);
+        // Clear any stored tokens
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('supabase.auth.token');
+            // Clear all Supabase-related storage
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('sb-')) {
+                    localStorage.removeItem(key);
+                }
+            });
+        }
+        router.push('/login');
+    }, [router]);
 
     const value = {
         user,
