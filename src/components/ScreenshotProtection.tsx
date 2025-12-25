@@ -1,87 +1,45 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Shield } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 /**
- * ScreenshotProtection - Prevents screenshots and screen recording for non-admin users
+ * ScreenshotProtection - Makes screenshots less useful for non-admin users
  * 
  * Techniques used:
- * 1. CSS filter blur when PrintScreen/screenshot is detected
- * 2. Visibility API to detect when app loses focus
- * 3. Keyboard event blocking for screenshot shortcuts
+ * 1. Watermark overlay with user email
+ * 2. Aggressive blur when window loses focus
+ * 3. Content hiding when devtools are opened
  * 4. CSS user-select: none to prevent copying
+ * 5. Print protection
  */
 export default function ScreenshotProtection() {
     const { isAdmin, loading } = useAdmin();
+    const { user } = useAuth();
     const [isBlurred, setIsBlurred] = useState(false);
-    const [showWarning, setShowWarning] = useState(false);
-
-    // Debug logging
-    useEffect(() => {
-        console.log('[ScreenshotProtection] Component mounted');
-        console.log('[ScreenshotProtection] isAdmin:', isAdmin);
-        console.log('[ScreenshotProtection] loading:', loading);
-    }, [isAdmin, loading]);
+    const [devToolsOpen, setDevToolsOpen] = useState(false);
+    const watermarkRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         // Skip protection for admins or during loading
-        if (loading || isAdmin) {
-            console.log('[ScreenshotProtection] Skipping protection - Admin or loading');
-            return;
-        }
+        if (loading || isAdmin) return;
 
-        console.log('[ScreenshotProtection] ACTIVATING PROTECTION for non-admin user');
-
-        // Block keyboard shortcuts for screenshots
-        const handleKeyDown = (e: KeyboardEvent) => {
-            // PrintScreen key
-            if (e.key === 'PrintScreen') {
-                e.preventDefault();
-                triggerProtection();
-                return false;
-            }
-
-            // Windows: Win + Shift + S (Snipping Tool)
-            if (e.key === 's' && e.shiftKey && (e.metaKey || e.ctrlKey)) {
-                e.preventDefault();
-                triggerProtection();
-                return false;
-            }
-
-            // macOS: Cmd + Shift + 3 or 4 (Screenshot)
-            if ((e.key === '3' || e.key === '4') && e.shiftKey && e.metaKey) {
-                e.preventDefault();
-                triggerProtection();
-                return false;
-            }
-
-            // Cmd/Ctrl + P (Print)
-            if (e.key === 'p' && (e.metaKey || e.ctrlKey)) {
-                e.preventDefault();
-                triggerProtection();
-                return false;
-            }
-        };
-
-        // Detect when window loses focus (potential screen recording or screenshot tool)
+        // Blur content when window loses focus (potential screenshot)
         const handleVisibilityChange = () => {
-            if (document.visibilityState === 'hidden') {
-                setIsBlurred(true);
-            } else {
-                // Small delay before unblurring to catch screenshot tools
-                setTimeout(() => setIsBlurred(false), 100);
-            }
+            setIsBlurred(document.visibilityState === 'hidden');
         };
 
-        // Detect window blur (could be screenshot tool overlay)
-        const handleWindowBlur = () => {
-            setIsBlurred(true);
-        };
+        const handleWindowBlur = () => setIsBlurred(true);
+        const handleWindowFocus = () => setIsBlurred(false);
 
-        const handleWindowFocus = () => {
-            setTimeout(() => setIsBlurred(false), 100);
+        // Detect DevTools opening (common for taking clean screenshots)
+        const detectDevTools = () => {
+            const threshold = 160;
+            const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+            const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+            setDevToolsOpen(widthThreshold || heightThreshold);
         };
 
         // Block right-click context menu
@@ -90,21 +48,15 @@ export default function ScreenshotProtection() {
             return false;
         };
 
-        const triggerProtection = () => {
-            setIsBlurred(true);
-            setShowWarning(true);
-            setTimeout(() => {
-                setIsBlurred(false);
-                setShowWarning(false);
-            }, 3000);
-        };
-
         // Add event listeners
-        document.addEventListener('keydown', handleKeyDown, true);
         document.addEventListener('visibilitychange', handleVisibilityChange);
-        document.addEventListener('contextmenu', handleContextMenu);
         window.addEventListener('blur', handleWindowBlur);
         window.addEventListener('focus', handleWindowFocus);
+        window.addEventListener('resize', detectDevTools);
+        document.addEventListener('contextmenu', handleContextMenu);
+
+        // Initial devtools check
+        detectDevTools();
 
         // Apply CSS protections
         document.body.style.userSelect = 'none';
@@ -119,22 +71,30 @@ export default function ScreenshotProtection() {
                     display: none !important;
                 }
                 body::after {
-                    content: 'Contenido protegido - No se permite imprimir';
-                    display: block;
+                    content: 'Contenido Protegido - Helios © ${new Date().getFullYear()}';
+                    display: block !important;
                     text-align: center;
                     font-size: 24px;
                     padding: 100px;
+                    color: #000;
                 }
+            }
+            
+            /* Prevent drag and drop */
+            img, video {
+                pointer-events: none;
+                user-select: none;
+                -webkit-user-drag: none;
             }
         `;
         document.head.appendChild(style);
 
         return () => {
-            document.removeEventListener('keydown', handleKeyDown, true);
             document.removeEventListener('visibilitychange', handleVisibilityChange);
-            document.removeEventListener('contextmenu', handleContextMenu);
             window.removeEventListener('blur', handleWindowBlur);
             window.removeEventListener('focus', handleWindowFocus);
+            window.removeEventListener('resize', detectDevTools);
+            document.removeEventListener('contextmenu', handleContextMenu);
 
             document.body.style.userSelect = '';
             document.body.style.webkitUserSelect = '';
@@ -149,35 +109,68 @@ export default function ScreenshotProtection() {
 
     return (
         <>
-            {/* Blur overlay when screenshot detected */}
-            {isBlurred && (
+            {/* Watermark Grid - Always visible, makes screenshots identifiable */}
+            <div
+                ref={watermarkRef}
+                className="fixed inset-0 pointer-events-none z-[9997] overflow-hidden"
+                style={{
+                    backgroundImage: `repeating-linear-gradient(
+                        45deg,
+                        transparent,
+                        transparent 200px,
+                        rgba(239, 68, 68, 0.03) 200px,
+                        rgba(239, 68, 68, 0.03) 400px
+                    )`
+                }}
+            >
+                {/* Diagonal watermarks */}
+                {Array.from({ length: 15 }).map((_, i) => (
+                    <div
+                        key={i}
+                        className="absolute text-red-500/10 font-bold text-xl select-none"
+                        style={{
+                            top: `${(i * 15) % 100}%`,
+                            left: `${(i * 20) % 100}%`,
+                            transform: 'rotate(-45deg)',
+                            whiteSpace: 'nowrap'
+                        }}
+                    >
+                        🔒 HELIOS © {user?.email || 'Protected'} {new Date().toLocaleDateString()}
+                    </div>
+                ))}
+            </div>
+
+            {/* Blur overlay when window loses focus or DevTools detected */}
+            {(isBlurred || devToolsOpen) && (
                 <div
-                    className="fixed inset-0 z-[9999] backdrop-blur-xl bg-black/80 flex items-center justify-center pointer-events-none"
-                    style={{ backdropFilter: 'blur(50px)' }}
+                    className="fixed inset-0 z-[9998] backdrop-blur-3xl bg-black/90 flex items-center justify-center pointer-events-none"
                 >
                     <div className="text-center">
-                        <Shield className="w-16 h-16 text-red-500 mx-auto mb-4 animate-pulse" />
-                        <p className="text-white text-lg font-semibold">
-                            Contenido Protegido
+                        <Shield className="w-24 h-24 text-red-500 mx-auto mb-6 animate-pulse" />
+                        <p className="text-white text-2xl font-bold mb-3">
+                            ⚠️ Contenido Protegido
                         </p>
-                        <p className="text-zinc-400 text-sm mt-2">
-                            Las capturas de pantalla están deshabilitadas
+                        <p className="text-zinc-300 text-lg">
+                            {devToolsOpen
+                                ? 'Herramientas de desarrollo detectadas'
+                                : 'Captura de pantalla bloqueada'
+                            }
+                        </p>
+                        <p className="text-zinc-500 text-sm mt-4">
+                            Usuario: {user?.email}
+                        </p>
+                        <p className="text-zinc-600 text-xs mt-2">
+                            Helios © {new Date().getFullYear()} - Contenido bajo protección
                         </p>
                     </div>
                 </div>
             )}
 
-            {/* Warning toast */}
-            {showWarning && !isBlurred && (
-                <div className="fixed bottom-6 right-6 z-[9998] px-4 py-3 bg-red-500/90 text-white rounded-xl shadow-2xl animate-in slide-in-from-right-5 duration-300">
-                    <div className="flex items-center gap-3">
-                        <Shield className="w-5 h-5" />
-                        <span className="text-sm font-medium">
-                            Captura de pantalla bloqueada
-                        </span>
-                    </div>
-                </div>
-            )}
+            {/* Persistent warning badge */}
+            <div className="fixed bottom-4 left-4 z-[9996] px-3 py-2 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg text-xs font-medium flex items-center gap-2 pointer-events-none">
+                <Shield className="w-3 h-3" />
+                Contenido Protegido
+            </div>
         </>
     );
 }
