@@ -36,11 +36,11 @@ export function useDocumentUsage() {
                 // 1. Get Plan
                 const { data: profile } = await supabase
                     .from('profiles')
-                    .select('plan_tier')
+                    .select('plan')
                     .eq('id', user.id)
                     .single();
 
-                const plan = profile?.plan_tier || 'free';
+                const plan = profile?.plan || 'free';
                 const limit = APP_CONFIG.PLANS[plan as keyof typeof APP_CONFIG.PLANS]?.documents || 5;
 
                 // 2. Count Documents this Month
