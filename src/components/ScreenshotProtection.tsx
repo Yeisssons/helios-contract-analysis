@@ -9,7 +9,6 @@ export default function ScreenshotProtection() {
     const { isAdmin, loading } = useAdmin();
     const { user } = useAuth();
     const [isBlurred, setIsBlurred] = useState(false);
-    const [showWarning, setShowWarning] = useState(false);
 
     useEffect(() => {
         if (loading || isAdmin) return;
@@ -23,7 +22,6 @@ export default function ScreenshotProtection() {
         };
 
         const handleFocus = () => {
-            // Delay unblur to catch screenshot tools
             blurTimeout = setTimeout(() => setIsBlurred(false), 300);
         };
 
@@ -35,46 +33,17 @@ export default function ScreenshotProtection() {
             }
         };
 
-        // Detect potential screenshot attempt via clipboard
-        const handleCopy = (e: ClipboardEvent) => {
-            e.preventDefault();
-            setShowWarning(true);
-            setTimeout(() => setShowWarning(false), 3000);
-        };
-
         // Block context menu
         const handleContextMenu = (e: MouseEvent) => {
             e.preventDefault();
             return false;
         };
 
-        // Detect keyboard shortcuts
-        const handleKeyDown = (e: KeyboardEvent) => {
-            // Block common screenshot shortcuts
-            if (
-                e.key === 'PrintScreen' ||
-                (e.shiftKey && e.metaKey && (e.key === '3' || e.key === '4')) ||
-                (e.shiftKey && (e.metaKey || e.ctrlKey) && e.key === 's') ||
-                (e.ctrlKey && e.key === 'p')
-            ) {
-                e.preventDefault();
-                setIsBlurred(true);
-                setShowWarning(true);
-                setTimeout(() => {
-                    setIsBlurred(false);
-                    setShowWarning(false);
-                }, 2000);
-                return false;
-            }
-        };
-
         // Apply event listeners
         window.addEventListener('blur', handleBlur);
         window.addEventListener('focus', handleFocus);
         document.addEventListener('visibilitychange', handleVisibilityChange);
-        document.addEventListener('copy', handleCopy);
         document.addEventListener('contextmenu', handleContextMenu);
-        document.addEventListener('keydown', handleKeyDown, true);
 
         // CSS protections
         document.body.style.userSelect = 'none';
@@ -100,14 +69,11 @@ export default function ScreenshotProtection() {
                 pointer-events: none;
                 user-select: none;
                 -webkit-user-drag: none;
-                -webkit-touch-callout: none;
             }
             
-            /* Make text unselectable */
             * {
                 -webkit-user-select: none;
                 -moz-user-select: none;
-                -ms-user-select: none;
                 user-select: none;
             }
         `;
@@ -118,9 +84,7 @@ export default function ScreenshotProtection() {
             window.removeEventListener('blur', handleBlur);
             window.removeEventListener('focus', handleFocus);
             document.removeEventListener('visibilitychange', handleVisibilityChange);
-            document.removeEventListener('copy', handleCopy);
             document.removeEventListener('contextmenu', handleContextMenu);
-            document.removeEventListener('keydown', handleKeyDown, true);
             document.body.style.userSelect = '';
             document.body.style.webkitUserSelect = '';
             const styleEl = document.getElementById('screenshot-protection');
@@ -130,63 +94,88 @@ export default function ScreenshotProtection() {
 
     if (isAdmin || loading) return null;
 
+    const userEmail = user?.email || 'usuario';
+    const userName = userEmail.split('@')[0];
+    const currentDate = new Date().toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+    const currentTime = new Date().toLocaleTimeString('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
     return (
         <>
-            {/* Watermark Layer */}
+            {/* PERMANENT Watermark - Email Header */}
+            <div className="fixed top-20 right-6 z-[9995] pointer-events-none select-none">
+                <div className="px-4 py-2 rounded-lg bg-red-900/20 border border-red-500/30 backdrop-blur-sm">
+                    <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-red-400" />
+                        <div className="text-xs">
+                            <div className="text-red-400 font-semibold">{userName}</div>
+                            <div className="text-red-500/70 text-[10px]">
+                                {currentDate} {currentTime}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* PERMANENT Badge - Bottom Left */}
+            <div className="fixed bottom-4 left-4 z-[9995] px-3 py-1.5 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg text-xs font-medium flex items-center gap-2 pointer-events-none select-none backdrop-blur-sm">
+                <Shield className="w-3 h-3" />
+                🔒 Contenido Protegido
+            </div>
+
+            {/* PERMANENT Diagonal Watermarks */}
             <div
-                className="fixed inset-0 pointer-events-none z-[9997]"
+                className="fixed inset-0 pointer-events-none z-[9994] select-none overflow-hidden"
                 style={{
                     background: `repeating-linear-gradient(
                         45deg,
                         transparent,
-                        transparent 150px,
-                        rgba(239, 68, 68, 0.04) 150px,
-                        rgba(239, 68, 68, 0.04) 300px
+                        transparent 200px,
+                        rgba(239, 68, 68, 0.02) 200px,
+                        rgba(239, 68, 68, 0.02) 400px
                     )`
                 }}
             >
-                {Array.from({ length: 20 }).map((_, i) => (
+                {Array.from({ length: 25 }).map((_, i) => (
                     <div
                         key={i}
-                        className="absolute text-red-500/[0.08] font-bold text-sm select-none whitespace-nowrap"
+                        className="absolute text-red-500/[0.04] font-bold text-lg whitespace-nowrap"
                         style={{
-                            top: `${(i * 12 + 5) % 95}%`,
-                            left: `${(i * 18 + 5) % 90}%`,
+                            top: `${(i * 13 + 8) % 90}%`,
+                            left: `${(i * 17 + 5) % 85}%`,
                             transform: 'rotate(-45deg)',
                         }}
                     >
-                        🔒 HELIOS © {user?.email?.split('@')[0] || 'USER'} - {new Date().toLocaleDateString('es-ES')}
+                        HELIOS © {userName} {currentDate}
                     </div>
                 ))}
             </div>
 
-            {/* Blur Overlay */}
+            {/* DETECTION-BASED Blur Overlay */}
             {isBlurred && (
-                <div className="fixed inset-0 z-[9998] backdrop-blur-3xl bg-black/95 flex items-center justify-center">
+                <div className="fixed inset-0 z-[9998] backdrop-blur-3xl bg-black/95 flex items-center justify-center pointer-events-none">
                     <div className="text-center">
-                        <Shield className="w-20 h-20 text-red-500 mx-auto mb-4 animate-pulse" />
-                        <p className="text-white text-xl font-bold">⚠️ Contenido Protegido</p>
-                        <p className="text-zinc-400 text-sm mt-2">Captura de pantalla detectada</p>
-                        <p className="text-zinc-600 text-xs mt-4">
-                            Usuario: {user?.email} | {new Date().toLocaleString('es-ES')}
+                        <Shield className="w-24 h-24 text-red-500 mx-auto mb-6 animate-pulse" />
+                        <p className="text-white text-2xl font-bold mb-3">
+                            ⚠️ Contenido Protegido
                         </p>
+                        <p className="text-zinc-300 text-lg mb-4">
+                            Captura de pantalla detectada
+                        </p>
+                        <div className="space-y-2 text-zinc-500">
+                            <p className="text-sm">Usuario: {userEmail}</p>
+                            <p className="text-xs">{currentDate} - {currentTime}</p>
+                            <p className="text-xs mt-4">Helios © {new Date().getFullYear()} - Contenido rastreado</p>
+                        </div>
                     </div>
                 </div>
             )}
-
-            {/* Warning Toast */}
-            {showWarning && !isBlurred && (
-                <div className="fixed top-20 right-6 z-[9999] px-4 py-3 bg-red-500 text-white rounded-xl shadow-2xl animate-in slide-in-from-right-5 flex items-center gap-3">
-                    <Shield className="w-5 h-5" />
-                    <span className="font-medium">Acción bloqueada - Contenido protegido</span>
-                </div>
-            )}
-
-            {/* Protection Badge */}
-            <div className="fixed bottom-4 left-4 z-[9996] px-3 py-1.5 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg text-xs font-medium flex items-center gap-2 pointer-events-none select-none">
-                <Shield className="w-3 h-3" />
-                Protegido
-            </div>
         </>
     );
 }
