@@ -408,12 +408,16 @@ function AnalysisHistoryContent() {
                                     <button
                                         onClick={() => setViewMode('cards')}
                                         className={`p-2.5 rounded-lg transition-all ${viewMode === 'cards' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                                        title={language === 'es' ? 'Vista de tarjetas' : 'Card view'}
+                                        aria-label={language === 'es' ? 'Vista de tarjetas' : 'Card view'}
                                     >
                                         <Grid3X3 className="w-5 h-5" />
                                     </button>
                                     <button
                                         onClick={() => setViewMode('list')}
                                         className={`p-2.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                                        title={language === 'es' ? 'Vista de lista' : 'List view'}
+                                        aria-label={language === 'es' ? 'Vista de lista' : 'List view'}
                                     >
                                         <List className="w-5 h-5" />
                                     </button>

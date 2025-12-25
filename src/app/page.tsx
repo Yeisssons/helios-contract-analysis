@@ -585,7 +585,7 @@ function HomeContent() {
                 {contracts.length > 3 && (
                   <div className="mt-6 text-center">
                     <Link
-                      href="/analysis"
+                      href="/contracts"
                       className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold rounded-lg transition-colors"
                     >
                       {language === 'es' ? 'Ver Todos los Documentos' : 'View All Documents'}
