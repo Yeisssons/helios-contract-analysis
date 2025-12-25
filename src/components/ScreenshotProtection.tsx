@@ -18,9 +18,21 @@ export default function ScreenshotProtection() {
     const [isBlurred, setIsBlurred] = useState(false);
     const [showWarning, setShowWarning] = useState(false);
 
+    // Debug logging
+    useEffect(() => {
+        console.log('[ScreenshotProtection] Component mounted');
+        console.log('[ScreenshotProtection] isAdmin:', isAdmin);
+        console.log('[ScreenshotProtection] loading:', loading);
+    }, [isAdmin, loading]);
+
     useEffect(() => {
         // Skip protection for admins or during loading
-        if (loading || isAdmin) return;
+        if (loading || isAdmin) {
+            console.log('[ScreenshotProtection] Skipping protection - Admin or loading');
+            return;
+        }
+
+        console.log('[ScreenshotProtection] ACTIVATING PROTECTION for non-admin user');
 
         // Block keyboard shortcuts for screenshots
         const handleKeyDown = (e: KeyboardEvent) => {
