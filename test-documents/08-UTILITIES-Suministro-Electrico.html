@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Contrato de Suministro Eléctrico</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            border-bottom: 2px solid #eab308;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #ca8a04;
+            margin-top: 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #eab308;
+        }
+
+        .parties {
+            background: #fefce8;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .tariff-box {
+            background: #f0fdf4;
+            border: 2px solid #22c55e;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .clause {
+            margin: 15px 0;
+        }
+
+        .signature {
+            margin-top: 60px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-box {
+            width: 45%;
+            text-align: center;
+        }
+
+        .signature-line {
+            border-top: 1px solid #000;
+            margin-top: 60px;
+            padding-top: 5px;
+        }
+
+        .important {
+            background: #fef3c7;
+            padding: 10px;
+            border-left: 4px solid #f59e0b;
+            margin: 15px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        table th,
+        table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        table th {
+            background: #eab308;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="logo">⚡ HELIOS ENERGÍA VERDE</div>
+        <p>Comercializadora de Electricidad - Registro CNMC nº 2024-R-0456</p>
+    </div>
+
+    <h1>CONTRATO DE SUMINISTRO DE ENERGÍA ELÉCTRICA</h1>
+    <p style="text-align: center;">Contrato nº: ELE-2025-78945 | CUPS: ES0021000012345678AB</p>
+
+    <div class="parties">
+        <h2>PARTES CONTRATANTES</h2>
+        <p><strong>COMERCIALIZADORA:</strong><br>
+            Helios Energía Verde, S.L., con CIF B-28765432, inscrita en el Registro de Comercializadoras de la CNMC con
+            nº 2024-R-0456, domiciliada en Avenida de la Energía 50, 28042 Madrid. Atención al Cliente: 900 800 600.</p>
+
+        <p><strong>CLIENTE/TITULAR:</strong><br>
+            Supermercados Ahorro Total, S.A., con CIF A-46123789, domiciliada en Calle Comercio 10, 46001 Valencia.
+            Representado por D. Javier Navarro Blasco, Director de Operaciones.</p>
+    </div>
+
+    <h2>1. PUNTO DE SUMINISTRO</h2>
+    <table>
+        <tr>
+            <td><strong>Dirección:</strong></td>
+            <td>Centro Comercial Las Arenas, Local 45, 46001 Valencia</td>
+        </tr>
+        <tr>
+            <td><strong>CUPS:</strong></td>
+            <td>ES0021000012345678AB1P</td>
+        </tr>
+        <tr>
+            <td><strong>Distribuidora:</strong></td>
+            <td>i-DE Redes Eléctricas Inteligentes, S.A.U.</td>
+        </tr>
+        <tr>
+            <td><strong>Tensión:</strong></td>
+            <td>Baja Tensión 400V</td>
+        </tr>
+        <tr>
+            <td><strong>Potencia contratada:</strong></td>
+            <td>P1-P2: 150 kW / P3-P6: 200 kW</td>
+        </tr>
+        <tr>
+            <td><strong>Tipo contador:</strong></td>
+            <td>Telegestionado con discriminación horaria</td>
+        </tr>
+        <tr>
+            <td><strong>Consumo anual estimado:</strong></td>
+            <td>450.000 kWh</td>
+        </tr>
+    </table>
+
+    <h2>2. DURACIÓN DEL CONTRATO</h2>
+    <p class="clause">El presente contrato entrará en vigor el <strong>1 de marzo de 2025</strong> y tendrá una duración
+        de <strong>24 MESES</strong>, finalizando el <strong>28 de febrero de 2027</strong>. Se prorrogará
+        automáticamente por períodos anuales salvo comunicación en contrario con 15 días de antelación.</p>
+
+    <div class="tariff-box">
+        <h2>3. TARIFA Y PRECIOS</h2>
+        <p><strong>Modalidad:</strong> Tarifa 3.0TD - Precio Fijo 24 meses</p>
+        <table>
+            <tr>
+                <th>Período</th>
+                <th>Horario</th>
+                <th>€/kWh</th>
+                <th>Potencia €/kW/año</th>
+            </tr>
+            <tr>
+                <td>P1 (Punta)</td>
+                <td>10-14h y 18-22h (L-V)</td>
+                <td>0,1650</td>
+                <td>38,50</td>
+            </tr>
+            <tr>
+                <td>P2 (Llano)</td>
+                <td>8-10h, 14-18h, 22-24h (L-V)</td>
+                <td>0,1250</td>
+                <td>23,80</td>
+            </tr>
+            <tr>
+                <td>P3 (Valle)</td>
+                <td>0-8h (L-V) + fines de semana</td>
+                <td>0,0850</td>
+                <td>8,90</td>
+            </tr>
+        </table>
+        <p><strong>Impuesto electricidad:</strong> 5,11% sobre base imponible<br>
+            <strong>Alquiler contador:</strong> Incluido en peajes<br>
+            <strong>100% Energía origen renovable</strong> certificada por CNMC (Garantía de Origen)
+        </p>
+    </div>
+
+    <h2>4. FACTURACIÓN Y PAGO</h2>
+    <p class="clause">La facturación se realizará <strong>mensualmente</strong> con lectura real telegestionada. El
+        importe estimado mensual es de aproximadamente <strong>5.800 €</strong> (según consumo medio del sector).</p>
+    <p class="clause">El pago se realizará mediante domiciliación bancaria en la cuenta indicada, con cargo el día 5 de
+        cada mes.</p>
+
+    <div class="important">
+        <p>⚠️ <strong>Impago:</strong> El impago de facturas facultará a la Comercializadora a solicitar la suspensión
+            del suministro tras 2 meses de impago, previo aviso con 10 días de antelación. Los gastos de reconexión
+            (87,65 €) correrán a cargo del cliente.</p>
+    </div>
+
+    <h2>5. DERECHOS DEL CLIENTE</h2>
+    <ul>
+        <li>Acceso al autoconsumo individual o colectivo</li>
+        <li>Cambio de comercializadora sin coste (libre mercado)</li>
+        <li>Información clara sobre consumo y facturación</li>
+        <li>Acceso a área de cliente online 24/7</li>
+        <li>Reclamación ante Servicios de Consumo o CNMC</li>
+    </ul>
+
+    <h2>6. OBLIGACIONES DEL CLIENTE</h2>
+    <ul>
+        <li>Pagar las facturas en los plazos establecidos</li>
+        <li>Permitir acceso a instalaciones para lecturas y revisiones</li>
+        <li>Comunicar cambios en la titularidad o datos de contacto</li>
+        <li>No manipular equipos de medida</li>
+        <li>Mantener instalaciones interiores en buen estado</li>
+    </ul>
+
+    <h2>7. MODIFICACIÓN DE CONDICIONES</h2>
+    <p class="clause">Durante la vigencia del contrato a precio fijo, la Comercializadora no podrá modificar los precios
+        de energía acordados. Los peajes y cargos regulados podrán variar según disposiciones oficiales, repercutiéndose
+        automáticamente.</p>
+
+    <h2>8. RESOLUCIÓN DEL CONTRATO</h2>
+    <p class="clause">El cliente podrá resolver el contrato en cualquier momento con un preaviso de <strong>15 días
+            naturales</strong>, sin penalización alguna. En caso de resolución anticipada por cambio a otra
+        comercializadora, se abonará la última factura prorrateada.</p>
+    <p class="clause">La Comercializadora podrá resolver por impago continuado (más de 3 meses) o por uso fraudulento
+        del suministro.</p>
+
+    <h2>9. COMPENSACIÓN POR AUTOCONSUMO</h2>
+    <p class="clause">En caso de que el cliente disponga de instalación de autoconsumo con excedentes, la
+        Comercializadora compensará la energía vertida a red al precio establecido en el Anexo de Autoconsumo
+        (actualmente 0,065 €/kWh).</p>
+
+    <h2>10. PROTECCIÓN DE DATOS</h2>
+    <p class="clause">Los datos personales serán tratados conforme al RGPD para la gestión del suministro, facturación y
+        comunicaciones comerciales (si consiente). Derechos: acceso, rectificación, supresión en lopd@heliosenergia.es.
+    </p>
+
+    <h2>11. LEGISLACIÓN Y JURISDICCIÓN</h2>
+    <p class="clause">Este contrato se rige por la Ley 24/2013 del Sector Eléctrico y normativa de desarrollo. Para
+        controversias, las partes se someten a los Juzgados de Valencia, con posibilidad previa de acudir al Sistema
+        Arbitral de Consumo.</p>
+
+    <div class="signature">
+        <div class="signature-box">
+            <div class="signature-line">
+                Por HELIOS ENERGÍA VERDE<br>
+                Director Comercial<br>
+                Fecha: 15/02/2025
+            </div>
+        </div>
+        <div class="signature-box">
+            <div class="signature-line">
+                EL CLIENTE<br>
+                Supermercados Ahorro Total, S.A.<br>
+                D. Javier Navarro Blasco
+            </div>
+        </div>
+    </div>
+
+    <p style="text-align: center; margin-top: 40px; font-size: 12px; color: #666;">
+        Valencia, a 15 de febrero de 2025<br>
+        Contrato registrado en el Sistema de Información del Mercado Eléctrico (SIPS)<br>
+        Atención al cliente: 900 800 600 | www.heliosenergia.es
+    </p>
+</body>
+
+</html>

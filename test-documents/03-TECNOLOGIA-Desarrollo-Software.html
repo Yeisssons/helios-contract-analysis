@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Contrato de Desarrollo de Software</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            border-bottom: 2px solid #4a90d9;
+            padding-bottom: 10px;
+            color: #1a365d;
+        }
+
+        h2 {
+            color: #4a90d9;
+            margin-top: 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4a90d9;
+        }
+
+        .parties {
+            background: #e8f4fd;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .clause {
+            margin: 15px 0;
+        }
+
+        .signature {
+            margin-top: 60px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-box {
+            width: 45%;
+            text-align: center;
+        }
+
+        .signature-line {
+            border-top: 1px solid #000;
+            margin-top: 60px;
+            padding-top: 5px;
+        }
+
+        .important {
+            background: #fff3cd;
+            padding: 10px;
+            border-left: 4px solid #ffc107;
+            margin: 15px 0;
+        }
+
+        .tech-box {
+            background: #1a1a2e;
+            color: #4ade80;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: monospace;
+        }
+
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        table th,
+        table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        table th {
+            background: #4a90d9;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="logo">💻 HELIOS TECH SOLUTIONS</div>
+        <p>Desarrollo de Software & Consultoría Tecnológica</p>
+    </div>
+
+    <h1>CONTRATO DE DESARROLLO DE SOFTWARE A MEDIDA</h1>
+    <p style="text-align: center;">Proyecto: CRM-ENTERPRISE-2025 | Referencia: DEV-2025-0089</p>
+
+    <div class="parties">
+        <h2>PARTES CONTRATANTES</h2>
+        <p><strong>PROVEEDOR:</strong><br>
+            Helios Tech Solutions, S.L., con CIF B-87654321, domiciliada en Calle Tecnología 42, Parque Empresarial Las
+            Rozas, 28232 Madrid, representada por D. Alejandro Fernández García, CEO.</p>
+
+        <p><strong>CLIENTE:</strong><br>
+            Innovaciones Digitales Corp, S.A., con CIF A-12398745, domiciliada en Paseo de la Castellana 200, 28046
+            Madrid, representada por Dña. Laura Sánchez Pérez, Directora de Tecnología (CTO).</p>
+    </div>
+
+    <h2>1. OBJETO DEL CONTRATO</h2>
+    <p class="clause">El PROVEEDOR se compromete a desarrollar, entregar e implantar un sistema de gestión de relaciones
+        con clientes (CRM) empresarial según las especificaciones técnicas del Anexo I, denominado <strong>"InnovaCRM
+            Enterprise"</strong>.</p>
+
+    <div class="tech-box">
+        <strong>// Especificaciones Técnicas del Proyecto</strong><br><br>
+        Stack: Next.js 15 + React 19 + TypeScript<br>
+        Backend: Node.js + Express + PostgreSQL<br>
+        Cloud: AWS (EC2, RDS, S3, Lambda)<br>
+        CI/CD: GitHub Actions + Docker + Kubernetes<br>
+        Integraciones: Salesforce API, HubSpot, Zapier<br>
+        Usuarios concurrentes: 500+<br>
+        SLA Disponibilidad: 99.9%
+    </div>
+
+    <h2>2. FECHA DE INICIO Y DURACIÓN</h2>
+    <p class="clause">El proyecto comenzará el <strong>1 de febrero de 2025</strong> y tendrá una duración estimada de
+        <strong>8 meses</strong>, con fecha de entrega final prevista para el <strong>30 de septiembre de 2025</strong>.
+    </p>
+
+    <h2>3. FASES Y ENTREGABLES</h2>
+    <table>
+        <tr>
+            <th>Fase</th>
+            <th>Descripción</th>
+            <th>Entrega</th>
+            <th>Pago</th>
+        </tr>
+        <tr>
+            <td>Fase 1 - Análisis</td>
+            <td>Requisitos y arquitectura</td>
+            <td>28 Feb 2025</td>
+            <td>20%</td>
+        </tr>
+        <tr>
+            <td>Fase 2 - Diseño UX/UI</td>
+            <td>Prototipos y diseño</td>
+            <td>31 Mar 2025</td>
+            <td>15%</td>
+        </tr>
+        <tr>
+            <td>Fase 3 - Desarrollo Core</td>
+            <td>Módulos principales</td>
+            <td>30 Jun 2025</td>
+            <td>30%</td>
+        </tr>
+        <tr>
+            <td>Fase 4 - Integraciones</td>
+            <td>APIs y terceros</td>
+            <td>31 Ago 2025</td>
+            <td>20%</td>
+        </tr>
+        <tr>
+            <td>Fase 5 - UAT y Deploy</td>
+            <td>Testing y puesta en producción</td>
+            <td>30 Sep 2025</td>
+            <td>15%</td>
+        </tr>
+    </table>
+
+    <h2>4. PRECIO Y CONDICIONES DE PAGO</h2>
+    <p class="clause">El precio total del proyecto asciende a <strong>CIENTO CINCUENTA MIL EUROS (150.000,00
+            €)</strong>, más el IVA correspondiente (21%). Los pagos se realizarán según el calendario de hitos indicado
+        en la cláusula anterior.</p>
+
+    <div class="important">
+        <p>⚠️ <strong>Penalización por retraso:</strong> En caso de retraso imputable al PROVEEDOR superior a 15 días
+            laborables por fase, se aplicará una penalización del 0,5% del valor de la fase por cada semana de retraso,
+            hasta un máximo del 10%.</p>
+    </div>
+
+    <h2>5. PROPIEDAD INTELECTUAL</h2>
+    <p class="clause">Todo el código fuente, documentación técnica, diseños y materiales desarrollados en el marco de
+        este contrato serán propiedad exclusiva del CLIENTE una vez realizado el pago completo. El PROVEEDOR cede todos
+        los derechos de explotación en cualquier modalidad.</p>
+    <p class="clause">El código será entregado en un repositorio Git con historial completo de commits, bajo licencia
+        propietaria del CLIENTE.</p>
+
+    <h2>6. CONFIDENCIALIDAD Y NDA</h2>
+    <p class="clause">Las partes se comprometen a mantener estricta confidencialidad sobre toda información técnica,
+        comercial o estratégica intercambiada durante la ejecución del proyecto. Esta obligación se mantendrá durante
+        <strong>5 años</strong> tras la finalización del contrato.</p>
+
+    <h2>7. GARANTÍA Y MANTENIMIENTO</h2>
+    <p class="clause">El PROVEEDOR garantiza el correcto funcionamiento del software durante un período de <strong>12
+            meses</strong> desde la entrega final. Durante este período, se corregirán sin coste adicional todos los
+        errores o bugs detectados.</p>
+    <p class="clause">Opcionalmente, el CLIENTE podrá contratar un servicio de mantenimiento evolutivo por un importe de
+        3.000 €/mes.</p>
+
+    <h2>8. NIVEL DE SERVICIO (SLA)</h2>
+    <table>
+        <tr>
+            <th>Métrica</th>
+            <th>Objetivo</th>
+        </tr>
+        <tr>
+            <td>Disponibilidad del sistema</td>
+            <td>99.9% mensual</td>
+        </tr>
+        <tr>
+            <td>Tiempo de respuesta crítico</td>
+            <td>&lt; 4 horas</td>
+        </tr>
+        <tr>
+            <td>Tiempo de respuesta alto</td>
+            <td>&lt; 8 horas</td>
+        </tr>
+        <tr>
+            <td>Tiempo de respuesta medio</td>
+            <td>&lt; 24 horas</td>
+        </tr>
+        <tr>
+            <td>Backup de datos</td>
+            <td>Diario, retención 30 días</td>
+        </tr>
+    </table>
+
+    <h2>9. RESOLUCIÓN DEL CONTRATO</h2>
+    <p class="clause">Cualquiera de las partes podrá resolver el contrato mediante comunicación escrita con un preaviso
+        de <strong>30 días</strong>. En caso de resolución anticipada, el CLIENTE abonará el trabajo realizado hasta la
+        fecha más un 10% adicional en concepto de costes de cierre.</p>
+
+    <h2>10. PROTECCIÓN DE DATOS (RGPD)</h2>
+    <p class="clause">El PROVEEDOR actuará como encargado del tratamiento de los datos personales que el CLIENTE le
+        proporcione, obligándose a cumplir con el Reglamento (UE) 2016/679 y la LOPDGDD. Se firma un Acuerdo de
+        Encargado del Tratamiento como Anexo II.</p>
+
+    <h2>11. LEGISLACIÓN Y JURISDICCIÓN</h2>
+    <p class="clause">Este contrato se rige por la legislación española. Para cualquier controversia, las partes se
+        someten a arbitraje de la Corte de Arbitraje de Madrid, con renuncia expresa a cualquier otro fuero.</p>
+
+    <div class="signature">
+        <div class="signature-box">
+            <div class="signature-line">
+                Por HELIOS TECH SOLUTIONS<br>
+                D. Alejandro Fernández García<br>
+                CEO
+            </div>
+        </div>
+        <div class="signature-box">
+            <div class="signature-line">
+                Por INNOVACIONES DIGITALES CORP<br>
+                Dña. Laura Sánchez Pérez<br>
+                CTO
+            </div>
+        </div>
+    </div>
+
+    <p style="text-align: center; margin-top: 40px; font-size: 12px; color: #666;">
+        Madrid, a 25 de enero de 2025<br>
+        Contrato firmado digitalmente mediante certificado electrónico cualificado<br>
+        Anexos: I - Especificaciones Técnicas | II - DPA | III - Acuerdo de Confidencialidad
+    </p>
+</body>
+
+</html>
